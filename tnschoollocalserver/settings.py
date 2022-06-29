@@ -228,6 +228,16 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, 'log/api_error.log'),
             'formatter': 'verbose'
         },
+        'student_start': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'log/student_start.log')
+        },
+        'student_end': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'log/student_end.log')
+        },
     },
     'loggers': {
         'monitoringdebug': {
@@ -255,13 +265,23 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'student_start_log': {
+            'handlers': ['student_start'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'student_end_log': {
+            'handlers': ['student_end'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
 
 # Enable authentication for the api calls
 AUTH_ENABLE = False # Enable is_authentication in views.py file
 
-CENTRAL_SERVER_IP = '10.184.36.20:1600'
+CENTRAL_SERVER_IP = '10.184.36.118:8000'
 
 
 # Remote DB names

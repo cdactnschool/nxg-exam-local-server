@@ -44,6 +44,8 @@ accesslog   = logging.getLogger('accesslog')
 errorlog    = logging.getLogger('errorlog')
 infolog     = logging.getLogger('infolog')
 apilog      = logging.getLogger('apilog')
+student_start_log = logging.getLogger('student_start_log')
+student_end_log = logging.getLogger('student_end_log')
 
 import sqlite3
 import py7zr
@@ -285,7 +287,6 @@ class db_auth(APIView):
         mycursor = cn.cursor()
 
         data = JSONParser().parse(request)
-
         possible_type = ''
         user_detail = {}
 
@@ -753,6 +754,11 @@ class exam_submit(APIView):
             
             attendance_object_check.save()
 
+            # Adding data for filebeat
+            student_end_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
+
+            print(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
+
             return Response({'message' : 'Exam submitted','api_status':True})
         else:
             return Response({'message': 'No reponse available','api_status':True})
@@ -865,7 +871,7 @@ class GenerateQuestionPaper(APIView):
     ````````````````
 
     {
-        event_id : 123,
+        id : 123,
 
     }
 
@@ -910,6 +916,10 @@ class GenerateQuestionPaper(APIView):
                 start_time = datetime.datetime.now()
             )
             event_attendance_obj.save()
+            
+            # Adding data for filebeat
+            student_start_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
+
         else:
             event_attendance_obj = event_attendance_check[0]
         
@@ -944,13 +954,13 @@ class GenerateQuestionPaper(APIView):
                 question_paper_data = json.load(f)
            
             print('----------------------------------------------------------------')
-            print('Event ID and QP SET ID already exists in local school database..')
+            print('Event ID and QP SET ID already exists in local school database..',json_file_path)
                     
             print('----------------------------------------------------------------')
 
             for answers in question_paper_data['ans']:
                 answers['review'], answers['ans'] = get_answers(request.user.username,answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
-
+            question_paper_data['user'] = request.user.username
 
             return Response(question_paper_data)
 
@@ -966,8 +976,8 @@ class GenerateQuestionPaper(APIView):
                 tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
                 tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
                 tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
-                tmp_exam_dict['user'] = request.user.username
                 exam_meta_data.append(tmp_exam_dict)
+
          
             qpset_filter = {
             'event_id': request_data['event_id'],
@@ -1034,11 +1044,12 @@ class GenerateQuestionPaper(APIView):
             configure_qp_data['questions'] = questions_data_list
             configure_qp_data['ans'] = get_ans_api
             
+            
             if not os.path.exists(MEDIA_PATH):
                 os.makedirs(MEDIA_PATH)
             with open(json_file_path , 'w') as f :
                 json.dump(configure_qp_data, f)
-
+            configure_qp_data['user'] = request.user.username
             return Response(configure_qp_data)
    
        
