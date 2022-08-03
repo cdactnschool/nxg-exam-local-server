@@ -55,6 +55,12 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
 
         '''
         Return if Exam is started/not completed/Completed
+
+        0 -> Exam not started
+        1 -> Exam not completed
+        2 -> Exam completed
+
+
         '''
 
         user_detail = self.context.get("user")
@@ -71,27 +77,32 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
 
         
         if attendance_obj == None:
-            return 'Exam not started'
+            return 0
         
         if attendance_obj.end_time == None:
-            return 'Exam not completed'
+            return 1
         
         if attendance_obj.end_time != None:
-            return 'Exam completed'
+            return 2
 
         return None
 
     def get_event_status(self,obj):
         '''
         Return if Event is live/old/upcoming
+
+        0 -> Live
+        1 -> Upcoming
+        2 -> Old
+
         '''
 
         if obj.event_startdate <= datetime.datetime.now().date() <= obj.event_enddate:
-            return 'Live'
+            return 1
         elif obj.event_startdate > datetime.datetime.now().date():
-            return 'Upcoming'
+            return 2
         elif obj.event_enddate < datetime.datetime.now().date():
-            return 'Old'
+            return 3
         
         return None
     
