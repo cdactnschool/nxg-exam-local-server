@@ -15,10 +15,10 @@ urlpatterns = [
     path('token/verify',                    TokenVerifyView.as_view(),                  name='token_verify'),
 
     path('load_events',                     views.store_event.as_view(),                name='event_list'), 
-    path('meta_data',                       views.meta_data.as_view(),                  name='meta_data'), # Changes
+    path('meta_data',                       views.MetaData.as_view(),                  name='meta_data'), # Changes
 
     path('get-my-events',                   views.get_my_events.as_view(),              name='get-my-events'),
-    path('generate-question-paper',         views.generate_question_paper.as_view(),    name='generate-question-paper'), # Changes
+    path('qpdownload',                      views.GenerateQuestionPaper.as_view(),    name='qpdownload'), # Changes
     path('exam_response',                   views.exam_response.as_view(),              name='exam_response'),
     path('update-remtime',                  views.update_remtime.as_view(),             name='update-remtime'),
     path('exam-submit',                     views.exam_submit.as_view(),                name='exam-submit'),

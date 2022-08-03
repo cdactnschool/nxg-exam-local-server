@@ -71,13 +71,13 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
 
         
         if attendance_obj == None:
-            return 'Exam not started'
+            return 0
         
         if attendance_obj.end_time == None:
-            return 'Exam not completed'
+            return 1
         
         if attendance_obj.end_time != None:
-            return 'Exam completed'
+            return 2
 
         return None
 
@@ -87,11 +87,11 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         '''
 
         if obj.event_startdate <= datetime.datetime.now().date() <= obj.event_enddate:
-            return 'Live'
+            return 0
         elif obj.event_startdate > datetime.datetime.now().date():
-            return 'Upcoming'
+            return 1
         elif obj.event_enddate < datetime.datetime.now().date():
-            return 'Old'
+            return 2
         
         return None
     
@@ -173,69 +173,55 @@ class exam_scheduling_serializer(serializers.ModelSerializer):
         model = models_scheduler.scheduling
         fields = '__all__'
 
-class exam_meta_data_serializer(serializers.ModelSerializer):
+
+class ExamMetaSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.exam_meta_data.objects.create(**validated_data)
+        return models.ExamMeta.objects.create(**validated_data)
 
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.exam_meta_data
+        model = models.ExamMeta
         fields = '__all__'
 
-class question_meta_serializer(serializers.ModelSerializer):
+class QpSetsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.question_meta_data.objects.create(**validated_data)
+        return models.QpSet.objects.create(**validated_data)
     
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.question_meta_data
+        model = models.QpSet
         fields = '__all__'
+
 
     def getusername(self,obj):
         return obj.user.username
 
-class question_table_serializer(serializers.ModelSerializer):
+class QuestionsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.question_table.objects.create(**validated_data)
+        return models.Question.objects.create(**validated_data)
     
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.question_table
+        model = models.Question
         fields = '__all__'
 
 
     def getusername(self,obj):
         return obj.user.username
 
-class choice_table_serializer(serializers.ModelSerializer):
+
+class ChoicesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.choice_table.objects.create(**validated_data)
+        return models.Choice.objects.create(**validated_data)
     
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.choice_table
+        model = models.Choice
         fields = '__all__'
 
     def getusername(self,obj):
         return obj.user.username
-
-class question_paper_table_serializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        return models.question_paper_table.objects.create(**validated_data)
-
-    username = serializers.SerializerMethodField('getusername')
-
-    class Meta:
-        model = models.question_paper_table
-        fields = '__all__'
-
-
-    def getusername(self,obj):
-        return obj.user.username
-
-

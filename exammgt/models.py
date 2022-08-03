@@ -33,76 +33,55 @@ class Profile(models.Model):
     def __str__(self):
         return "{0}-{1}".format(self.user.username, self.usertype)
 
-class exam_meta_data(models.Model):
+class ExamMeta(models.Model):
     event_id                            = models.BigIntegerField(primary_key=True)
-    user                                = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    subject_id                          = models.IntegerField()
-    stream                              = models.CharField(max_length=1024)
+    subject                             = models.CharField(max_length=1024)
     no_of_questions                     = models.IntegerField()
-    medium                              = models.CharField(max_length=1024)
-    event_type                          = models.CharField(max_length=1024)
-    exam_duration                       = models.IntegerField()
-
-    
-    created_on                          = models.DateTimeField(auto_now = True)
-
-    def __str__(self):
-        return "{0}-{1}-{2}".format(self.event_id,self.no_of_questions,self.created_on)
-
-
-class question_meta_data(models.Model):
-    event_id                            = models.BigIntegerField(primary_key=True)
-    user                                = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    no_of_batch                         = models.IntegerField()
-    duration                            = models.IntegerField()
+    duraion_mins                        = models.IntegerField()
+    qtype                               = models.CharField(max_length=1024)
+    total_marks                         = models.IntegerField()
+    qshuffle                            = models.BooleanField(default=False)
     show_submit_at_last_question        = models.BooleanField(default=False)
-    shuffle_question                    = models.BooleanField(default=False)
     show_summary                        = models.BooleanField(default=False)
     show_result                         = models.BooleanField(default=False)
-    end_time_alert_In_Min               = models.IntegerField()
-    show_instruction_button             = models.BooleanField(default=False)
+    end_alert_time                      = models.IntegerField()
+    show_instruction                    = models.BooleanField(default=False)
     qp_set_list                         = models.TextField()
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return "{0}-{1}-{2}".format(self.event_id,self.no_of_batch,self.created_on)
+        return "{0}-{1}-{2}-{3}".format(self.duraion_mins, self.event_id, self.subject, self.created_on)
+
+class QpSet(models.Model):
+    event_id                            = models.BigIntegerField()
+    qp_set_id                           = models.IntegerField(primary_key=True)
+    qid_list                            = models.TextField()
+    created_on                          = models.DateTimeField(auto_now = True)
 
 
-class question_table(models.Model):
-    qp_set_id                           = models.BigIntegerField(primary_key=True)
-    user                                = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    question_image                      = models.TextField()
-    question_id_list                    = models.TextField()
+    def __str__(self):
+        return "{0}-{1}-{2}".format(self.event_id, self.qp_set_id, self.created_on)
+
+
+class Question(models.Model):
+    qid                                 = models.BigIntegerField(primary_key=True)
+    qimage                              = models.TextField()
     no_of_choices                       = models.IntegerField()
-    correct_choice                      = models.TextField()
-    mark                                = models.CharField(max_length=10,blank=True,null=True)
-    complexity                          = models.CharField(max_length=50)
+    correct_choice                      = models.IntegerField()
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return "{0}-{1}-{2}".format(self.qp_set_id,self.no_of_choices,self.created_on)
+        return "{0}-{1}-{2}".format(self.qid, self.no_of_choices, self.created_on)
 
 
-class choice_table(models.Model):
-    qp_set_id                           = models.BigIntegerField(primary_key=True)
-    user                                = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    choice_id                           = models.TextField()
-    choice_image                        = models.TextField()
-    created_on                          = models.DateTimeField(auto_now = True)
-
-    def __str__(self):
-        return "{0}-{1}".format(self.qp_set_id,self.created_on)
-
-
-class question_paper_table(models.Model):
-    qp_set_id                         = models.BigIntegerField(primary_key=True)
-    user                                = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    qp_set_id                           = models.IntegerField()
-    question_order_id                   = models.IntegerField()
-    created_on                          = models.DateTimeField(auto_now = True)
+class Choice(models.Model):
+    qid                           = models.BigIntegerField()
+    cid                           = models.IntegerField(primary_key=True)
+    cimage                        = models.TextField()
+    created_on                    = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return "{0}-{1}-{2}".format(self.qp_set_id,self.qp_set_id,self.created_on)
+        return "{0}-{1}-{2}".format(self.qid, self.cid, self.created_on)
 
 
 class exam_response(models.Model):
