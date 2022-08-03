@@ -1,3 +1,4 @@
+from secrets import choice
 from django.shortcuts import render
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -12,8 +13,7 @@ from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 import random
 
-
-from . import models
+from .import models
 from . import serializers
 
 from scheduler import models as models_scheduler
@@ -28,6 +28,7 @@ from django.urls import reverse
 from django.conf import settings
 import hashlib
 import requests
+
 
 import logging
 
@@ -418,7 +419,7 @@ class exam_response(APIView):
         filter_fields = {
             'user':request.user,
             'question_id':data['qid'],
-            'qp_set_id':data['question_paper_id'],
+            'qp_set_id':data['qp_set_id'],
             'event_id':data['event_id']
         }
         try:
@@ -707,12 +708,12 @@ class school_exam_summary(APIView):
             print(f'Exception raised while creating a candidate question meta data object throught API : {e}')
 
 
-def get_answers(username,qid,question_paper_id,event_id):
+def get_answers(username,qid,qp_set_id,event_id):
     try:
         filter_fields = {
             'user':username,
             'question_id':qid,
-            'qp_set_id':question_paper_id,
+            'qp_set_id':qp_set_id,
             'event_id':event_id
         }
         obj = get_object_or_404(models.exam_response,**filter_fields)
@@ -722,7 +723,7 @@ def get_answers(username,qid,question_paper_id,event_id):
     except:
         return "",""
 
-class generate_question_paper(APIView):
+class GenerateQuestionPaper(APIView):
     '''
     class to generate question paper per candidate
 
@@ -745,25 +746,27 @@ class generate_question_paper(APIView):
         # check if entry already exists and not completed
 
         #print('******',request.data)
-        data = JSONParser().parse(request)
-        data['event_id'] = data['id']
+        request_data = JSONParser().parse(request)
 
-        print('Event ID:',data)
-        print('username',request.user.username)
-        event_attendance_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_id = request.user.id)
-        
-        question_meta_object = models.question_meta_data.objects.filter(event_id = data['event_id'])
-        
+        request_data['event_id'] = request_data['id']
+
+        print('---------------',request_data)
+
+        event_attendance_check = models.event_attendance.objects.filter(event_id = request_data['event_id'] ,student_id = request.user.id)
+
+        question_meta_object = models.ExamMeta.objects.filter(event_id = request_data['event_id'])
+
         if len(question_meta_object) > 0:
             question_meta_object = question_meta_object[0] # get the first instance
             print('question_meta_object Content',question_meta_object)
         else:
             return Response({'message':'No question set for this student','status':'false'})
-        
+
+
         # Add an entry in the event_attenance_check
         if len(event_attendance_check) == 0:
             event_attendance_obj = models.event_attendance.objects.create(
-                event_id = data['event_id'],
+                event_id = request_data['event_id'],
                 student_id = request.user,
                 student_username =request.user.username,
                 qp_set = random.choice(eval(question_meta_object.qp_set_list)),
@@ -772,95 +775,104 @@ class generate_question_paper(APIView):
             event_attendance_obj.save()
         else:
             event_attendance_obj = event_attendance_check[0]
-        
-        print('----------',event_attendance_obj)
-        print('~~~~~~~~~ qp_set_id',event_attendance_obj.qp_set)
-        
-        question_table_object   = models.question_table.objects.filter(qp_set_id=event_attendance_obj.qp_set)[0]
-        choice_table_object     = models.choice_table.objects.filter(qp_set_id=event_attendance_obj.qp_set)[0]
-        #question_meta_object    = models.question_meta_data.objects.filter(user = request.user.id)[0]
-        #question_meta_object = question_meta_object[0]
-
-        question_table_object_data  = model_to_dict(question_table_object)
-        choice_table_object_data    = model_to_dict(choice_table_object)
-        exam_meta_object_data       = model_to_dict(event_attendance_obj)
-        question_meta_object_data   = model_to_dict(question_meta_object)
-
-        configure_meta_data = {}
-        configure_meta_data['no_of_batch']                  = question_meta_object_data['no_of_batch']
-        configure_meta_data['show_submit_at_last_question'] = question_meta_object_data['show_submit_at_last_question'] 
-        configure_meta_data['shuffle_question']             = question_meta_object_data['shuffle_question']
-        configure_meta_data['show_summary']                 = question_meta_object_data['show_summary']
-        configure_meta_data['show_result']                  = question_meta_object_data['show_result']
-        configure_meta_data['end_time_alert_In_Min']        = question_meta_object_data['end_time_alert_In_Min'] 
-        configure_meta_data['show_instruction_button']      = question_meta_object_data['show_instruction_button']
-        configure_meta_data['store_local_storage']          = False
-        configure_meta_data['time_sync_seconds']            = 30
-
-
-        question_image_list     = eval(question_table_object_data['question_image'])
-        correct_choice_list     = eval(question_table_object_data['correct_choice'])
-        no_of_choices           = question_table_object_data['no_of_choices']
-        question_id_list        = eval(question_table_object_data['question_id_list'])
-  
-        
-        choice_image_list       = eval(choice_table_object_data['choice_image'])
-        choice_id_list          = eval(choice_table_object_data['choice_id'])
-  
-
-        # Get schedule based on the event_id/schedule_id
-
-        exam_scheduling_object = models_scheduler.scheduling.objects.filter(schedule_id=data['event_id'])[0]
-
-        question_paper_data = {}
-        question_paper_data['question_paper_id'] = question_table_object_data['qp_set_id']
-        question_paper_data['subject'] = exam_scheduling_object.class_subject
-        question_paper_data['qtype'] = "MCQ"
-      
-
-        choice_data_dic = []
-        for ch_img_list, ch_id_list in zip(choice_image_list, choice_id_list):
-            options = []
-            for img, id in zip(ch_img_list, ch_id_list):
-                image_api = {}
-                image_api['choice_id'] = id
-                image_api['choice_image'] = img
-                options.append(image_api)
-            choice_data_dic.append(options)
-
-
-        question_data_dic = []
-        for q_id, q_img, op, correct_ch in zip(question_id_list,question_image_list, choice_data_dic, correct_choice_list):
-            tmp = {}
-            tmp['qid'] = q_id
-            tmp['qimage'] = q_img
-            tmp['no_of_choices'] = no_of_choices
-            tmp['q_choices'] = op
-            tmp['correct_choice'] = correct_ch
-            question_data_dic.append(tmp)
-
-        question_paper_data['qpShuffle'] = question_id_list
-        question_paper_data['questions'] = question_data_dic
     
-        exam_meta_object_data.update(question_paper_data)        
-        configure_meta_data.update(exam_meta_object_data)
+        qpset_filter = {
+            'event_id': request_data['event_id'],
+            'qp_set_id': event_attendance_obj.qp_set
+        }
 
+        exam_filter = {
+            "event_id": request_data['event_id']
+        }
+
+        exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_filter)
+        print('------------------',len(exam_meta_object_edit))
+
+        if len(exam_meta_object_edit) == 0:
+            return Response({'status': 200, 'message': 'Event is not present.'})
+
+        exam_meta_data = []
+
+        for exam_data in exam_meta_object_edit:
+            tmp_exam_dict = model_to_dict(exam_data)
+            try:
+                del tmp_exam_dict['qp_set_list']
+            except KeyError:
+                pass
+            
+            tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
+            tmp_exam_dict['exam_duration'] = 50 # Fetch seconds
+            tmp_exam_dict['user'] = request.user.username
+            exam_meta_data.append(tmp_exam_dict)
+    
+        qp_sets_object_edit = models.QpSet.objects.filter(**qpset_filter)
+
+        qp_sets_object_edit = models.QpSet.objects.filter(**qpset_filter)
+        qp_set_data = []
+        for qp_data in qp_sets_object_edit:
+            qp_set_data.append(model_to_dict(qp_data))
+    
+        qid_list = eval(qp_set_data[0]['qid_list'])
+
+        qp_base64_list = []
+        qp_base64_list_object_edit = models.Question.objects.filter(qid__in=qid_list)
+        for qp_data in qp_base64_list_object_edit:
+            qp_base64_list.append(model_to_dict(qp_data))
+
+
+        choice_base64_list = []
+        for qid in qid_list:
+            filter = {
+                "qid": qid
+            }
+
+            choice_base64_list_object_edit = models.Choice.objects.filter(**filter)
+            choice_base64_list_object = []
+            for ch_data in choice_base64_list_object_edit:
+                tmp_dict_data = model_to_dict(ch_data)
+                # del tmp_dict_data['qid']
+                choice_base64_list_object.append(tmp_dict_data)
+
+            choice_base64_list.append(choice_base64_list_object)
+
+
+
+        questions_data_list =[]
+        for qp_img in qp_base64_list:
+            for ch_img in choice_base64_list:
+                tmp_ch_dict = {}
+                if qp_img['qid'] == ch_img[0]['qid']:
+                    tmp_ch_dict['q_choices'] = ch_img
+                    qp_img.update(tmp_ch_dict)
+        
+            questions_data_list.append(qp_img)
+
+        
 
         get_ans_api = []
-        for q_id in question_id_list:
+        for q_id in qid_list:
             tmp = {}
             tmp['qid'] = q_id
             #tmp['review'] = ""
             #tmp['ans'] = ""
-            tmp['review'], tmp['ans'] = get_answers(request.user,q_id,question_paper_data['question_paper_id'],data['event_id'])
+            tmp['review'], tmp['ans'] = get_answers(request.user,q_id,event_attendance_obj.qp_set,request_data['event_id'])
 
             get_ans_api.append(tmp)
 
-        configure_meta_data['ans'] = get_ans_api
-        configure_meta_data['user'] = request.user.username
-        configure_meta_data['exam_duration'] = 20
-        configure_meta_data['show_result'] = True
-        return Response(configure_meta_data)
+
+
+
+        configure_qp_data = exam_meta_data[0]
+        configure_qp_data['qp_set_id'] = event_attendance_obj.qp_set
+        configure_qp_data['q_ids'] = qid_list
+        configure_qp_data['questions'] = questions_data_list
+        configure_qp_data['ans'] = get_ans_api
+        
+
+
+
+        return Response(configure_qp_data)
+    
 
 class store_event(APIView):
     if settings.AUTH_ENABLE:
@@ -937,157 +949,195 @@ class store_event(APIView):
             print(f'Exception raised while store event data object throught API : {e}')
             return Response({'status':'false','message':f'Exception raised while store event data object throught API : {e}'})
 
-
-class meta_data(APIView):
+class MetaData(APIView):
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
     def post(self,request,*args, **kwargs):
         try :
-            with open('exammgt/media/meta.json', 'r') as f:
-                meta = json.load(f)
-
-            with open('exammgt/media/papers.json', 'r') as f:
-                paper_data = json.load(f)
             
-            #user_id = request.user.id
-            user_id = request.user.id
-
-
-            exam_meta_data = {} 
-            exam_meta_data['user'] = user_id           
-            exam_meta_data['event_id'] = meta.get('event_id')
-            exam_meta_data['subject_id'] = 155
-            exam_meta_data['stream'] = 'None'
-            exam_meta_data['no_of_questions'] = paper_data.get('no_of_question')
-            exam_meta_data['medium'] = "English"
-            exam_meta_data['event_type'] = paper_data.get('qtype')
-            exam_meta_data['exam_duration'] = paper_data.get('duraion')
-
-
-            question_imgge_list = []
-            correct_choice_list = []
-            question_id_list = []
-            choice_image_list = []
-            choice_id_list = []
-            for api_data in paper_data.get('questions'):
-                question_imgge_list.append(api_data.get('qimage'))
-                question_id_list.append(api_data.get('qid'))
-                correct_choice_list.append(api_data.get('correct_choice'))
-
-                tmp = api_data.get('q_choices')
-
-                choice_image = []
-                choice_id = []
-                for i in tmp:
-                    choice_image.append(i.get('choice_image'))
-                    choice_id.append(i.get('choice_id'))
-                
-                choice_image_list.append(choice_image)
-                choice_id_list.append(choice_id)
-
-
-            question_tbale_data = {}  
-            question_tbale_data['user'] = user_id        
-            question_tbale_data['qp_set_id'] = paper_data.get('question_paper_id')
-            question_tbale_data['question_image'] = str(question_imgge_list)
-            question_tbale_data['question_id_list'] = str(question_id_list)
-            question_tbale_data['no_of_choices'] = paper_data.get('questions')[0].get('no_of_choices')
-            question_tbale_data['correct_choice'] = str(correct_choice_list)
-            question_tbale_data['mark'] = 'Yes'
-            question_tbale_data['complexity'] = 'Easy'
-
+            SERVER_IP = "10.184.36.20:1600"
+            reqUrl = "http://" + SERVER_IP + "/paper/qpdownload"
             
-           
-            choice_table_data = {}       
-            choice_table_data['user'] = user_id
-            choice_table_data['qp_set_id'] = paper_data.get('question_paper_id')
-            choice_table_data['choice_id'] = str(choice_id_list)
-            choice_table_data['choice_image'] = str(choice_image_list)
+            set1 = "[2026, 2027, 2024, 2030, 2029, 2022, 2025, 2023, 2021, 2028]"
+            set2 = "[2730, 2731, 2022, 2764, 2029, 2028, 2023, 2727, 2762, 2725]"
+            set3 = "[2730, 2731, 2763, 2764, 2030, 2729, 2728, 2727, 2762, 1455]"
+            temp_question_id_list_list = []
+            temp_question_id_list_list.append(set1)
+            temp_question_id_list_list.append(set2)
+            temp_question_id_list_list.append(set3)
 
-         
-
-            meta_serialized_data = serializers.exam_meta_data_serializer(data=exam_meta_data,many=False)
-            
-            question_meta_data =  {}
-            question_meta_data['user'] = user_id
-            question_meta_data.update(meta)
-
-
-            question_meta_serialized_data = serializers.question_meta_serializer(data=question_meta_data,many=False)
-            question_tbale_serialized_data = serializers.question_table_serializer(data=question_tbale_data,many=False)
-            choice_table_serialized_data = serializers.choice_table_serializer(data=choice_table_data,many=False)
-            
-
-            question_paper_table_data = {}       
-            question_paper_table_data['user'] = user_id
-            question_paper_table_data['qp_set_id'] = paper_data.get('question_paper_id')
-            question_paper_table_data['question_id'] = 11241
-            question_paper_table_data['question_order_id'] = 3433
+            temp_pq_set_id_list = [1201, 1202, 1203]
         
-            question_paper_table_serialized_data = serializers.question_paper_table_serializer(data=question_paper_table_data,many=False)
+
+            qps_set_list = []
+            for i, j in zip(temp_pq_set_id_list, temp_question_id_list_list):
+                tmp = {}
+                tmp['qp_set_id'] = i
+                tmp['question_id_list'] = j
+                qps_set_list.append(tmp)
 
 
-            exam_meta_data.update(question_meta_data)
-            exam_meta_data.update(question_tbale_data)
-            exam_meta_data.update(choice_table_data)
-            exam_meta_data.update(question_paper_table_data)
 
-            all_meta_data = exam_meta_data
+        
+            request_data = JSONParser().parse(request)
 
-            if len(all_meta_data) != 0:
+            event_meta_data = {}
+            event_meta_data['event_id'] = request_data['event_id']
+            event_meta_data['subject'] = "English"
+            event_meta_data['no_of_questions'] = 10
+            event_meta_data['duraion_mins'] = 30
+            
+            event_meta_data['qtype'] = 'MCQ'
+            event_meta_data['total_marks'] = 50
+            event_meta_data['no_of_batches'] = 3
+            event_meta_data['qshuffle'] = False
+            event_meta_data['show_submit_at_last_question'] = True
+            event_meta_data['show_summary'] = True
+            event_meta_data['show_result'] = True
+            event_meta_data['end_alert_time'] = 5
+            event_meta_data['show_instruction'] = True
+            event_meta_data['qp_set_list'] = str(temp_pq_set_id_list)
 
-                models.exam_meta_data.objects.all().delete()
-                if meta_serialized_data.is_valid():
-                    meta_serialized_data.save()
-                    #print('meta_serialized_data saved')
-                else:
-                    print(f'Error in serialization of exam meta data : {meta_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing meta data's","error":meta_serialized_data.errors})
-                
-                models.question_meta_data.objects.all().delete()
-                if question_meta_serialized_data.is_valid():
-                    question_meta_serialized_data.save()
+     
+      
+            exam_meta_filter  = {
+                "event_id" : request_data['event_id']
+             
+                }
+            exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
+            if len(exam_meta_object_edit) == 0:
+                serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
+                if serialized_exam_meta.is_valid():
+                    serialized_exam_meta.save()
                     
-                    #print('question_meta_serialized_data save')
                 else:
-                    print(f'Error in serialization of question meta data : {question_meta_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing question_meta_serialized_data","error":question_meta_serialized_data.errors})
-            
-                
-                models.question_table.objects.all().delete()
-                if question_tbale_serialized_data.is_valid():
-                    question_tbale_serialized_data.save()
-                    #print('question_tbale_serialized_data save')
-                
-                else:
-                    print(f'Error in serialization of question_table data : {question_tbale_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing question_tbale_serialized_data","error":question_tbale_serialized_data.errors})
-            
-                models.choice_table.objects.all().delete()
-                if choice_table_serialized_data.is_valid():
-                    choice_table_serialized_data.save()
-                    #print('choice_table_serialized_data save')
+                    print(f'Error in serialization of Exam meta data : {serialized_exam_meta.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing Exam Meta data","error":serialized_exam_meta.errors})
 
-                else:
-                    print(f'Error in serialization of choice_table data : {choice_table_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing choice_table_serialized_data","error":choice_table_serialized_data.errors})
-            
-                models.question_paper_table.objects.all().delete()
-                if question_paper_table_serialized_data.is_valid():
-                    question_paper_table_serialized_data.save()
-                    #print('question_paper_table_serialized_data save')
-                else:
-                    print(f'Error in serialization of question_paper data : {question_paper_table_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing question_paper_table_serialized_data","error":question_paper_table_serialized_data.errors})
-            
-                
-                return Response(all_meta_data) 
-                
             else:
-                print(f'Error in serialization of meta data : {meta_serialized_data.errors}')
-                return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing meta data's","error":meta_serialized_data.errors})
+                print('\n')
+                print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                print('Event ID is already present into school local database....')
+                print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+
             
+            qp_set_id___list = []
+            question_id___list = []
+            for qs_data in qps_set_list:
+                qp_set_id___list.append(qs_data['qp_set_id'])
+                question_id___list.append(qs_data['question_id_list'])
+            
+            
+            
+            qpdownload_list = []
+            for qp_set_id, qp_id in zip(qp_set_id___list, question_id___list):
+
+                payload = json.dumps({
+                    "qp_set_id": qp_set_id ,
+                    "question_id_list" : qp_id
+                })
+       
+                qpdownload_response = requests.request("POST", reqUrl, data=payload)
+                qpdownload_list.append(qpdownload_response.json())
+        
+
+
+            event_meta_data['qp_set_data'] = qpdownload_list
+
+            with open('exammgt/media/get_meta_data_' + str(request_data['event_id']) + '.json', 'w') as file:
+                json.dump(event_meta_data, file)
+
+
+
+          
+            for qp_data, qp_id in zip(event_meta_data['qp_set_data'], eval(event_meta_data['qp_set_list'])):
+                tmp_qp_sets_data = {}
+                tmp_qp_sets_data['event_id'] = event_meta_data['event_id']
+                tmp_qp_sets_data['qp_set_id'] = qp_id
+                tmp_qp_sets_data['qid_list'] = str(qp_data['q_ids'])
+
+                qp_sets_filter  = {
+                                "qp_set_id" : qp_id
+                            }
+
+                qp_set_object_edit = models.QpSet.objects.filter(**qp_sets_filter)
+                if len(qp_set_object_edit) == 0:
+                    serialized_qp_sets = serializers.QpSetsSerializer(data=tmp_qp_sets_data,many=False)
+                    if serialized_qp_sets.is_valid():
+                        serialized_qp_sets.save()
+                        
+                    else:
+                        print(f'Error in serialization of QP Sets : {serialized_qp_sets.errors}')
+                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing QP Sets","error":serialized_qp_sets.errors})
+                else:
+                    print('\n')
+                    print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                    print('QP SET ID is already present into school local database....')
+                    print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+
+
+            for qp_data in event_meta_data['qp_set_data']:
+                for qp in qp_data['questions']:
+                    tmp_questions_data = {}
+                    tmp_questions_data['qid'] = qp['qid']
+                    tmp_questions_data['qimage'] = qp['qimage']
+                    tmp_questions_data['no_of_choices'] = qp['no_of_choices']
+                    tmp_questions_data['correct_choice'] = qp['correct_choice']
+                    
+                    questions_filter  = {
+                                "qid" : qp['qid']
+                            }
+
+                    questions_object_edit = models.Question.objects.filter(**questions_filter)
+                    if len(questions_object_edit) == 0:
+                        serialized_questions = serializers.QuestionsSerializer(data=tmp_questions_data,many=False)
+                        if serialized_questions.is_valid():
+                            serialized_questions.save()
+                            
+                        else:
+                            print(f'Error in serialization of questions : {serialized_questions.errors}')
+                            return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing questions","error":serialized_questions.errors})
+                    else:
+                        print('\n')
+                        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                        print('Question ID is already present into school local database....')
+                        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                    
+
+
+            for qp_data in event_meta_data['qp_set_data']:
+                for ch in qp_data['questions']:
+                    for ch_img in ch['q_choices']:
+                        tmp_choice_data = {}
+                        tmp_choice_data['qid'] = ch['qid']
+                        tmp_choice_data['cid'] = ch_img['choice_id']
+                        tmp_choice_data['cimage'] = ch_img['choice_image']
+
+                        choice_filter  = {
+                                # "qid" : qp['qid'],
+                                "cid" : ch_img['choice_id']
+                            }
+
+                        choice_object_edit = models.Choice.objects.filter(**choice_filter)
+                        if len(choice_object_edit) == 0:
+                            serialized_choice= serializers.ChoicesSerializer(data=tmp_choice_data,many=False)
+                            if serialized_choice.is_valid():
+                                serialized_choice.save()
+                                
+                            else:
+                                print(f'Error in serialization of choices : {serialized_choice.errors}')
+                                return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing choices","error":serialized_choice.errors})
+                        else:
+                            print('\n')
+                            print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                            print('Question ID and Choice ID is already present into school local database....')
+                            print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                        
+                        
+
+
+            return Response(event_meta_data)
 
         except Exception as e:
-            print(f'Exception raised while creating a candidate question meta data object throught API : {e}')
-            return
+            print(f'Exception raised while creating a meta data object throught API : {e}')
+            return Response({"status":False,"message": f'{e}'})
