@@ -1,4 +1,4 @@
-from secrets import choice
+
 from django.shortcuts import render
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
