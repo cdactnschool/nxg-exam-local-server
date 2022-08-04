@@ -584,14 +584,14 @@ class update_remtime(APIView):
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
 
-            attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_id = request.user.id)
+            attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_id = request.user)
 
-            if len(attendance_object_check) == 0:
+            if attendance_object_check:
                 attendance_object_check = attendance_object_check[0]
                 attendance_object_check.remaining_time = data['rem_time']
                 attendance_object_check.save()
 
-                return Response({'message':'Remaining time updated successfully'})
+                return Response({'message':'Remaining time updated successfully', 'status': True})
             else:
                 return Response({'message':'No entry in the table availble for update'})
             #rem_time
