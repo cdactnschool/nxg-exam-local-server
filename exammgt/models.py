@@ -39,7 +39,7 @@ class ExamMeta(models.Model):
     event_id                            = models.BigIntegerField(primary_key=True)
     subject                             = models.CharField(max_length=1024)
     no_of_questions                     = models.IntegerField()
-    duraion_mins                        = models.IntegerField()
+    duration_mins                        = models.IntegerField()
     qtype                               = models.CharField(max_length=1024)
     total_marks                         = models.IntegerField()
     qshuffle                            = models.BooleanField(default=False)
@@ -52,7 +52,7 @@ class ExamMeta(models.Model):
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return "{0}-{1}-{2}-{3}".format(self.duraion_mins, self.event_id, self.subject, self.created_on)
+        return "{0}-{1}-{2}".format(self.event_id, self.subject, self.created_on)
 
 class QpSet(models.Model):
     event_id                            = models.BigIntegerField()

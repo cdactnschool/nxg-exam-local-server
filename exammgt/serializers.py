@@ -43,6 +43,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     event_status            = serializers.SerializerMethodField('get_event_status')
     event_completion_status = serializers.SerializerMethodField('get_event_completion_status')
     exam_scores             = serializers.SerializerMethodField('get_exam_scores')
+    meta_status             = serializers.SerializerMethodField('get_meta_status')
 
     def create(self, validated_data):
         return models_scheduler.scheduling.objects.create(**validated_data)
@@ -55,6 +56,11 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
 
         '''
         Return if Exam is started/not completed/Completed
+
+        0 -> Exam not Started
+        1 -> Exam not Completed
+        2 -> Exam Completed
+
         '''
 
         user_detail = self.context.get("user")
@@ -84,6 +90,11 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     def get_event_status(self,obj):
         '''
         Return if Event is live/old/upcoming
+
+        0 -> Live
+        1 -> Upcoming
+        2 -> Old
+
         '''
 
         if obj.event_startdate <= datetime.datetime.now().date() <= obj.event_enddate:
@@ -137,6 +148,22 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
             return '-'
 
         return attendance_obj.total_marks
+    
+    def get_meta_status(self,obj):
+        '''
+        Check if meta data is set for the event
+
+        0 -> Meta data not set
+        1 -> Meta data set
+
+        '''
+        meta_status_query = models.ExamMeta.objects.filter(event_id = obj.schedule_id)
+
+        if len(meta_status_query) == 0:
+            return 0
+        else:
+            return 1
+
 
 class exam_event_serializer(serializers.ModelSerializer):
     def create(self, validated_data):

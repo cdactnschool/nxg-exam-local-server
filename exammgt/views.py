@@ -575,6 +575,8 @@ class update_remtime(APIView):
     ````````````
     event_id <- id
     student_id <- request.user.id
+
+    rem_time <- remaining time in seconds
     
     '''
     def post(self,request,*args, **kwargs):
@@ -777,6 +779,7 @@ class GenerateQuestionPaper(APIView):
                 student_id = request.user,
                 student_username =request.user.username,
                 qp_set = random.choice(eval(question_meta_object.qp_set_list)),
+                remaining_time = question_meta_object.duration_mins * 60,  # return duration in seconds
                 start_time = datetime.datetime.now()
             )
             event_attendance_obj.save()
@@ -808,7 +811,7 @@ class GenerateQuestionPaper(APIView):
                 pass
             
             tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
-            tmp_exam_dict['exam_duration'] = 50 # Fetch seconds
+            tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
             tmp_exam_dict['user'] = request.user.username
             exam_meta_data.append(tmp_exam_dict)
     
@@ -959,8 +962,14 @@ class store_event(APIView):
 class MetaData(APIView):
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    
     def post(self,request,*args, **kwargs):
         try :
+            
+            #request_data = JSONParser().parse(request)
+            request_data = {}
+            request_data['event_id'] = 2349
+            
             
             SERVER_IP = "10.184.36.20:1600"
             reqUrl = "http://" + SERVER_IP + "/paper/qpdownload"
@@ -986,13 +995,12 @@ class MetaData(APIView):
 
 
         
-            request_data = JSONParser().parse(request)
 
             event_meta_data = {}
             event_meta_data['event_id'] = request_data['event_id']
             event_meta_data['subject'] = "English"
             event_meta_data['no_of_questions'] = 10
-            event_meta_data['duraion_mins'] = 30
+            event_meta_data['duration_mins'] = 30
             
             event_meta_data['qtype'] = 'MCQ'
             event_meta_data['total_marks'] = 50
@@ -1005,8 +1013,9 @@ class MetaData(APIView):
             event_meta_data['show_instruction'] = True
             event_meta_data['qp_set_list'] = str(temp_pq_set_id_list)
 
-     
-      
+
+
+            # Push the exam_meta_object_edit
             exam_meta_filter  = {
                 "event_id" : request_data['event_id']
              
@@ -1054,7 +1063,7 @@ class MetaData(APIView):
             with open('exammgt/media/get_meta_data_' + str(request_data['event_id']) + '.json', 'w') as file:
                 json.dump(event_meta_data, file)
 
-
+            ######
 
           
             for qp_data, qp_id in zip(event_meta_data['qp_set_data'], eval(event_meta_data['qp_set_list'])):
