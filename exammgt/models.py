@@ -1,3 +1,4 @@
+from configparser import SectionProxy
 import random
 from django.db import models
 from django.contrib.auth.models import User
@@ -21,6 +22,7 @@ class Profile(models.Model):
 
     user        = models.OneToOneField(User, on_delete=models.CASCADE)
     name_text   = models.CharField(max_length=30,null=True,blank=True)
+    section     = models.CharField(max_length=30,null=True,blank=True)
     student_class = models.IntegerField(null=True,blank=True)
     usertype    = models.CharField(max_length=30,null=True,blank=True)
     udise_code  = models.CharField(max_length=30,null=True,blank=True)

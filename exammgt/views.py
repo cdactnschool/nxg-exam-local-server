@@ -54,7 +54,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add extra responses here
         data['username']    = self.user.username
         data['groups']      = self.user.groups.values_list('name', flat=True)[0]
-        data['name_text']   =self.user.profile.name_text
+        data['name_text']   = self.user.profile.name_text
+        data['section']     = self.user.profile.section
         data['student_class']=self.user.profile.student_class
         data['usertype']    = self.user.profile.usertype
         data['priority']    = self.user.profile.priority
@@ -121,6 +122,7 @@ auth_fields = {
         'school_field_foreign_ref' : 'id',
         'school_key_ref_master':'school_id',
         'name_field_master':'name',
+        'section_field_master':'class_section',
         'student_class': 'class_studying_id',
     },
     'school':{
@@ -184,6 +186,9 @@ def create_local_user(request,data):
     
     if 'name_text' in data:
         profile_instance.name_text      = data['name_text']
+    
+    if 'section' in data:
+        profile_instance.section        = data['section']
     
     if 'user_type' in data:
         profile_instance.usertype       = data['user_type']
@@ -378,7 +383,7 @@ class db_auth(APIView):
 
                 # Fetch school id
 
-                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
+                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
                 #print('school id fetch query',query)
 
                 mycursor.execute(query)
@@ -391,6 +396,7 @@ class db_auth(APIView):
                 user_detail['school_id'] = school_id_fetch[0][0]
                 user_detail['name_text'] = school_id_fetch[0][1]
                 user_detail['student_class'] = school_id_fetch[0][2]
+                user_detail['section'] = school_id_fetch[0][3]
 
 
                 # Fetch school, district, block details
