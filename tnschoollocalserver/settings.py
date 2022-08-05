@@ -57,8 +57,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=30),
     'ROTATE_REFRESH_TOKENS': True,  #Allow user who are logged continously to extended access token time # True refresh will give new refresh token # Issue hackers can use the old refresh token to get access token
     'BLACKLIST_AFTER_ROTATION': True, # Blacklist old token -> solution for rotation refresh token
     'UPDATE_LAST_LOGIN': False,
@@ -260,6 +260,9 @@ LOGGING = {
 
 # Enable authentication for the api calls
 AUTH_ENABLE = False # Enable is_authentication in views.py file
+
+CENTRAL_SERVER_IP = '10.184.36.20:1600'
+
 
 # Remote DB names
 DB_BASEAPP_GROUP_CODE           = 'baseapp_group_code'
