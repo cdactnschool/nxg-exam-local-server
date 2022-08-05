@@ -102,16 +102,22 @@ class exam_response(models.Model):
         return "{0}-{1}-{2}".format(self.id,self.event_id,self.created_on)
 
 class event_attendance(models.Model):
-    event_id        = models.BigIntegerField()
-    student_id      = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    student_username= models.CharField(max_length=30,null=True,blank=True)
-    qp_set          = models.CharField(max_length=30,null=True,blank=True)
-    start_time      = models.DateTimeField(null=True,blank=True)
-    end_time        = models.DateTimeField(null=True,blank=True)
-    remaining_time  = models.IntegerField(null=True,blank=True)
-    total_marks     = models.FloatField(null=True,default=0)
-    json_created    = models.BooleanField(default=False)
-    sync_done       = models.BooleanField(default=False)
+    event_id            = models.BigIntegerField()
+    student_id          = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    student_username    = models.CharField(max_length=30,null=True,blank=True)
+    qp_set              = models.CharField(max_length=30,null=True,blank=True)
+    start_time          = models.DateTimeField(null=True,blank=True)
+    end_time            = models.DateTimeField(null=True,blank=True)
+    remaining_time      = models.IntegerField(null=True,blank=True)
+    total_questions     = models.IntegerField(null=True,blank=True)
+    visited_questions   = models.IntegerField(null=True,blank=True)
+    answered_questions  = models.IntegerField(null=True,blank=True)
+    reviewed_questions  = models.IntegerField(null=True,blank=True)
+    correct_answers     = models.IntegerField(null=True,blank=True)
+    wrong_answers       = models.IntegerField(null=True,blank=True)
+    total_marks         = models.FloatField(null=True,default=0)
+    json_created        = models.BooleanField(default=False)
+    sync_done           = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.event_id}-{self.student_username}-{self.qp_set}-{self.json_created}-{self.sync_done}"

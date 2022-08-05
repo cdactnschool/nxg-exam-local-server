@@ -468,14 +468,14 @@ class exam_response(APIView):
             return Response({'status':'success','message':'new entry'})
 
 
-class summary(APIView):
+def get_summary(event_id,student_id):
+
     '''
     
-    class to return the summary content
+    Function to return the summary content
 
     Return Fields
     `````````````
-
     total_questions     - Total number of questions
     not_answered        - Total questions not answered (Total number of questions - Number of visited questions)
     answered            - Total number of questions where answered field is not null
@@ -484,6 +484,50 @@ class summary(APIView):
     correct_answered    - Total number of questions which are correct (selected_choice_id == question_result)
     wrong_answered      - Total number of question which are incorrectly marked (selected_choice_id != question _result)
     marks               - Fetch from the event_attendance table
+
+    '''
+
+    try:
+        event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_id = student_id)
+
+        summary_data = {
+            'total_question':0,
+            'not_answered':0,
+            'answered':0,
+            'reviewed':0,
+            'vistedQuestion':0,
+            'correct_answered':0,
+            'wrong_answered': 0,
+            'marks':0,
+        }
+
+        if event_attendance_query:
+            event_attendance_object             = event_attendance_query[0]
+
+            summary_data['total_question']      = event_attendance_object.total_questions
+            summary_data['not_answered']        = event_attendance_object.total_questions - event_attendance_object.answered_questions
+            summary_data['answered']            = event_attendance_object.answered_questions
+            summary_data['reviewed']            = event_attendance_object.reviewed_questions
+            summary_data['vistedQuestion']      = event_attendance_object.visited_questions
+            summary_data['correct_answered']    = event_attendance_object.correct_answers
+            summary_data['wrong_answered']      = event_attendance_object.wrong_answers
+            summary_data['marks']               = event_attendance_object.total_marks
+        
+        return summary_data
+
+    except Exception as e:
+        print('Exception in the get_summary function',e)
+        return {}
+
+class summary(APIView):
+    '''
+    
+    class to return the summary content when the candidate submits the exam
+
+    input field
+    ```````````
+
+    event_id <- id or schedule_id
 
     '''
 
@@ -496,44 +540,13 @@ class summary(APIView):
         
             data = JSONParser().parse(request)
 
-            exam_response_objects = models.exam_response.objects.filter(event_id=data['event_id'],user=request.user.id)
-
-
-            summary_data = {
-                'total_question':10, # Fetch the total number of questions
-                'not_answered':0,
-                'answered':0,
-                'reviewed':0,
-                'vistedQuestion':0,
-                'correct_answered':0,
-                'wrong_answered': 0,
-                'marks':0,
-            }
-            print('No of exam reponses :',len(exam_response_objects))
-            for exam_resp in exam_response_objects:
-                summary_data['vistedQuestion'] += 1
-                #summary_data['marks'] += exam_resp.mark
-                
-                if exam_resp.review == True:
-                    summary_data['reviewed'] += 1
-
-                if exam_resp.selected_choice_id != None:
-                    summary_data['answered'] += 1
-
-                    if exam_resp.selected_choice_id == exam_resp.question_result:
-                        summary_data['correct_answered'] += 1
-                    else:
-                        summary_data['wrong_answered'] += 1    
-            
-            summary_data['not_answered'] = summary_data['total_question'] - summary_data['answered']
-
-            # Get marks from the event_attendance
-            summary_data['marks'] = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_id = request.user.id)[0].total_marks
-                
-            return Response(summary_data)
+            return Response(get_summary(data['event_id'],request.user.id))
 
         except Exception as e:
-            return Response({'status':'false','message':f'Exception occured {e}'})
+            return Response({'status':False,'message':f'Exception occured {e}'})
+
+
+
 
 class get_my_events(APIView):
 
@@ -621,16 +634,45 @@ class exam_submit(APIView):
 
         #print('Attendance object ',len(attendance_object_check))
 
+        # Fetch the total number of question from the meta data
+
         if len(attendance_object_check) != 0:
+
+
             attendance_object_check = attendance_object_check[0]
             attendance_object_check.end_time = datetime.datetime.now()
-            total_marks = 0
+            attendance_object_check.total_questions = models.ExamMeta.objects.filter(event_id = data['event_id'])[0].no_of_questions
+            total_marks         = 0
+            visited_questions   = 0
+            answered_questions  = 0
+            reviewed_questions  = 0
+            correct_answers     = 0
+            wrong_answers       = 0
             for resp_obj in models.exam_response.objects.filter(event_id=data['event_id'],user=request.user.id):
+                visited_questions += 1
+                
+                if resp_obj.selected_choice_id:
+                    answered_questions += 1
+                
+                if resp_obj.review:
+                    reviewed_questions += 1
+                
+                if resp_obj.selected_choice_id == resp_obj.question_result:
+                    correct_answers += 1
+                else:
+                    wrong_answers += 1
+
                 try:
                     total_marks += float(resp_obj.mark)
                 except Exception as e:
                     print(f'Unable to convert: {resp_obj.mark} as float; Exception : {e}')
-            attendance_object_check.total_marks = total_marks
+                
+            attendance_object_check.total_marks         = total_marks
+            attendance_object_check.visited_questions   = visited_questions
+            attendance_object_check.answered_questions  = answered_questions
+            attendance_object_check.reviewed_questions  = reviewed_questions
+            attendance_object_check.correct_answers     = correct_answers
+            attendance_object_check.wrong_answers       = wrong_answers
             
             attendance_object_check.save()
 
