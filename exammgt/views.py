@@ -1044,9 +1044,8 @@ class MetaData(APIView):
             # request_data = {}
             #request_data['event_id'] = 2349
             
-            
-            SERVER_IP = "10.184.36.20:1600"
-            reqUrl = "http://" + SERVER_IP + "/paper/qpdownload"
+            CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
+            reqUrl = "http://" + CENTRAL_SERVER_IP + "/paper/qpdownload"
             
             with open('exammgt/media/meta.json', 'r') as meta:
                 meta_data = json.load(meta)
