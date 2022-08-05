@@ -14,7 +14,7 @@ urlpatterns = [
     path('token/refresh',                   TokenRefreshView.as_view(),                 name='token_refresh'),
     path('token/verify',                    TokenVerifyView.as_view(),                  name='token_verify'),
 
-    path('load_events',                     views.store_event.as_view(),                name='event_list'), 
+    path('load_events',                     views.LoadEvent.as_view(),                name='event_list'), 
     path('meta_data',                       views.MetaData.as_view(),                  name='meta_data'), # Changes
 
     path('get-my-events',                   views.get_my_events.as_view(),              name='get-my-events'),
