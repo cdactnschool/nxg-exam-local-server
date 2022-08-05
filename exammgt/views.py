@@ -780,14 +780,12 @@ class GenerateQuestionPaper(APIView):
 
         #Add an entry in the event_attenance_check
         if len(event_attendance_check) == 0:
-            question_meta_object = model_to_dict(question_meta_object)
-        
             event_attendance_obj = models.event_attendance.objects.create(
                 event_id = request_data['event_id'],
                 student_id = request.user,
                 student_username =request.user.username,
-                qp_set = random.choice(eval(question_meta_object['qp_set_list'])),
-                remaining_time = question_meta_object['duration_mins'] * 60,  # return duration in seconds
+                qp_set = random.choice(eval(question_meta_object.qp_set_list)),
+                remaining_time = question_meta_object.duration_mins * 60,  # return duration in seconds
                 start_time = datetime.datetime.now()
             )
             event_attendance_obj.save()
