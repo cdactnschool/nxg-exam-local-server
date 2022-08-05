@@ -500,10 +500,10 @@ def get_summary(event_id,student_id):
             'wrong_answered': 0,
             'marks':0,
         }
-
         if event_attendance_query:
             event_attendance_object             = event_attendance_query[0]
 
+            print('========')
             summary_data['total_question']      = event_attendance_object.total_questions
             summary_data['not_answered']        = event_attendance_object.total_questions - event_attendance_object.answered_questions
             summary_data['answered']            = event_attendance_object.answered_questions
@@ -539,13 +539,43 @@ class summary(APIView):
         try:
         
             data = JSONParser().parse(request)
-
+            #print(data,data['event_id'])
+            #print('---------',data['event_id'],request.user.id)
             return Response(get_summary(data['event_id'],request.user.id))
 
         except Exception as e:
             return Response({'status':False,'message':f'Exception occured {e}'})
 
+class SummaryAll(APIView):
+    '''
+    class to return list of summaries
 
+    input field
+    ````````````
+
+    event_id <- id or schedule_id
+
+
+    '''
+    if settings.AUTH_ENABLE:
+        permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    
+    def post(self,request,*args, **kwargs):
+
+        try:
+            summary_list = []
+            data = JSONParser().parse(request)
+
+            for attendance_object in models.event_attendance.objects.filter(event_id=data['event_id']).exclude(end_time=None):
+                #print(attendance_object.event_id,attendance_object.student_id.id)
+                summary_consolidated = get_summary(attendance_object.event_id,attendance_object.student_id.id)
+                summary_consolidated['username'] = attendance_object.student_username
+                summary_list.append(summary_consolidated)
+            
+            return Response(summary_list)
+
+        except Exception as e:
+            return Response({'status':False,'message':f'Exception occured {e}'})
 
 
 class get_my_events(APIView):
@@ -1044,8 +1074,9 @@ class MetaData(APIView):
             # request_data = {}
             #request_data['event_id'] = 2349
             
-            CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
-            reqUrl = "http://" + CENTRAL_SERVER_IP + "/paper/qpdownload"
+            
+            SERVER_IP = "10.184.36.20:1600"
+            reqUrl = "http://" + SERVER_IP + "/paper/qpdownload"
             
             with open('exammgt/media/meta.json', 'r') as meta:
                 meta_data = json.load(meta)
