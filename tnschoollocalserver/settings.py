@@ -261,6 +261,9 @@ LOGGING = {
 # Enable authentication for the api calls
 AUTH_ENABLE = False # Enable is_authentication in views.py file
 
+CENTRAL_SERVER_IP = '10.184.36.20:1600'
+
+
 # Remote DB names
 DB_BASEAPP_GROUP_CODE           = 'baseapp_group_code'
 DB_EMIS_USERLOGIN               = 'emis_userlogin'
