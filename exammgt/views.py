@@ -840,6 +840,7 @@ class GenerateQuestionPaper(APIView):
                 
                 tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
                 tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
+                tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
                 tmp_exam_dict['user'] = request.user.username
                 exam_meta_data.append(tmp_exam_dict)
          
