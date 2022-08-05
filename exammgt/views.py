@@ -447,25 +447,28 @@ class exam_response(APIView):
                 object_edit.mark = 0
             object_edit.save()
             
-            return Response({'status':True,'message':'updated'})
+            return Response({'status': True,'message':'updated'})
         except Exception as e:
 
             print('Exception element :',e)
-            
-            filter_fields['selected_choice_id'] = None if data['ans'] == '' else data['ans']
-            filter_fields['question_result'] = data['correct_choice']
-            filter_fields['review'] = data['review']
+            try:            
+                filter_fields['selected_choice_id'] = None if data['ans'] == '' else data['ans']
+                filter_fields['question_result'] = data['correct_choice']
+                filter_fields['review'] = data['review']
 
-            # Give 1 mark for correct answer
-            print('Check for mark :',filter_fields['selected_choice_id'] == filter_fields['question_result'])
-            if filter_fields['selected_choice_id'] == filter_fields['question_result']:
-                filter_fields['mark'] = 1
-            else:
-                filter_fields['mark'] = 0
+                # Give 1 mark for correct answer
+                print('Check for mark :',filter_fields['selected_choice_id'] == filter_fields['question_result'])
+                if filter_fields['selected_choice_id'] == filter_fields['question_result']:
+                    filter_fields['mark'] = 1
+                else:
+                    filter_fields['mark'] = 0
 
-            obj = models.exam_response.objects.create(**filter_fields)
-            #print('Exception in exam_response :',e)
-            return Response({'status':'success','message':'new entry'})
+                obj = models.exam_response.objects.create(**filter_fields)
+                #print('Exception in exam_response :',e)
+                return Response({'status': True,'message': 'new entry'})
+            except Exception as e:
+                print('Exception in exam_response :',e)
+                return Response({'status': False,'message': 'Error in saving'})
 
 
 class summary(APIView):
