@@ -826,22 +826,6 @@ class GenerateQuestionPaper(APIView):
             print('Event ID and QP SET ID already exists in local school database..')
                     
             print('----------------------------------------------------------------')
-            qp_sets_object_edit = models.QpSet.objects.filter(**qpset_filter)
-            qp_set_data = []
-            for qp_data in qp_sets_object_edit:
-                qp_set_data.append(model_to_dict(qp_data))
-        
-            qid_list = qp_set_data[0]['qid_list']
-            
-            get_ans_api = []
-            for q_id in qid_list:
-                tmp = {}
-                tmp['qid'] = q_id
-                tmp['review'], tmp['ans'] = get_answers(request.user,q_id,event_attendance_obj.qp_set,request_data['event_id'])
-
-                get_ans_api.append(tmp)
-
-            question_paper_data['ans'] = get_ans_api
 
             return Response(question_paper_data)
 
@@ -863,9 +847,11 @@ class GenerateQuestionPaper(APIView):
             'event_id': request_data['event_id'],
             'qp_set_id': event_attendance_obj.qp_set
             }
-          
+    
+            print('--------------------------')
             qp_sets_object_edit = models.QpSet.objects.filter(**qpset_filter)
-            qp_set_data = []
+            qp_set_data = []  
+            print('--------------------------')
             for qp_data in qp_sets_object_edit:
                 print(qp_data)
                 qp_set_data.append(model_to_dict(qp_data))
@@ -896,7 +882,6 @@ class GenerateQuestionPaper(APIView):
                 choice_base64_list.append(choice_base64_list_object)
 
 
-
             questions_data_list =[]
             for qp_img in qp_base64_list:
                 for ch_img in choice_base64_list:
@@ -917,9 +902,6 @@ class GenerateQuestionPaper(APIView):
 
                 get_ans_api.append(tmp)
 
-
-
-
             configure_qp_data = exam_meta_data[0]
             configure_qp_data['qp_set_id'] = event_attendance_obj.qp_set
             configure_qp_data['q_ids'] = qid_list
@@ -927,14 +909,13 @@ class GenerateQuestionPaper(APIView):
             configure_qp_data['ans'] = get_ans_api
             
 
-
             with open(json_file_path , 'w') as f :
                 json.dump(configure_qp_data, f)
 
             return Response(configure_qp_data)
    
        
-class store_event(APIView):
+class LoadEvent(APIView):
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
@@ -1171,12 +1152,12 @@ class MetaData(APIView):
                 for ch_img in ch['q_choices']:
                     tmp_choice_data = {}
                     tmp_choice_data['qid'] = ch['qid']
-                    tmp_choice_data['cid'] = ch_img['choice_id']
-                    tmp_choice_data['cimage'] = ch_img['choice_image']
+                    tmp_choice_data['cid'] = ch_img['cid']
+                    tmp_choice_data['cimage'] = ch_img['cimage']
 
                     choice_filter  = {
                             # "qid" : qp['qid'],
-                            "cid" : ch_img['choice_id']
+                            "cid" : ch_img['cid']
                         }
 
                     choice_object_edit = models.Choice.objects.filter(**choice_filter)
