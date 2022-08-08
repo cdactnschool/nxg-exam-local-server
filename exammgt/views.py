@@ -17,6 +17,7 @@ import random
 
 from .import models
 from . import serializers
+from scheduler import models as SchedulerModels
 
 import itertools
 from collections import OrderedDict
@@ -471,7 +472,7 @@ class exam_response(APIView):
                 return Response({'status': False,'message': 'Error in saving'})
 
 
-def get_summary(dict_obj,event_id,student_id):
+def get_summary(event_id,student_id):
 
     '''
     
@@ -492,7 +493,7 @@ def get_summary(dict_obj,event_id,student_id):
 
     try:
         event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_id = student_id)
-        
+        dict_obj = {}
         dict_obj['total_question'] = 0
         dict_obj['not_answered'] = 0
         dict_obj['answered'] = 0
@@ -543,7 +544,7 @@ class summary(APIView):
             data = JSONParser().parse(request)
             #print(data,data['event_id'])
             #print('---------',data['event_id'],request.user.id)
-            return Response(get_summary({},data['event_id'],request.user.id))
+            return Response(get_summary(data['event_id'],request.user.id))
 
         except Exception as e:
             return Response({'status':False,'message':f'Exception occured {e}'})
@@ -570,17 +571,13 @@ class SummaryAll(APIView):
 
             for attendance_object in models.event_attendance.objects.filter(event_id=data['event_id']):
                 #print(attendance_object.event_id,attendance_object.student_id.id)
-                summary_consolidated={}
-                summary_consolidated['username'] = attendance_object.student_username
-                summary_consolidated['name'] = attendance_object.student_id.profile.name_text
-                summary_consolidated['section'] = attendance_object.student_id.profile.section
-                summary_consolidated['class'] = attendance_object.student_id.profile.student_class
                 
                 if attendance_object.end_time != None:
                 #summary_consolidated
-                    summary_consolidated = get_summary(summary_consolidated,attendance_object.event_id,attendance_object.student_id.id)
+                    summary_consolidated = get_summary(attendance_object.event_id,attendance_object.student_id.id)
                     summary_consolidated['completed'] = 1
                 else:
+                    summary_consolidated={}
                     summary_consolidated['total_question'] = '-'
                     summary_consolidated['not_answered'] = '-'
                     summary_consolidated['answered'] = '-'
@@ -591,6 +588,10 @@ class SummaryAll(APIView):
                     summary_consolidated['marks'] = '-'
                     summary_consolidated['completed'] = 0
 
+                summary_consolidated['username'] = attendance_object.student_username
+                summary_consolidated['name'] = attendance_object.student_id.profile.name_text
+                summary_consolidated['section'] = attendance_object.student_id.profile.section
+                summary_consolidated['class'] = attendance_object.student_id.profile.student_class
 
                 summary_list.append(summary_consolidated)
             
@@ -1012,68 +1013,77 @@ class GenerateQuestionPaper(APIView):
    
        
 class LoadEvent(APIView):
+    '''
+    
+    Class to fetch the event data from central  server
+
+    Input parameter
+    ```````````````
+
+    {
+        "school_id" : 30488
+    }
+
+    '''
+
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
         try :
             # school_id = 30488
-      
-            # #SERVER_IP = "10.184.36.20:12000"
-            # #reqUrl = "http://" + SERVER_IP + "/get_events"
-            # payload = {
-            #     "school_id" : school_id
-            # }
+            CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
+            reqUrl = "http://" + CENTRAL_SERVER_IP + "/scheduler/get_events"
+       
+            school_id = request.data['school_id']
+            payload = {
+                "school_id" : school_id
+            }
+            get_events_response = requests.request("POST", reqUrl, data=payload)
+            events_response_data = get_events_response.json()
 
+            print('exammgt/media/event_data_' + str(school_id) + '.json')
 
-            # print('!!!!!!!!!',request.build_absolute_uri(reverse('get_events')))
-
-            # get_events_response = requests.request("POST", request.build_absolute_uri(reverse('get_events')), data=payload)
-            # #get_events_response = request.post(request.build_absolute_uri(reverse('get_events')),data=payload)
-
-            # events_response_data = get_events_response.json()
-     
-            # with open('exammgt/media/event_data.json', 'w') as f:
-            #    json.dump(events_response_data, f)   
+            with open('exammgt/media/event_data_' + str(school_id) + '.json', 'w') as f:
+               json.dump(events_response_data, f)   
 
 
             try:
-                if os.path.isfile('exammgt/media/event_data.json'):
-                    with open('exammgt/media/event_data.json', 'r') as f:
+                if os.path.isfile('exammgt/media/event_data_' + str(school_id) + '.json'):
+                    with open('exammgt/media/event_data_' + str(school_id) + '.json', 'r') as f:
                         event_data = json.load(f)   
+                else:
+                    return Response({"status": False, "message": "json not found"})
+                # Flush old records
                 
-                event_list = event_data.get('event_list')
-                participants_data_list = event_data.get('participants_data')
-                scheduling_data_list = event_data.get('scheduling_data')
-                models_scheduler.event.objects.all().delete()
-                for event in event_list:
-                    # print(event)
-                    event_serialized_data = serializers.exam_event_serializer(data=event,many=False)
-                    if event_serialized_data.is_valid():
-                        event_serialized_data.save()
-                    else:
-                        print(f'Error in serialization of event data : {event_serialized_data.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing event data's","error":event_serialized_data.errors})
-                
-                models_scheduler.participants.objects.all().delete()
-                for par_data in participants_data_list:
-                    #print(par_data)
-                    participants_serialized_data = serializers.exam_participants_serializer(data=par_data,many=False)
-                    if participants_serialized_data.is_valid():
-                        participants_serialized_data.save()
-                    else:
-                        print(f'Error in serialization of participants data : {participants_serialized_data.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing participants data's","error":participants_serialized_data.errors})
+                SchedulerModels.event.objects.all().delete()
+                SchedulerModels.scheduling.objects.all().delete()
+                SchedulerModels.participants.objects.all().delete()
 
-                models_scheduler.scheduling.objects.all().delete()
-                for sh_event in scheduling_data_list:
-                    # print(sh_event)
-                    scheduling_serialized_data = serializers.exam_scheduling_serializer(data=sh_event, many=False)
-                    if scheduling_serialized_data.is_valid():
-                        scheduling_serialized_data.save()
-                    else:
-                        print(f'Error in serialization of scheduling data : {scheduling_serialized_data.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in scheduling participants data's","error":scheduling_serialized_data.errors})
+                # Loading event data
+                event_serialized_data = serializers.exam_event_serializer(data=event_data['event_list'],many=True)
+                if event_serialized_data.is_valid():
+                    event_serialized_data.save()
+                else:
+                    print(f'Error in serialization of evebt data : {event_serialized_data.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing event data's","error":event_serialized_data.errors})
+                
+                # Loading Scheduling data
+                scheduling_serialized_data = serializers.exam_scheduling_serializer(data = event_data['scheduling_data'],many=True)
+                if scheduling_serialized_data.is_valid():
+                    scheduling_serialized_data.save()
+                else:
+                    print(f'Error in serialization of scheduling data : {scheduling_serialized_data.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in scheduling participants data's","error":scheduling_serialized_data.errors})
+
+
+                # Loading Participants data
+                participants_serialized_data = serializers.exam_participants_serializer(data = event_data['participants_data'],many=True)
+                if participants_serialized_data.is_valid():
+                    participants_serialized_data.save()
+                else:
+                    print(f'Error in serialization of participants data : {participants_serialized_data.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing participants data's","error":participants_serialized_data.errors})
                 
                 return Response(event_data)
           

@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from . import models
 from scheduler import models as models_scheduler
+from . import views
 
 import datetime
-
+#from .views import connection
+#from sqlalchemy import create_engine
 
 def fetch_attendance_object(user_detail,event_id):
 
@@ -44,6 +46,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     event_completion_status = serializers.SerializerMethodField('get_event_completion_status')
     exam_scores             = serializers.SerializerMethodField('get_exam_scores')
     meta_status             = serializers.SerializerMethodField('get_meta_status')
+    total_candidates        = serializers.SerializerMethodField('get_total_candidates')
 
     def create(self, validated_data):
         return models_scheduler.scheduling.objects.create(**validated_data)
@@ -163,7 +166,28 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
             return 0
         else:
             return 1
+    
+    def get_total_candidates(self,obj):
+        '''
+        Fetch the total number of candidates
+        '''
+        user_detail = self.context.get("user")
 
+        if user_detail.profile.usertype == 'student':
+            return None
+        try:
+            cn = views.connection()
+            mycursor = cn.cursor()
+            query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std} ;"
+            mycursor.execute(query)
+            student_count_result = mycursor.fetchall()
+            return student_count_result[0][0]
+            
+        except Exception as e:
+            print('Exception occured in getting total candidates count :',e)
+            return None
+
+        
 
 class exam_event_serializer(serializers.ModelSerializer):
     def create(self, validated_data):
