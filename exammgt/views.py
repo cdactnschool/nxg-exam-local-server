@@ -1039,38 +1039,35 @@ class LoadEvent(APIView):
                     with open('exammgt/media/event_data.json', 'r') as f:
                         event_data = json.load(f)   
                 
-                event_list = event_data.get('event_list')
-                participants_data_list = event_data.get('participants_data')
-                scheduling_data_list = event_data.get('scheduling_data')
-                models_scheduler.event.objects.all().delete()
-                for event in event_list:
-                    # print(event)
-                    event_serialized_data = serializers.exam_event_serializer(data=event,many=False)
-                    if event_serialized_data.is_valid():
-                        event_serialized_data.save()
-                    else:
-                        print(f'Error in serialization of event data : {event_serialized_data.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing event data's","error":event_serialized_data.errors})
-                
-                models_scheduler.participants.objects.all().delete()
-                for par_data in participants_data_list:
-                    #print(par_data)
-                    participants_serialized_data = serializers.exam_participants_serializer(data=par_data,many=False)
-                    if participants_serialized_data.is_valid():
-                        participants_serialized_data.save()
-                    else:
-                        print(f'Error in serialization of participants data : {participants_serialized_data.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing participants data's","error":participants_serialized_data.errors})
+                # Flush old records
+                models.exam_event.objects.all().delete()
+                models.exam_scheduling.objects.all().delete()
+                models.exam_participants.objects.all().delete()
 
-                models_scheduler.scheduling.objects.all().delete()
-                for sh_event in scheduling_data_list:
-                    # print(sh_event)
-                    scheduling_serialized_data = serializers.exam_scheduling_serializer(data=sh_event, many=False)
-                    if scheduling_serialized_data.is_valid():
-                        scheduling_serialized_data.save()
-                    else:
-                        print(f'Error in serialization of scheduling data : {scheduling_serialized_data.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in scheduling participants data's","error":scheduling_serialized_data.errors})
+                # Loading event data
+                event_serialized_data = serializers.exam_event_serializer(data=event_data['event_list'],many=True)
+                if event_serialized_data.is_valid():
+                    event_serialized_data.save()
+                else:
+                    print(f'Error in serialization of evebt data : {event_serialized_data.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing event data's","error":event_serialized_data.errors})
+                
+                # Loading Scheduling data
+                scheduling_serialized_data = serializers.exam_scheduling_serializer(data = event_data['scheduling_data'],many=True)
+                if scheduling_serialized_data.is_valid():
+                    scheduling_serialized_data.save()
+                else:
+                    print(f'Error in serialization of scheduling data : {scheduling_serialized_data.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in scheduling participants data's","error":scheduling_serialized_data.errors})
+
+
+                # Loading Participants data
+                participants_serialized_data = serializers.exam_participants_serializer(data = event_data['participants_data'],many=True)
+                if participants_serialized_data.is_valid():
+                    participants_serialized_data.save()
+                else:
+                    print(f'Error in serialization of participants data : {participants_serialized_data.errors}')
+                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing participants data's","error":participants_serialized_data.errors})
                 
                 return Response(event_data)
           
