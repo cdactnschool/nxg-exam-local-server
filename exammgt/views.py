@@ -34,6 +34,8 @@ from django.conf import settings
 import hashlib
 import requests
 
+import pandas as pd
+import sqlite3
 
 import logging
 
@@ -1089,6 +1091,56 @@ class LoadEvent(APIView):
                 return Response({"status":"false","message":"event_data.json file not found"})
             
 
+        except Exception as e:
+            print(f'Exception raised while store event data object throught API : {e}')
+            return Response({'status':'false','message':f'Exception raised while store event data object throught API : {e}'})
+
+class LoadReg(APIView):
+    def post(self,request,*args, **kwargs):
+        try :
+            regpath = os.path.join(settings.BASE_DIR,'tn_school')
+            base_sqlite_path = 'db.sqlite3'
+
+            print('---------')
+
+            #Drop table
+            for file in os.listdir(regpath):
+                if file.endswith(".csv"):
+                    csv_full_path = os.path.join(regpath,file)
+                    table_name = os.path.basename(csv_full_path).split('.')[0]
+                    with sqlite3.connect(base_sqlite_path) as conn:
+                        c = conn.cursor()
+                        c.executescript(f"DROP TABLE IF EXISTS {table_name}")
+                    conn.commit()
+            print('Dropped old tables')
+
+            # Load schema
+            for file in os.listdir(regpath):
+                if file.endswith(".sql"):
+                    schema_path = os.path.join(regpath, file)
+                    # load schema
+                    with sqlite3.connect(base_sqlite_path) as conn:
+                        c = conn.cursor()
+                        with open(schema_path,'r') as file:
+                            content = file.read()
+                        c.executescript(content)
+                    conn.commit()
+            print('Loaded the schema')
+
+            # Load data
+            for file in os.listdir(regpath):
+                if file.endswith(".csv"):
+                    csv_full_path = os.path.join(regpath,file)
+                    table_name = os.path.basename(csv_full_path).split('.')[0]
+                    df = pd.read_csv(csv_full_path)
+                    with sqlite3.connect('db.sqlite3') as conn:
+                        c = conn.cursor()
+                        df.to_sql(table_name,conn,if_exists='replace')
+                        print('Data inserted successfully for ;',table_name)
+                        conn.commit()
+            print('Loaded the csv file')
+
+            return Response({'status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while store event data object throught API : {e}')
             return Response({'status':'false','message':f'Exception raised while store event data object throught API : {e}'})
