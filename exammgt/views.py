@@ -17,6 +17,7 @@ import random
 
 from .import models
 from . import serializers
+from scheduler import models as SchedulerModels
 
 import itertools
 from collections import OrderedDict
@@ -1009,40 +1010,52 @@ class GenerateQuestionPaper(APIView):
    
        
 class LoadEvent(APIView):
+    '''
+    
+    Class to fetch the event data from central  server
+
+    Input parameter
+    ```````````````
+
+    {
+        "school_id" : 30488
+    }
+
+    '''
+
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
         try :
             # school_id = 30488
-      
-            # #SERVER_IP = "10.184.36.20:12000"
-            # #reqUrl = "http://" + SERVER_IP + "/get_events"
-            # payload = {
-            #     "school_id" : school_id
-            # }
+            CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
+            reqUrl = "http://" + CENTRAL_SERVER_IP + "/scheduler/get_events"
+       
+            school_id = request.data['school_id']
+            payload = {
+                "school_id" : school_id
+            }
+            get_events_response = requests.request("POST", reqUrl, data=payload)
+            events_response_data = get_events_response.json()
 
+            print('exammgt/media/event_data_' + str(school_id) + '.json')
 
-            # print('!!!!!!!!!',request.build_absolute_uri(reverse('get_events')))
-
-            # get_events_response = requests.request("POST", request.build_absolute_uri(reverse('get_events')), data=payload)
-            # #get_events_response = request.post(request.build_absolute_uri(reverse('get_events')),data=payload)
-
-            # events_response_data = get_events_response.json()
-     
-            # with open('exammgt/media/event_data.json', 'w') as f:
-            #    json.dump(events_response_data, f)   
+            with open('exammgt/media/event_data_' + str(school_id) + '.json', 'w') as f:
+               json.dump(events_response_data, f)   
 
 
             try:
-                if os.path.isfile('exammgt/media/event_data.json'):
-                    with open('exammgt/media/event_data.json', 'r') as f:
+                if os.path.isfile('exammgt/media/event_data_' + str(school_id) + '.json'):
+                    with open('exammgt/media/event_data_' + str(school_id) + '.json', 'r') as f:
                         event_data = json.load(f)   
-                
+                else:
+                    return Response({"status": False, "message": "json not found"})
                 # Flush old records
-                models.exam_event.objects.all().delete()
-                models.exam_scheduling.objects.all().delete()
-                models.exam_participants.objects.all().delete()
+                
+                SchedulerModels.event.objects.all().delete()
+                SchedulerModels.scheduling.objects.all().delete()
+                SchedulerModels.participants.objects.all().delete()
 
                 # Loading event data
                 event_serialized_data = serializers.exam_event_serializer(data=event_data['event_list'],many=True)
