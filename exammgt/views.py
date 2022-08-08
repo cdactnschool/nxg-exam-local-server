@@ -468,7 +468,7 @@ class exam_response(APIView):
             return Response({'status':'success','message':'new entry'})
 
 
-def get_summary(dict_obj,event_id,student_id):
+def get_summary(event_id,student_id):
 
     '''
     
@@ -489,7 +489,7 @@ def get_summary(dict_obj,event_id,student_id):
 
     try:
         event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_id = student_id)
-        
+        dict_obj = {}
         dict_obj['total_question'] = 0
         dict_obj['not_answered'] = 0
         dict_obj['answered'] = 0
@@ -540,7 +540,7 @@ class summary(APIView):
             data = JSONParser().parse(request)
             #print(data,data['event_id'])
             #print('---------',data['event_id'],request.user.id)
-            return Response(get_summary({},data['event_id'],request.user.id))
+            return Response(get_summary(data['event_id'],request.user.id))
 
         except Exception as e:
             return Response({'status':False,'message':f'Exception occured {e}'})
@@ -567,17 +567,13 @@ class SummaryAll(APIView):
 
             for attendance_object in models.event_attendance.objects.filter(event_id=data['event_id']):
                 #print(attendance_object.event_id,attendance_object.student_id.id)
-                summary_consolidated={}
-                summary_consolidated['username'] = attendance_object.student_username
-                summary_consolidated['name'] = attendance_object.student_id.profile.name_text
-                summary_consolidated['section'] = attendance_object.student_id.profile.section
-                summary_consolidated['class'] = attendance_object.student_id.profile.student_class
                 
                 if attendance_object.end_time != None:
                 #summary_consolidated
-                    summary_consolidated = get_summary(summary_consolidated,attendance_object.event_id,attendance_object.student_id.id)
+                    summary_consolidated = get_summary(attendance_object.event_id,attendance_object.student_id.id)
                     summary_consolidated['completed'] = 1
                 else:
+                    summary_consolidated={}
                     summary_consolidated['total_question'] = '-'
                     summary_consolidated['not_answered'] = '-'
                     summary_consolidated['answered'] = '-'
@@ -588,6 +584,10 @@ class SummaryAll(APIView):
                     summary_consolidated['marks'] = '-'
                     summary_consolidated['completed'] = 0
 
+                summary_consolidated['username'] = attendance_object.student_username
+                summary_consolidated['name'] = attendance_object.student_id.profile.name_text
+                summary_consolidated['section'] = attendance_object.student_id.profile.section
+                summary_consolidated['class'] = attendance_object.student_id.profile.student_class
 
                 summary_list.append(summary_consolidated)
             
