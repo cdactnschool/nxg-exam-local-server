@@ -19,6 +19,7 @@ urlpatterns = [
     path('load-reg',                        views.LoadReg.as_view(),                    name='event_list'), 
     path('load_events',                     views.LoadEvent.as_view(),                  name='event_list'), 
     path('meta_data',                       views.MetaData.as_view(),                   name='meta_data'), # Changes
+    path('school-details',                  views.SchoolDetails.as_view(),              name='school-details'),
 
     path('get-my-events',                   views.get_my_events.as_view(),              name='get-my-events'),
     path('qpdownload',                      views.GenerateQuestionPaper.as_view(),      name='qpdownload'), # Changes

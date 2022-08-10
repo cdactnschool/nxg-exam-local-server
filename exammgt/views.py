@@ -1385,3 +1385,44 @@ class MetaData(APIView):
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
             return Response({"status":False,"message": f'{e}'})
+
+class SchoolDetails(APIView):
+    '''
+    Class to fetch the school details from the db.students_school_child_count
+    '''
+
+    def post(self,request,*args, **kwargs):
+        try:
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['dataStatus'] = False
+                data['message'] = 'Server Not reachable'
+                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
+                return Response(data)
+            
+            field_names = ['udise_code','school_id','school_name','school_type','district_id','district_name','block_id','block_name']
+
+
+            mycursor = cn.cursor()
+
+            query = f"SELECT {','.join([str(elem) for elem in field_names])} FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            print('query :',query)
+            mycursor.execute(query)
+            school_detail_response = mycursor.fetchall()
+            print('school details :',school_detail_response[0])
+            return Response({
+                'udise_code':school_detail_response[0][0],
+                'school_id':school_detail_response[0][1],
+                'school_name':school_detail_response[0][2],
+                'school_type':school_detail_response[0][3],
+                'district_id':school_detail_response[0][4],
+                'district_name':school_detail_response[0][5],
+                'block_id':school_detail_response[0][6],
+                'block_name':school_detail_response[0][7],
+            })
+
+        except Exception as e:
+            print('Exception caused while fetching school details :',e)
+            return Response({'status':False,'message':'Unable to fetch school details'})
