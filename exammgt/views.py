@@ -1138,50 +1138,56 @@ class LoadReg(APIView):
 
             # events_response_data = get_events_response.json()
 
-            # with py7zr.SevenZipFile('sample.7z', mode='r') as z:
-            #     z.extractall(path="/tmp")
+            regpath = os.path.join(file_path.split(res_fname)[0],'tn_school')
+            if os.path.isdir(regpath):
+                for f in os.listdir(regpath):
+                    os.remove(os.path.join(regpath, f))
+            
+            with py7zr.SevenZipFile(file_path, mode='r') as z:
+                z.extractall(path=file_path.split(res_fname)[0])
 
-            # regpath = os.path.join(settings.BASE_DIR,'tn_school')
-            # base_sqlite_path = 'db.sqlite3'
+            print('DB name :',settings.DATABASES['default']['NAME'])
 
-            # print('---------')
+            base_sqlite_path = settings.DATABASES['default']['NAME']
 
-            # #Drop table
-            # for file in os.listdir(regpath):
-            #     if file.endswith(".csv"):
-            #         csv_full_path = os.path.join(regpath,file)
-            #         table_name = os.path.basename(csv_full_path).split('.')[0]
-            #         with sqlite3.connect(base_sqlite_path) as conn:
-            #             c = conn.cursor()
-            #             c.executescript(f"DROP TABLE IF EXISTS {table_name}")
-            #         conn.commit()
-            # print('Dropped old tables')
+            print('---------')
 
-            # # Load schema
-            # for file in os.listdir(regpath):
-            #     if file.endswith(".sql"):
-            #         schema_path = os.path.join(regpath, file)
-            #         # load schema
-            #         with sqlite3.connect(base_sqlite_path) as conn:
-            #             c = conn.cursor()
-            #             with open(schema_path,'r') as file:
-            #                 content = file.read()
-            #             c.executescript(content)
-            #         conn.commit()
-            # print('Loaded the schema')
+            #Drop table
+            for file in os.listdir(regpath):
+                if file.endswith(".csv"):
+                    csv_full_path = os.path.join(regpath,file)
+                    table_name = os.path.basename(csv_full_path).split('.')[0]
+                    with sqlite3.connect(base_sqlite_path) as conn:
+                        c = conn.cursor()
+                        c.executescript(f"DROP TABLE IF EXISTS {table_name}")
+                    conn.commit()
+            print('Dropped old tables')
 
-            # # Load data
-            # for file in os.listdir(regpath):
-            #     if file.endswith(".csv"):
-            #         csv_full_path = os.path.join(regpath,file)
-            #         table_name = os.path.basename(csv_full_path).split('.')[0]
-            #         df = pd.read_csv(csv_full_path)
-            #         with sqlite3.connect('db.sqlite3') as conn:
-            #             c = conn.cursor()
-            #             df.to_sql(table_name,conn,if_exists='replace')
-            #             print('Data inserted successfully for ;',table_name)
-            #             conn.commit()
-            # print('Loaded the csv file')
+            # Load schema
+            for file in os.listdir(regpath):
+                if file.endswith(".sql"):
+                    schema_path = os.path.join(regpath, file)
+                    # load schema
+                    with sqlite3.connect(base_sqlite_path) as conn:
+                        c = conn.cursor()
+                        with open(schema_path,'r') as file:
+                            content = file.read()
+                        c.executescript(content)
+                    conn.commit()
+            print('Loaded the schema')
+
+            # Load data
+            for file in os.listdir(regpath):
+                if file.endswith(".csv"):
+                    csv_full_path = os.path.join(regpath,file)
+                    table_name = os.path.basename(csv_full_path).split('.')[0]
+                    df = pd.read_csv(csv_full_path)
+                    with sqlite3.connect('db.sqlite3') as conn:
+                        c = conn.cursor()
+                        df.to_sql(table_name,conn,if_exists='replace')
+                        print('Data inserted successfully for ;',table_name)
+                        conn.commit()
+            print('Loaded the csv file')
 
             return Response({'status':True,'message':'Registeration data loaded'})
         except Exception as e:
