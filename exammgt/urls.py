@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, localserver as ls
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -9,6 +9,8 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
+    path('regstatus',                       ls.ServerRegistrationStatus.as_view(),      name='server-reg-status'),
+    
     path('db_auth',                         views.db_auth.as_view(),                    name='db_auth'),
     path('token',                           views.MyTokenObtainPairView.as_view(),      name='token-obtain-pair'),
     path('token/refresh',                   TokenRefreshView.as_view(),                 name='token_refresh'),
