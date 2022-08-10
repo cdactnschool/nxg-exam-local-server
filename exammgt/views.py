@@ -1040,6 +1040,7 @@ class LoadEvent(APIView):
        
             school_id = request.data['school_id']
             payload = {
+                "username" : request.user.username,
                 "school_id" : school_id
             }
             get_events_response = requests.request("POST", reqUrl, data=payload)
@@ -1112,10 +1113,13 @@ class LoadReg(APIView):
             CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
             reqUrl = "http://" + CENTRAL_SERVER_IP + "/exammgt/registeration-data"
        
-            udise_code = request.data['udise_code']
+            udise_code = request.data['udise']
             print(udise_code)
             payload = json.dumps({
-                "udise_code" : udise_code
+                "udise_code" : request.data['udise'],
+                "name":request.data['name'],
+                "mobile_no":request.data['mobileno']
+
             })
           
             get_events_response = requests.request("POST", reqUrl, data=payload)
@@ -1125,26 +1129,41 @@ class LoadReg(APIView):
 
             print(res_fname, res_md5sum)
 
-            file_path = os.path.join(settings.MEDIA_ROOT, 'regdata', res_fname)
+            # os.system()
+
+
+            file_path = os.path.join(settings.MEDIA_ROOT, 'regdata', res_fname.strip())
+            #file_path = os.path.join(settings.MEDIA_ROOT, 'regdata', "regdata.7z")
 
             print(file_path, '-=--=--', file_path.split(res_fname)[0])
             # check the path exists to check
             # if os.path.exists(file_path.split(res_fname)[0]):
             #     os.mkdir(file_path.split(res_fname)[0])
 
-            with open(file_path,'wb') as f:
-                f.write(get_events_response.content)
+            print('status code :',get_events_response.status_code)
+            try:
+                with open(file_path,'wb') as f:
+                    f.write(get_events_response.content)
+            except Exception as e:
+                print('Exception in storing zip file :',e)
 
+            print('~~~~~~~~~~~~')
 
             # events_response_data = get_events_response.json()
 
-            regpath = os.path.join(file_path.split(res_fname)[0],'tn_school')
-            if os.path.isdir(regpath):
-                for f in os.listdir(regpath):
-                    os.remove(os.path.join(regpath, f))
+            #regpath = os.path.join(file_path.split(res_fname)[0],'tn_registeration_data')
+
+            regpath=file_path.split(res_fname)[0]
+
+            # print('--- regpath',regpath)
+            # if os.path.isdir(regpath):
+            #     for f in os.listdir(regpath):
+            #         os.remove(os.path.join(regpath, f))
             
             with py7zr.SevenZipFile(file_path, mode='r') as z:
-                z.extractall(path=file_path.split(res_fname)[0])
+                z.extractall(path=regpath)
+            
+
 
             print('DB name :',settings.DATABASES['default']['NAME'])
 
@@ -1152,10 +1171,14 @@ class LoadReg(APIView):
 
             print('---------')
 
+            print('List of file',os.listdir(regpath))
+
+            regcsvpath = os.path.join(regpath,'tn_registeration_data')
+
             #Drop table
-            for file in os.listdir(regpath):
+            for file in os.listdir(regcsvpath):
                 if file.endswith(".csv"):
-                    csv_full_path = os.path.join(regpath,file)
+                    csv_full_path = os.path.join(regcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
                     with sqlite3.connect(base_sqlite_path) as conn:
                         c = conn.cursor()
@@ -1164,9 +1187,9 @@ class LoadReg(APIView):
             print('Dropped old tables')
 
             # Load schema
-            for file in os.listdir(regpath):
+            for file in os.listdir(regcsvpath):
                 if file.endswith(".sql"):
-                    schema_path = os.path.join(regpath, file)
+                    schema_path = os.path.join(regcsvpath, file)
                     # load schema
                     with sqlite3.connect(base_sqlite_path) as conn:
                         c = conn.cursor()
@@ -1177,9 +1200,9 @@ class LoadReg(APIView):
             print('Loaded the schema')
 
             # Load data
-            for file in os.listdir(regpath):
+            for file in os.listdir(regcsvpath):
                 if file.endswith(".csv"):
-                    csv_full_path = os.path.join(regpath,file)
+                    csv_full_path = os.path.join(regcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
                     df = pd.read_csv(csv_full_path)
                     with sqlite3.connect('db.sqlite3') as conn:
@@ -1191,8 +1214,8 @@ class LoadReg(APIView):
 
             return Response({'reg_status':True,'message':'Registeration data loaded'})
         except Exception as e:
-            print(f'Exception raised while store event data object throught API : {e}')
-            return Response({'reg_status':False,'message':f'Exception raised while store event data object throught API : {e}'})
+            print(f'Exception raised while load registeration data throught API : {e}')
+            return Response({'reg_status':False,'message':f'Exception raised while load registeration data throught API : {e}'})
 
 class InitialReg(APIView):
     def post(self,request,*args, **kwargs):
@@ -1447,3 +1470,10 @@ class SchoolDetails(APIView):
         except Exception as e:
             print('Exception caused while fetching school details :',e)
             return Response({'status':False,'message':'Unable to fetch school details','school_name':''})
+
+
+def return_ack(statement):
+    '''
+    gener
+    '''
+    pass
