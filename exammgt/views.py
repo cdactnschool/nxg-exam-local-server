@@ -86,7 +86,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 def connection():
     try:
         print('=============================')
-        conn = sqlite3.connect('dbConnect/tnschool_registeration.sqlite')
+        conn = sqlite3.connect('db.sqlite3')
         return conn
     except Exception as e:
         print('connection error :',e)
@@ -1189,10 +1189,10 @@ class LoadReg(APIView):
                         conn.commit()
             print('Loaded the csv file')
 
-            return Response({'status':True,'message':'Registeration data loaded'})
+            return Response({'reg_status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while store event data object throught API : {e}')
-            return Response({'status':'false','message':f'Exception raised while store event data object throught API : {e}'})
+            return Response({'reg_status':False,'message':f'Exception raised while store event data object throught API : {e}'})
 
 class MetaData(APIView):
     if settings.AUTH_ENABLE:
@@ -1425,4 +1425,4 @@ class SchoolDetails(APIView):
 
         except Exception as e:
             print('Exception caused while fetching school details :',e)
-            return Response({'status':False,'message':'Unable to fetch school details'})
+            return Response({'status':False,'message':'Unable to fetch school details','school_name':''})
