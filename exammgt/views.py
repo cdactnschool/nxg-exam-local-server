@@ -1194,10 +1194,31 @@ class LoadReg(APIView):
             print(f'Exception raised while store event data object throught API : {e}')
             return Response({'reg_status':False,'message':f'Exception raised while store event data object throught API : {e}'})
 
+class InitialReg(APIView):
+    def post(self,request,*args, **kwargs):
+        try:
+            data = JSONParser().parse(request)
+            #data = {'udise_code':33150901903}
+
+            if 'udise_code' not in data:
+                return Response({'status':False,'message':'udise_code not provided','school_name':''})
+            
+            req_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
+
+            payload = json.dumps({"udise_code": data['udise_code']})
+
+            get_udise_response = requests.request("POST",req_url,data = payload)
+
+            return Response(get_udise_response.json())
+        
+        except Exception as e:
+            print('Exception caused during Initial Registeration :',e)
+            return Response({'status':False,'message':'Exception caused during Initial Registeration','school_name':''})
+
 class MetaData(APIView):
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
-    
+
     def post(self,request,*args, **kwargs):
         try :
             
