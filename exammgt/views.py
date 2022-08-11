@@ -300,7 +300,7 @@ class db_auth(APIView):
             auth_detail_response = mycursor.fetchall()
             
             if len(auth_detail_response) == 0:
-                return Response({'message':'No data found','status':'false'})
+                return Response({'api_status':False,'message':'No data found'})
             #print(auth_detail_response)
             print('Records matching the username @ teacher_hm',auth_detail_response)
 
@@ -323,7 +323,7 @@ class db_auth(APIView):
                 teacher_hm_master_response = mycursor.fetchall()
 
                 if len(teacher_hm_master_response) == 0:
-                    return Response({'status':'User Authenticated but no details in Master table'})
+                    return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
 
                 print('**teacher_hm_master_response',teacher_hm_master_response[0])
                 user_detail['school_id'] = teacher_hm_master_response[0][1]
@@ -361,7 +361,7 @@ class db_auth(APIView):
                     return Response(token_response)
 
             else:
-                return Response({'possible_type':possible_type,'message':'Incorrect Username/password','status':'false'})
+                return Response({'possible_type':possible_type,'message':'Incorrect Username/password','api_status':False})
 
         # student
 
@@ -379,7 +379,7 @@ class db_auth(APIView):
 
 
             if len(auth_detail_response) == 0:
-                return Response({'message':'No data found','status':'false'})
+                return Response({'message':'No data found','api_status':False})
             
             user_detail['emis_user_id'] = auth_detail_response[0][2]
             
@@ -397,7 +397,7 @@ class db_auth(APIView):
                 school_id_fetch = mycursor.fetchall()
 
                 if len(school_id_fetch) == 0:
-                    return Response({'status':'User Authenticated but no details in Master table'})
+                    return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
 
                 #print('----------',school_id_fetch[0][0])
                 user_detail['school_id'] = school_id_fetch[0][0]
@@ -418,11 +418,11 @@ class db_auth(APIView):
                 return Response(token_response)
                 #return Response({'possible_type':possible_type,'status':'Correct user'})
             else:
-                return Response({'possible_type':possible_type,'message':'Incorrect Username/password','status':'false'})
+                return Response({'possible_type':possible_type,'message':'Incorrect Username/password','api_status':False})
         
         # No authentication for department user in local
         else:
-            return Response({'message':'Incorrect Username/password','status':'false'})
+            return Response({'message':'Incorrect Username/password','api_status':False})
     
 
 class exam_response(APIView):
@@ -910,7 +910,7 @@ class GenerateQuestionPaper(APIView):
         #Save Json File Into Schhool Local Server
         file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
         json_path =  file_name + '.json'
-        FOLDER = 'exammgt/media/questions_json'
+        FOLDER = 'questions_json'
         if not os.path.exists(FOLDER):
             os.mkdir(FOLDER)
 
@@ -1008,7 +1008,8 @@ class GenerateQuestionPaper(APIView):
             configure_qp_data['questions'] = questions_data_list
             configure_qp_data['ans'] = get_ans_api
             
-
+            if not os.path.exists(MEDIA_PATH):
+                os.makedirs(MEDIA_PATH)
             with open(json_file_path , 'w') as f :
                 json.dump(configure_qp_data, f)
 
@@ -1066,7 +1067,11 @@ class LoadEvent(APIView):
                 "school_id" : school_id
             }
 
-            get_events_response = requests.request("POST", req_url, data=payload)
+            print('-------payload------',payload)
+
+
+            #get_events_response = requests.request("POST", req_url, data=payload)
+            get_events_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
 
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
@@ -1082,11 +1087,38 @@ class LoadEvent(APIView):
                 os.makedirs(eventpath)
 
             print('status code :',get_events_response.status_code)
-            try:
-                with open(file_path,'wb') as f:
-                    f.write(get_events_response.content)
-            except Exception as e:
-                print('Exception in storing events zip file :',e)
+
+
+            #filed = requests.request('GET',CMSPATH%courses[1],verify=False, stream = True )
+
+            with open(file_path,'wb') as fle:
+                for chunk in get_events_response.iter_content(chunk_size=8192):
+                    if chunk:
+                        #print('------abc--------')
+                        fle.write(chunk)
+            get_events_response.close()
+
+            print('status code :',get_events_response.status_code == 200)
+
+            if get_events_response.status_code != 200:
+                return Response({'api_status':False,'message':'Unable to load event data','error':'Status not equal to 200'})
+
+            with open(file_path,"rb") as f:
+                bytes_file = f.read() # read file as bytes_file
+                readable_hash = hashlib.md5(bytes_file).hexdigest();
+                print('~~~~~~~~~~~~~',readable_hash)
+            print(res_md5sum)
+
+            if readable_hash != res_md5sum:
+                return Response({'api_status':False,'message':'Unable to load event data','error':'mismatch in md5checksum'})
+            else:
+                print('md5checksum correct')
+
+            # try:
+            #     with open(file_path,'wb') as f:
+            #         f.write(get_events_response.content)
+            # except Exception as e:
+            #     print('Exception in storing events zip file :',e)
 
             with py7zr.SevenZipFile(file_path, mode='r') as z:
                 z.extractall(path=eventpath)
@@ -1131,17 +1163,17 @@ class LoadEvent(APIView):
                     with sqlite3.connect('db.sqlite3') as conn:
                         c = conn.cursor()
                         df.to_sql(table_name,conn,if_exists='replace')
-                        print('Data inserted successfully for ;',table_name)
+                        print('Data inserted successfully for :',table_name)
                         conn.commit()
             print('Loaded the csv file')
 
             print('Deleting all the file in ',eventpath)
             os.system(f"rm -rf {eventpath}")
 
-            return Response({'status':True,'message':'Event data loaded'})
+            return Response({'api_status':True,'message':'Event data loaded'})
         except Exception as e:
             print(f'Exception raised while loading event data : {e}')
-            return Response({'reg_status':False,'message':f'Exception raised while loading event data : {e}'})
+            return Response({'api_status':False,'message':f'Exception raised while loading event data : {e}'})
 
 class LoadReg(APIView):
 
@@ -1154,7 +1186,7 @@ class LoadReg(APIView):
             # Extration of 7zip file
 
             CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
-            reqUrl = "http://" + CENTRAL_SERVER_IP + "/exammgt/registeration-data"
+            req_url = "http://" + CENTRAL_SERVER_IP + "/exammgt/registeration-data"
        
             udise_code = request.data['udise']
             print(udise_code)
@@ -1165,10 +1197,13 @@ class LoadReg(APIView):
 
             })
           
-            get_events_response = requests.request("POST", reqUrl, data=payload)
+            # get_events_response = requests.request("POST", reqUrl, data=payload)
+            get_events_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
+
 
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
+            request_type = get_events_response.headers.get('process_str')
 
             print(res_fname, res_md5sum)
 
@@ -1187,11 +1222,34 @@ class LoadReg(APIView):
                 os.makedirs(file_path.split(res_fname)[0])
 
             print('status code :',get_events_response.status_code)
-            try:
-                with open(file_path,'wb') as f:
-                    f.write(get_events_response.content)
-            except Exception as e:
-                print('Exception in storing registeration zip file :',e)
+            # try:
+            #     with open(file_path,'wb') as f:
+            #         f.write(get_events_response.content)
+            # except Exception as e:
+            #     print('Exception in storing registeration zip file :',e)
+
+            with open(file_path,'wb') as fle:
+                for chunk in get_events_response.iter_content(chunk_size=8192):
+                    if chunk:
+                        #print('------abc--------')
+                        fle.write(chunk)
+            get_events_response.close()
+
+            print('status code :',get_events_response.status_code == 200)
+
+            if get_events_response.status_code != 200:
+                return Response({'api_status':False,'message':'Unable to load event data','error':'Status not equal to 200'})
+
+            with open(file_path,"rb") as f:
+                bytes_file = f.read() # read file as bytes_file
+                readable_hash = hashlib.md5(bytes_file).hexdigest();
+                print('~~~~~~~~~~~~~',readable_hash)
+            print(res_md5sum)
+
+            if readable_hash != res_md5sum:
+                return Response({'api_status':False,'message':'Unable to load event data','error':'mismatch in md5checksum'})
+            else:
+                print('md5checksum correct')
 
             print('~~~~~~~~~~~~')
 
@@ -1257,6 +1315,37 @@ class LoadReg(APIView):
                         print('Data inserted successfully for ;',table_name)
                         conn.commit()
             print('Loaded the csv file')
+
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['dataStatus'] = False
+                data['message'] = 'Server Not reachable'
+                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
+                return Response(data)
+            
+            mycursor = cn.cursor()
+
+            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            mycursor.execute(query)
+            school_id_response = mycursor.fetchall()
+
+            if len(school_id_response) == 0:
+                return Response({'reg_status':False,'message':'Registeration data not loaded yet'})
+
+            # send ack to central server
+
+            ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+
+            ack_payload = json.dumps({
+                "school_id" : school_id_response[0][0],
+                "request_type":request_type,
+                "remark":"COMPLETED",
+                "zip_hash":res_md5sum
+            })
+
+            requests.request("POST", ack_url, data=ack_payload)
 
             return Response({'reg_status':True,'message':'Registeration data loaded'})
         except Exception as e:
@@ -1516,10 +1605,3 @@ class SchoolDetails(APIView):
         except Exception as e:
             print('Exception caused while fetching school details :',e)
             return Response({'status':False,'message':'Unable to fetch school details','school_name':''})
-
-
-def return_ack(statement):
-    '''
-    gener
-    '''
-    pass
