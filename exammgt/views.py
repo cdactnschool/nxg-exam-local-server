@@ -1034,71 +1034,114 @@ class LoadEvent(APIView):
 
     def post(self,request,*args, **kwargs):
         try :
+            
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['dataStatus'] = False
+                data['message'] = 'Server Not reachable'
+                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
+                return Response(data)
+            
+            mycursor = cn.cursor()
+
+            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            mycursor.execute(query)
+            school_id_response = mycursor.fetchall()
+
+            if len(school_id_response) == 0:
+                return Response({'status':False,'message':'Registeration data not loaded yet'})
+
+            print('School id :',school_id_response[0][0])
+
+            
             # school_id = 30488
             CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
-            reqUrl = "http://" + CENTRAL_SERVER_IP + "/scheduler/get_events"
+            req_url = f"http://{CENTRAL_SERVER_IP}/scheduler/get_events"
        
-            school_id = request.data['school_id']
+            school_id = school_id_response[0][0]
             payload = {
-                "username" : request.user.username,
+                "username" : 'test',
                 "school_id" : school_id
             }
-            get_events_response = requests.request("POST", reqUrl, data=payload)
-            events_response_data = get_events_response.json()
 
-            print('exammgt/media/event_data_' + str(school_id) + '.json')
+            get_events_response = requests.request("POST", req_url, data=payload)
 
-            with open('exammgt/media/event_data_' + str(school_id) + '.json', 'w') as f:
-               json.dump(events_response_data, f)   
+            res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
+            res_md5sum = get_events_response.headers.get('md5sum')
 
+            print(res_fname, res_md5sum)
 
+            file_path = os.path.join(settings.MEDIA_ROOT, 'eventdata', res_fname.strip())
+            eventpath = file_path.split(res_fname)[0]
+
+            print(file_path, '-=--=--', eventpath)
+
+            if not os.path.exists(eventpath):
+                os.makedirs(eventpath)
+
+            print('status code :',get_events_response.status_code)
             try:
-                if os.path.isfile('exammgt/media/event_data_' + str(school_id) + '.json'):
-                    with open('exammgt/media/event_data_' + str(school_id) + '.json', 'r') as f:
-                        event_data = json.load(f)   
-                else:
-                    return Response({"status": False, "message": "json not found"})
-                # Flush old records
-                
-                SchedulerModels.event.objects.all().delete()
-                SchedulerModels.scheduling.objects.all().delete()
-                SchedulerModels.participants.objects.all().delete()
-
-                # Loading event data
-                event_serialized_data = serializers.exam_event_serializer(data=event_data['event_list'],many=True)
-                if event_serialized_data.is_valid():
-                    event_serialized_data.save()
-                else:
-                    print(f'Error in serialization of evebt data : {event_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing event data's","error":event_serialized_data.errors})
-                
-                # Loading Scheduling data
-                scheduling_serialized_data = serializers.exam_scheduling_serializer(data = event_data['scheduling_data'],many=True)
-                if scheduling_serialized_data.is_valid():
-                    scheduling_serialized_data.save()
-                else:
-                    print(f'Error in serialization of scheduling data : {scheduling_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in scheduling participants data's","error":scheduling_serialized_data.errors})
-
-
-                # Loading Participants data
-                participants_serialized_data = serializers.exam_participants_serializer(data = event_data['participants_data'],many=True)
-                if participants_serialized_data.is_valid():
-                    participants_serialized_data.save()
-                else:
-                    print(f'Error in serialization of participants data : {participants_serialized_data.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing participants data's","error":participants_serialized_data.errors})
-                
-                return Response(event_data)
-          
+                with open(file_path,'wb') as f:
+                    f.write(get_events_response.content)
             except Exception as e:
-                print('Exception ',e)
-                return Response({"status":"false","message":"event_data.json file not found"})
+                print('Exception in storing events zip file :',e)
+
+            with py7zr.SevenZipFile(file_path, mode='r') as z:
+                z.extractall(path=eventpath)
             
 
+
+            base_sqlite_path = settings.DATABASES['default']['NAME']
+            print('DB name :',base_sqlite_path)
+
+            eventcsvpath = os.path.join(eventpath,'tn_school_event')
+
+                        #Drop table
+            for file in os.listdir(eventcsvpath):
+                if file.endswith(".csv"):
+                    csv_full_path = os.path.join(eventcsvpath,file)
+                    table_name = os.path.basename(csv_full_path).split('.')[0]
+                    with sqlite3.connect(base_sqlite_path) as conn:
+                        c = conn.cursor()
+                        c.executescript(f"DROP TABLE IF EXISTS {table_name}")
+                    conn.commit()
+            print('Dropped old tables')
+
+            # Load schema
+            for file in os.listdir(eventcsvpath):
+                if file.endswith(".sql"):
+                    schema_path = os.path.join(eventcsvpath, file)
+                    # load schema
+                    with sqlite3.connect(base_sqlite_path) as conn:
+                        c = conn.cursor()
+                        with open(schema_path,'r') as file:
+                            content = file.read()
+                        c.executescript(content)
+                    conn.commit()
+            print('Loaded the schema')
+
+            # Load data
+            for file in os.listdir(eventcsvpath):
+                if file.endswith(".csv"):
+                    csv_full_path = os.path.join(eventcsvpath,file)
+                    table_name = os.path.basename(csv_full_path).split('.')[0]
+                    df = pd.read_csv(csv_full_path)
+                    with sqlite3.connect('db.sqlite3') as conn:
+                        c = conn.cursor()
+                        df.to_sql(table_name,conn,if_exists='replace')
+                        print('Data inserted successfully for ;',table_name)
+                        conn.commit()
+            print('Loaded the csv file')
+
+            print('Deleting all the file in ',eventpath)
+            os.system(f"rm -rf {eventpath}")
+
+            return Response({'status':True,'message':'Event data loaded'})
         except Exception as e:
-            print(f'Exception raised while store event data object throught API : {e}')
-            return Response({'status':'false','message':f'Exception raised while store event data object throught API : {e}'})
+            print(f'Exception raised while loading event data : {e}')
+            return Response({'reg_status':False,'message':f'Exception raised while loading event data : {e}'})
 
 class LoadReg(APIView):
 
@@ -1140,12 +1183,15 @@ class LoadReg(APIView):
             # if os.path.exists(file_path.split(res_fname)[0]):
             #     os.mkdir(file_path.split(res_fname)[0])
 
+            if not os.path.exists(file_path.split(res_fname)[0]):
+                os.makedirs(file_path.split(res_fname)[0])
+
             print('status code :',get_events_response.status_code)
             try:
                 with open(file_path,'wb') as f:
                     f.write(get_events_response.content)
             except Exception as e:
-                print('Exception in storing zip file :',e)
+                print('Exception in storing registeration zip file :',e)
 
             print('~~~~~~~~~~~~')
 
@@ -1451,7 +1497,7 @@ class SchoolDetails(APIView):
 
             mycursor = cn.cursor()
 
-            query = f"SELECT {','.join([str(elem) for elem in field_names])} FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            query = f"SELECT {','.join([str(elem) for elem in field_names])} FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
             print('query :',query)
             mycursor.execute(query)
             school_detail_response = mycursor.fetchall()

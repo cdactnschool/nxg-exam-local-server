@@ -74,8 +74,7 @@ class participants(models.Model):
 
 
 class scheduling(models.Model):
-    
-    schedule_id             = models.BigIntegerField()
+    schedule_id             = models.BigIntegerField(primary_key=True)
     event_title             = models.CharField(max_length=200)
     class_std               = models.CharField(max_length=200)
     class_section           = models.CharField(max_length=10,blank=True, null=True)
