@@ -1075,6 +1075,8 @@ class LoadEvent(APIView):
 
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
+            request_type = get_events_response.headers.get('process_str')
+
 
             print(res_fname, res_md5sum)
 
@@ -1169,6 +1171,18 @@ class LoadEvent(APIView):
 
             print('Deleting all the file in ',eventpath)
             os.system(f"rm -rf {eventpath}")
+
+            # send ack to central server
+
+            ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+
+            ack_payload = json.dumps({
+                "school_id" : school_id_response[0][0],
+                "request_type":request_type,
+                "zip_hash":res_md5sum
+            })
+
+            requests.request("POST", ack_url, data=ack_payload)
 
             return Response({'api_status':True,'message':'Event data loaded'})
         except Exception as e:
@@ -1341,7 +1355,6 @@ class LoadReg(APIView):
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
                 "request_type":request_type,
-                "remark":"COMPLETED",
                 "zip_hash":res_md5sum
             })
 
