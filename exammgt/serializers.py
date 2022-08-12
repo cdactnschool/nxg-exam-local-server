@@ -196,7 +196,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         meta_duration_query = models.ExamMeta.objects.filter(event_id = obj.schedule_id)
 
         if len(meta_duration_query) == 0:
-            return None
+            return '-'
         else:
             meta_duration_entry = meta_duration_query[0]
             # print('`````````````')

@@ -1366,6 +1366,10 @@ class LoadReg(APIView):
             return Response({'reg_status':False,'message':f'Exception raised while load registeration data throught API : {e}'})
 
 class InitialReg(APIView):
+    '''
+    Class to fetch the school information 
+    
+    '''
     def post(self,request,*args, **kwargs):
         try:
             data = JSONParser().parse(request)
@@ -1377,14 +1381,19 @@ class InitialReg(APIView):
             req_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
 
             payload = json.dumps({"udise_code": data['udise_code']})
-
-            get_udise_response = requests.request("POST",req_url,data = payload)
+            
+            try:
+                get_udise_response = requests.request("POST",req_url,data = payload)
+                if get_udise_response.status_code != 200:
+                    return Response({'api_status':False,'message':'Central server not reachable'})
+            except Exception as e:
+                return Response({'api_status':False,'message':'Central serval not reachable'})
 
             return Response(get_udise_response.json())
         
         except Exception as e:
             print('Exception caused during Initial Registeration :',e)
-            return Response({'status':False,'message':'Exception caused during Initial Registeration','school_name':''})
+            return Response({'api_status':False,'message':'Exception caused during Initial Registeration'})
 
 class MetaData(APIView):
     if settings.AUTH_ENABLE:
@@ -1392,43 +1401,84 @@ class MetaData(APIView):
 
     def post(self,request,*args, **kwargs):
         try :
+
             
-            request_data = JSONParser().parse(request)
-            # request_data = {}
+            # request_data = JSONParser().parse(request)
+            request_data = request.data
+
+            print('-------------------------')
+
             #request_data['event_id'] = 2349
+            req_url = f"http://{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
+            payload = json.dumps({
+                'event_id':request_data['event_id'],
+                'school_id':123
+            })
+
+            get_meta_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
+
+            if get_meta_response.status_code != 200:
+                return Response({'api_status':False,'message':'Unable to load exam data','error':'Status not equal to 200'})
             
+            res_fname = get_meta_response.headers.get('Content-Disposition').split('=')[1]
+            res_md5sum = get_meta_response.headers.get('md5sum')
+            request_type = get_meta_response.headers.get('process_str')
+
+
+            print(res_fname, res_md5sum)
+
+            file_path = os.path.join(settings.MEDIA_ROOT, 'examdata', res_fname.strip())
+            questionpath = file_path.split(res_fname)[0]
+
+            print(file_path, '-=--=--', questionpath)
+
+            if not os.path.exists(questionpath):
+                os.makedirs(questionpath)
+
+            with open(file_path,'wb') as fle:
+                for chunk in get_meta_response.iter_content(chunk_size=8192):
+                    if chunk:
+                        #print('------abc--------')
+                        fle.write(chunk)
+            get_meta_response.close()
+
+            with open(file_path,"rb") as f:
+                bytes_file = f.read() # read file as bytes_file
+                readable_hash = hashlib.md5(bytes_file).hexdigest();
+                print('~~~~~~~~~~~~~',readable_hash)
+            print(res_md5sum)
+
+            if readable_hash != res_md5sum:
+                return Response({'api_status':False,'message':'Unable to load exam data','error':'mismatch in md5checksum'})
+            else:
+                print('md5checksum correct')
+
+            with py7zr.SevenZipFile(file_path, mode='r') as z:
+                z.extractall(path=questionpath)
             
-            SERVER_IP = "10.184.36.20:1600"
-            reqUrl = "http://" + SERVER_IP + "/paper/qpdownload"
+
+            base_sqlite_path = settings.DATABASES['default']['NAME']
+            print('DB name :',base_sqlite_path)
+
+            json_file_path = os.path.join(questionpath,'qpdownload_json')
+
+            # request_data = {} 
             
-            with open('exammgt/media/meta.json', 'r') as meta:
-                meta_data = json.load(meta)
+            print('+++++++++++++++++++++++++++++++')
+            #exammgt/media/examdata/qpdownload_json/meta_data_1_2022_08_12_14_55_35.json
 
-            
-            iit_qp_set_list = []
-            iit_question_id_list = []
-            for meta in meta_data['qp_set_list']:
-                iit_qp_set_list.append(meta['qp_set_id'])
-                qp_list = meta['question_id_list']
-                iit_question_id_list.append(qp_list)
-            
-            qp_set_data = []
-            for qp_set, q_id in zip(iit_qp_set_list, iit_question_id_list):
-                tmp_dict_data = {}
-                tmp_dict_data['qp_set_id'] = qp_set
-                tmp_dict_data['q_ids'] = q_id
-                qp_set_data.append(tmp_dict_data)
-
-
-
-            question_id_list = list(OrderedDict.fromkeys(itertools.chain.from_iterable(iit_question_id_list)))
-            # print(iit_question_id_list)
-
-            # print(question_id_list)
-
+            print('question path',questionpath)
+            print('json file path',json_file_path)
+            for file in os.listdir(json_file_path):
+                if file.startswith('meta'):
+                    print('File :',file)
+                    print('full path :',os.path.join(json_file_path,file))
+                    with open(os.path.join(json_file_path,file), 'r') as f:
+                        meta_data = json.load(f)
+            print(meta_data)
 
             event_meta_data = {}
-            event_meta_data['event_id'] = request_data['event_id']
+            event_meta_data['event_id'] = meta_data['event_id']
             event_meta_data['subject'] = meta_data['subject']
             event_meta_data['no_of_questions'] = meta_data['no_of_questions']
             event_meta_data['duration_mins'] = meta_data['duration_mins']
@@ -1442,8 +1492,25 @@ class MetaData(APIView):
             event_meta_data['show_result'] = meta_data['show_result']
             event_meta_data['end_alert_time'] = meta_data['end_alert_time']
             event_meta_data['show_instruction'] = meta_data['show_instruction']
+
+            print('~~~~~~~~~~~~~~~~~~~')
+            print(event_meta_data)
+
+            iit_qp_set_list = []
+            iit_question_id_list = []
+            for meta in meta_data['qp_set_list']:
+                iit_qp_set_list.append(meta['qp_set_id'])
+                qp_list = meta['question_id_list']
+                iit_question_id_list.append(qp_list)
             event_meta_data['qp_set_list'] = str(iit_qp_set_list) #we need string for store into database
+            print('--------',event_meta_data)
           
+            qp_set_data = []
+            for qp_set, q_id in zip(iit_qp_set_list, iit_question_id_list):
+                tmp_dict_data = {}
+                tmp_dict_data['qp_set_id'] = qp_set
+                tmp_dict_data['q_ids'] = q_id
+                qp_set_data.append(tmp_dict_data)
 
 
             # Push the exam_meta_object_edit
@@ -1451,6 +1518,9 @@ class MetaData(APIView):
                 "event_id" : request_data['event_id']
              
                 }
+
+
+            print(exam_meta_filter)
             exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
                 serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
@@ -1468,22 +1538,28 @@ class MetaData(APIView):
                 
                 print('-----------------------------------------------------------')
 
-            
-            payload = json.dumps({
-                "question_id_list": question_id_list
-                })
 
-            qpdownload_response = requests.request("POST", reqUrl, data=payload)
-            qpdownload_list = qpdownload_response.json()
-            # print(qpdownload_list)
+            # Read the question .json -> Qpset, Question and Choices
+
+            for file in os.listdir(json_file_path):
+                if file.startswith('qpdownload'):
+                    print('File :',file)
+                    print('full path :',os.path.join(json_file_path,file))
+                    with open(os.path.join(json_file_path,file), 'r') as f:
+                        qpdownload_list = json.load(f)
+
+
+            #print('qpdownload list -------------',qpdownload_list)
+
 
             event_meta_data['qp_set_data'] = qp_set_data
             event_meta_data.update(qpdownload_list)
 
-            with open('exammgt/media/get_meta_data_' + str(request_data['event_id']) + '.json', 'w') as file:
-                json.dump(event_meta_data, file)
+        # storing of reuse
+        #     with open('exammgt/media/get_meta_data_' + str(request_data['event_id']) + '.json', 'w') as file:
+        #         json.dump(event_meta_data, file)
 
-            ######
+        #     ######
 
             for qp_data in event_meta_data['qp_set_data']:
                 tmp_qp_sets_data = {}
@@ -1577,6 +1653,10 @@ class MetaData(APIView):
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
             return Response({"status":False,"message": f'{e}'})
+
+        #     return Response({'api_status':True})
+        # except Exception as e:
+        #     return Response({'api_status':False,'exception':e})
 
 class SchoolDetails(APIView):
     '''
