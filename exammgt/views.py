@@ -1674,6 +1674,7 @@ class MetaData(APIView):
             })
 
             requests.request("POST", ack_url, data=ack_payload) 
+            event_meta_data['api_status'] = True
             return Response(event_meta_data)
 
         except Exception as e:
