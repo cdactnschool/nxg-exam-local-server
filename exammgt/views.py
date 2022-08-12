@@ -1401,8 +1401,25 @@ class MetaData(APIView):
 
     def post(self,request,*args, **kwargs):
         try :
-
             
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['dataStatus'] = False
+                data['message'] = 'Server Not reachable'
+                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
+                return Response(data)
+            
+            mycursor = cn.cursor()
+
+            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            mycursor.execute(query)
+            school_id_response = mycursor.fetchall()
+
+            if len(school_id_response) == 0:
+                return Response({'reg_status':False,'message':'Registeration data not loaded yet'})
+
             # request_data = JSONParser().parse(request)
             request_data = request.data
 
@@ -1412,7 +1429,7 @@ class MetaData(APIView):
             req_url = f"http://{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
             payload = json.dumps({
                 'event_id':request_data['event_id'],
-                'school_id':123
+                'school_id':school_id_response[0][0]
             })
 
             get_meta_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
@@ -1647,7 +1664,16 @@ class MetaData(APIView):
                         print('Question ID and Choice ID is already present into school local database..')
                         
                         print('-------------------------------------------------------------------------')
-                    
+            
+            ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+
+            ack_payload = json.dumps({
+                "school_id" : school_id_response[0][0],
+                "request_type":request_type,
+                "zip_hash":res_md5sum
+            })
+
+            requests.request("POST", ack_url, data=ack_payload) 
             return Response(event_meta_data)
 
         except Exception as e:
@@ -1697,4 +1723,4 @@ class SchoolDetails(APIView):
 
         except Exception as e:
             print('Exception caused while fetching school details :',e)
-            return Response({'status':False,'message':'Unable to fetch school details','school_name':''})
+            return Response({'api_status':False,'message':'Unable to fetch school details','school_name':''})
