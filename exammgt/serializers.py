@@ -47,6 +47,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     exam_scores             = serializers.SerializerMethodField('get_exam_scores')
     meta_status             = serializers.SerializerMethodField('get_meta_status')
     total_candidates        = serializers.SerializerMethodField('get_total_candidates')
+    duration_mins           = serializers.SerializerMethodField('get_duration_minutes')
 
     def create(self, validated_data):
         return models_scheduler.scheduling.objects.create(**validated_data)
@@ -187,6 +188,22 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
             print('Exception occured in getting total candidates count :',e)
             return None
 
+    def get_duration_minutes(self,obj):
+        '''
+        Fetch the exam duration from the ExamMeta table
+        '''
+
+        meta_duration_query = models.ExamMeta.objects.filter(event_id = obj.schedule_id)
+
+        if len(meta_duration_query) == 0:
+            return None
+        else:
+            meta_duration_entry = meta_duration_query[0]
+            # print('`````````````')
+            # print(meta_duration_query.__dict__)
+            # print('duration_mins' in meta_duration_query)
+            
+            return meta_duration_entry.duration_mins
         
 
 class exam_event_serializer(serializers.ModelSerializer):
