@@ -1538,7 +1538,7 @@ class MetaData(APIView):
             event_meta_data['show_result'] = meta_data['show_result']
             event_meta_data['end_alert_time'] = meta_data['end_alert_time']
             event_meta_data['show_instruction'] = meta_data['show_instruction']
-
+            event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
             print('~~~~~~~~~~~~~~~~~~~')
             print(event_meta_data)
 
@@ -1548,8 +1548,9 @@ class MetaData(APIView):
                 iit_qp_set_list.append(meta['qp_set_id'])
                 qp_list = meta['question_id_list']
                 iit_question_id_list.append(qp_list)
-            event_meta_data['qp_set_list'] = str(iit_qp_set_list) #we need string for store into database
-            print('--------',event_meta_data)
+
+            # event_meta_data['qp_set_list'] = str(iit_qp_set_list) #we need string for store into database
+            # print('--------',event_meta_data)
           
             qp_set_data = []
             for qp_set, q_id in zip(iit_qp_set_list, iit_question_id_list):
@@ -1557,14 +1558,14 @@ class MetaData(APIView):
                 tmp_dict_data['qp_set_id'] = qp_set
                 tmp_dict_data['q_ids'] = q_id
                 qp_set_data.append(tmp_dict_data)
-
+            
+            event_meta_data['qp_set_data'] = qp_set_data
 
             # Push the exam_meta_object_edit
             exam_meta_filter  = {
                 "event_id" : request_data['event_id']
              
                 }
-
 
             print(exam_meta_filter)
             exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
@@ -1585,7 +1586,38 @@ class MetaData(APIView):
                 print('-----------------------------------------------------------')
 
 
-            # Read the question .json -> Qpset, Question and Choices
+            for qp_data in event_meta_data['qp_set_data']:
+                    tmp_qp_sets_data = {}
+                    tmp_qp_sets_data['event_id'] = event_meta_data['event_id']
+                    tmp_qp_sets_data['qp_set_id'] = qp_data['qp_set_id']
+                    tmp_qp_sets_data['qid_list'] = str(qp_data['q_ids'])
+                    
+                
+                    qp_sets_filter  = {
+                                    "qp_set_id" : qp_data['qp_set_id']
+                                }
+                    
+                    qp_set_object_edit = models.QpSet.objects.filter(**qp_sets_filter)
+                    if len(qp_set_object_edit) == 0:
+                        serialized_qp_sets = serializers.QpSetsSerializer(data=tmp_qp_sets_data,many=False)
+                        if serialized_qp_sets.is_valid():
+                            serialized_qp_sets.save()
+                            
+                        else:
+                            print(f'Error in serialization of QP Sets : {serialized_qp_sets.errors}')
+                            return Response({"api_status":False,"message":"Incorrect data in serializing QP Sets","error":serialized_qp_sets.errors})
+                    else:
+                        print('\n')
+                        print('-----------------------------------------------------------')
+                        print('QP SET ID is already present into school local database....')
+                        
+                        print('-----------------------------------------------------------')
+
+
+
+
+
+            #Read the question .json -> Qpset, Question and Choices
 
             for file in os.listdir(json_file_path):
                 if file.startswith('qpdownload'):
@@ -1600,10 +1632,6 @@ class MetaData(APIView):
 
                     event_meta_data['qp_set_data'] = qp_set_data
                     event_meta_data.update(qpdownload_list)
-
-                # storing of reuse
-                #     with open('exammgt/media/get_meta_data_' + str(request_data['event_id']) + '.json', 'w') as file:
-                #         json.dump(event_meta_data, file)
 
                 #     ######
 
@@ -1705,7 +1733,7 @@ class MetaData(APIView):
             requests.request("POST", ack_url, data=ack_payload) 
             event_meta_data['api_status'] = True
             return Response(event_meta_data)
-
+         
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
             return Response({"api_status":False,"message":"Error in creating meta data","exception": f'{e}'})
