@@ -509,6 +509,7 @@ def get_summary(event_id,student_username):
 
     '''
 
+    
     try:
         event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_username = student_username)
         dict_obj = {}
@@ -519,6 +520,8 @@ def get_summary(event_id,student_username):
         dict_obj['vistedQuestion'] = '-'
         dict_obj['correct_answered'] = '-'
         dict_obj['wrong_answered'] = '-'
+        dict_obj['qp_set'] = '-'
+
 
         if event_attendance_query:
             event_attendance_object             = event_attendance_query[0]
@@ -531,6 +534,8 @@ def get_summary(event_id,student_username):
             dict_obj['vistedQuestion']      = event_attendance_object.visited_questions
             dict_obj['correct_answered']    = event_attendance_object.correct_answers
             dict_obj['wrong_answered']      = event_attendance_object.wrong_answers
+            dict_obj['qp_set']              = event_attendance_object.qp_set
+
         
         return dict_obj
 
