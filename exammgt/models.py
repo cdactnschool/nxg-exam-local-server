@@ -93,7 +93,6 @@ class exam_response(models.Model):
     question_id                         = models.IntegerField()
     selected_choice_id                  = models.IntegerField(null=True, blank=True)
     question_result                     = models.IntegerField(null=True,  blank=True)
-    mark                                = models.CharField(max_length=1024,blank=True,null=True)
     review                              = models.BooleanField(default=False)
     created_on                          = models.DateTimeField(auto_now = True)
 
@@ -113,7 +112,6 @@ class event_attendance(models.Model):
     reviewed_questions  = models.IntegerField(null=True,blank=True)
     correct_answers     = models.IntegerField(null=True,blank=True)
     wrong_answers       = models.IntegerField(null=True,blank=True)
-    total_marks         = models.FloatField(null=True,default=0)
     json_created        = models.BooleanField(default=False)
     sync_done           = models.BooleanField(default=False)
 

@@ -34,7 +34,7 @@ class GenerateSentJSON(APIView):
     def post(self,request,*args, **kwargs):
         
         if request.user.profile.usertype == 'student':
-            return Response ({'status':'false','message':'Student not authorized for JSON generation'})
+            return Response ({'api_status':False,'message':'Student not authorized for JSON generation'})
         
         data = JSONParser().parse(request)
         data['event_id'] = data ['id']
@@ -43,7 +43,7 @@ class GenerateSentJSON(APIView):
         event_attendances = models.event_attendance.objects.filter(event_id = data['event_id'],json_created=False).exclude(end_time=None)
 
         if len(event_attendances) == 0:
-            return Response ({'status':'true','message':'No entries left for JSON append'})
+            return Response ({'api_status':True,'message':'No entries left for JSON append'})
         
 
         folder_dir = f"cons_data/"
@@ -114,7 +114,7 @@ class GenerateSentJSON(APIView):
 
         
 
-        return Response({'status':'ok'})
+        return Response({'api_status':True,'message':'JSON file generated/updated successfully'})
 
 
 

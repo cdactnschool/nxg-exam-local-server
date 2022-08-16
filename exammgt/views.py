@@ -48,6 +48,8 @@ apilog      = logging.getLogger('apilog')
 import sqlite3
 import py7zr
 
+from django.db.models import Q
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     '''
     Customized Token Pair Serialization for generation token along with username and groups field
@@ -274,9 +276,8 @@ class db_auth(APIView):
 
         if cn == None:
             data = {}
-            data['dataStatus'] = False
+            data['api_status'] = False
             data['message'] = 'Server Not reachable'
-            data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
             return Response(data)
 
         
@@ -416,7 +417,6 @@ class db_auth(APIView):
                 print('@@@@@@@@@@@@@@@@',user_detail)
                 token_response = create_local_user(request,user_detail)
                 return Response(token_response)
-                #return Response({'possible_type':possible_type,'status':'Correct user'})
             else:
                 return Response({'possible_type':possible_type,'message':'Incorrect Username/password','api_status':False})
         
@@ -466,7 +466,7 @@ class exam_response(APIView):
                 object_edit.mark = 0
             object_edit.save()
             
-            return Response({'status': True,'message':'updated'})
+            return Response({'api_status': True,'message':'updated'})
         except Exception as e:
 
             print('Exception element :',e)
@@ -484,10 +484,10 @@ class exam_response(APIView):
 
                 obj = models.exam_response.objects.create(**filter_fields)
                 #print('Exception in exam_response :',e)
-                return Response({'status': True,'message': 'new entry'})
+                return Response({'api_status': True,'message': 'new entry'})
             except Exception as e:
                 print('Exception in exam_response :',e)
-                return Response({'status': False,'message': 'Error in saving'})
+                return Response({'api_status': False,'message': 'Error in saving'})
 
 
 def get_summary(event_id,student_username):
@@ -532,7 +532,6 @@ def get_summary(event_id,student_username):
             dict_obj['vistedQuestion']      = event_attendance_object.visited_questions
             dict_obj['correct_answered']    = event_attendance_object.correct_answers
             dict_obj['wrong_answered']      = event_attendance_object.wrong_answers
-            dict_obj['marks']               = event_attendance_object.total_marks
         
         return dict_obj
 
@@ -565,7 +564,7 @@ class summary(APIView):
             return Response(get_summary(data['event_id'],request.user.username))
 
         except Exception as e:
-            return Response({'status':False,'message':f'Exception occured {e}'})
+            return Response({'api_status':False,'message':f'Exception occured {e}'})
 
 class SummaryAll(APIView):
     '''
@@ -617,7 +616,7 @@ class SummaryAll(APIView):
 
         except Exception as e:
             print(e)
-            return Response({'status':False,'message':f'Exception occured {e}'})
+            return Response({'api_status':False,'message':f'Exception occured {e}'})
 
 
 class get_my_events(APIView):
@@ -648,13 +647,22 @@ class get_my_events(APIView):
             if request.user.profile.usertype == 'student':  # filter class for students
                 events_queryset = events_queryset.filter(class_std=request.user.profile.student_class)
 
-                # Add filters if section is available in the scheduling [TODO ]
+                
+
+                # Add filters if section is available in the scheduling todo
+
 
             events_serialized = serializers.exam_events_schedule_serializer(events_queryset,many=True,context={'user':request.user})
-            return Response(events_serialized.data)
+
+            events_serialized_data = {
+                'api_status':True,
+                'data':events_serialized.data
+            }
+
+            return Response(events_serialized_data)
 
         except Exception as e:
-            return Response({'status':'false','message':f'Error in get_my_events class {e}'})
+            return Response({'api_status':False,'message':f'Error in get_my_events class {e}'})
 
 class update_remtime(APIView):
     '''
@@ -681,12 +689,12 @@ class update_remtime(APIView):
                 attendance_object_check.remaining_time = data['rem_time']
                 attendance_object_check.save()
 
-                return Response({'message':'Remaining time updated successfully', 'status': True})
+                return Response({'message':'Remaining time updated successfully', 'api_status': True})
             else:
-                return Response({'message':'No entry in the table availble for update'})
+                return Response({'message':'No entry in the table availble for update','api_status':False})
             #rem_time
         except Exception as e:
-            return Response({'message':'No respose available','status':'false','Exception':e})
+            return Response({'message':'No respose available','api_status':False,'Exception':e})
 
 class exam_submit(APIView):
 
@@ -702,7 +710,7 @@ class exam_submit(APIView):
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
         except Exception as e:
-            return Response({'message':"event_id 'id' not passed",'status':'false','exception':e})
+            return Response({'message':"event_id 'id' not passed",'api_status':False,'exception':e})
 
         attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
@@ -716,7 +724,6 @@ class exam_submit(APIView):
             attendance_object_check = attendance_object_check[0]
             attendance_object_check.end_time = datetime.datetime.now()
             attendance_object_check.total_questions = models.ExamMeta.objects.filter(event_id = data['event_id'])[0].no_of_questions
-            total_marks         = 0
             visited_questions   = 0
             answered_questions  = 0
             reviewed_questions  = 0
@@ -736,12 +743,7 @@ class exam_submit(APIView):
                 else:
                     wrong_answers += 1
 
-                try:
-                    total_marks += float(resp_obj.mark)
-                except Exception as e:
-                    print(f'Unable to convert: {resp_obj.mark} as float; Exception : {e}')
                 
-            attendance_object_check.total_marks         = total_marks
             attendance_object_check.visited_questions   = visited_questions
             attendance_object_check.answered_questions  = answered_questions
             attendance_object_check.reviewed_questions  = reviewed_questions
@@ -750,9 +752,9 @@ class exam_submit(APIView):
             
             attendance_object_check.save()
 
-            return Response({'message' : 'Exam submitted','status':'true','total marks':total_marks})
+            return Response({'message' : 'Exam submitted','api_status':True})
         else:
-            return Response({'message': 'No reponse available','status':'false'})
+            return Response({'message': 'No reponse available','api_status':True})
 
 
 class school_exam_summary(APIView):
@@ -894,7 +896,7 @@ class GenerateQuestionPaper(APIView):
             question_meta_object = question_meta_object[0] # get the first instance
             print('question_meta_object Content',question_meta_object)
         else:
-            return Response({'message':'No question set for this student','status':'false'})
+            return Response({'message':'No question set for this student','api_status':False})
 
 
         #Add an entry in the event_attenance_check
@@ -924,7 +926,7 @@ class GenerateQuestionPaper(APIView):
         print('------------------',len(exam_meta_object_edit))
 
         if len(exam_meta_object_edit) == 0:
-            return Response({'status': 200, 'message': 'Event is not present.'})
+            return Response({'api_status': False, 'message': 'Event is not present.'})
         
         #Save Json File Into Schhool Local Server
         file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
@@ -1063,9 +1065,8 @@ class LoadEvent(APIView):
 
             if cn == None:
                 data = {}
-                data['dataStatus'] = False
+                data['api_status'] = False
                 data['message'] = 'Server Not reachable'
-                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
                 return Response(data)
             
             mycursor = cn.cursor()
@@ -1075,7 +1076,7 @@ class LoadEvent(APIView):
             school_id_response = mycursor.fetchall()
 
             if len(school_id_response) == 0:
-                return Response({'status':False,'message':'Registeration data not loaded yet'})
+                return Response({'api_status':False,'message':'Registeration data not loaded yet'})
 
             print('School id :',school_id_response[0][0])
 
@@ -1357,9 +1358,8 @@ class LoadReg(APIView):
 
             if cn == None:
                 data = {}
-                data['dataStatus'] = False
+                data['api_status'] = False
                 data['message'] = 'Server Not reachable'
-                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
                 return Response(data)
             
             mycursor = cn.cursor()
@@ -1399,7 +1399,7 @@ class InitialReg(APIView):
             #data = {'udise_code':33150901903}
 
             if 'udise_code' not in data:
-                return Response({'status':False,'message':'udise_code not provided','school_name':''})
+                return Response({'api_status':False,'message':'udise_code not provided','school_name':''})
             
             req_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
 
@@ -1429,9 +1429,8 @@ class MetaData(APIView):
 
             if cn == None:
                 data = {}
-                data['dataStatus'] = False
+                data['api_status'] = False
                 data['message'] = 'Server Not reachable'
-                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
                 return Response(data)
             
             mycursor = cn.cursor()
@@ -1441,7 +1440,7 @@ class MetaData(APIView):
             school_id_response = mycursor.fetchall()
 
             if len(school_id_response) == 0:
-                return Response({'reg_status':False,'message':'Registeration data not loaded yet'})
+                return Response({'api_status':False,'message':'Registeration data not loaded yet'})
 
             # request_data = JSONParser().parse(request)
             request_data = request.data
@@ -1573,7 +1572,7 @@ class MetaData(APIView):
                     
                 else:
                     print(f'Error in serialization of Exam meta data : {serialized_exam_meta.errors}')
-                    return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing Exam Meta data","error":serialized_exam_meta.errors})
+                    return Response({"api_status":False,"message":"Incorrect data in serializing Exam Meta data","error":serialized_exam_meta.errors})
 
             else:
                 print('\n')
@@ -1624,7 +1623,7 @@ class MetaData(APIView):
                         
                     else:
                         print(f'Error in serialization of QP Sets : {serialized_qp_sets.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing QP Sets","error":serialized_qp_sets.errors})
+                        return Response({"api_status":False,"message":"Incorrect data in serializing QP Sets","error":serialized_qp_sets.errors})
                 else:
                     print('\n')
                     print('-----------------------------------------------------------')
@@ -1653,7 +1652,7 @@ class MetaData(APIView):
                         
                     else:
                         print(f'Error in serialization of questions : {serialized_questions.errors}')
-                        return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing questions","error":serialized_questions.errors})
+                        return Response({"api_status":False,"message":"Incorrect data in serializing questions","error":serialized_questions.errors})
                 else:
                     print('\n')
                     print('-----------------------------------------------------------')
@@ -1684,7 +1683,7 @@ class MetaData(APIView):
                             
                         else:
                             print(f'Error in serialization of choices : {serialized_choice.errors}')
-                            return Response({"status":status.HTTP_400_BAD_REQUEST,"content":"Incorrect data in serializing choices","error":serialized_choice.errors})
+                            return Response({"api_status":False,"message":"Incorrect data in serializing choices","error":serialized_choice.errors})
                     else:
                         print('\n')
                         print('------------------------------------------------------------------------')
@@ -1706,7 +1705,7 @@ class MetaData(APIView):
 
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
-            return Response({"status":False,"message": f'{e}'})
+            return Response({"api_status":False,"message":"Error in creating meta data","exception": f'{e}'})
 
         #     return Response({'api_status':True})
         # except Exception as e:
@@ -1723,9 +1722,8 @@ class SchoolDetails(APIView):
 
             if cn == None:
                 data = {}
-                data['dataStatus'] = False
+                data['api_status'] = False
                 data['message'] = 'Server Not reachable'
-                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
                 return Response(data)
             
             field_names = ['udise_code','school_id','school_name','school_type','district_id','district_name','block_id','block_name']
@@ -1773,7 +1771,6 @@ class ConsSummary(APIView):
                 data = {}
                 data['api_status'] = False
                 data['message'] = 'Server Not reachable'
-                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
                 return Response(data)
             
             emisuser_student = auth_fields['student']['auth_table']

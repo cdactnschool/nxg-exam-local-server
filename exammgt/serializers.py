@@ -44,7 +44,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     exam_status             = serializers.SerializerMethodField('get_exam_status')
     event_status            = serializers.SerializerMethodField('get_event_status')
     event_completion_status = serializers.SerializerMethodField('get_event_completion_status')
-    exam_scores             = serializers.SerializerMethodField('get_exam_scores')
+    exam_correct             = serializers.SerializerMethodField('get_exam_correct')
     meta_status             = serializers.SerializerMethodField('get_meta_status')
     total_candidates        = serializers.SerializerMethodField('get_total_candidates')
     duration_mins           = serializers.SerializerMethodField('get_duration_minutes')
@@ -127,9 +127,9 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         return len(attendance_list)
 
     
-    def get_exam_scores(self,obj):
+    def get_exam_correct(self,obj):
         '''
-        Return the score of the candidate for student
+        Return the total number of correct answers of the candidate
 
         Return marks from the attendance_object
         Return '-' if Exam is not submitted
@@ -151,7 +151,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         if attendance_obj.end_time == None:
             return '-'
 
-        return attendance_obj.total_marks
+        return attendance_obj.correct_answers
     
     def get_meta_status(self,obj):
         '''
