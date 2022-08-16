@@ -459,11 +459,7 @@ class exam_response(APIView):
             object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
             object_edit.question_result = data['correct_choice']
             object_edit.review = data['review']
-            print('Check for mark :',object_edit.selected_choice_id == object_edit.question_result)
-            if object_edit.selected_choice_id == object_edit.question_result:
-                object_edit.mark = 1
-            else:
-                object_edit.mark = 0
+            
             object_edit.save()
             
             return Response({'api_status': True,'message':'updated'})
@@ -474,13 +470,6 @@ class exam_response(APIView):
                 filter_fields['selected_choice_id'] = None if data['ans'] == '' else data['ans']
                 filter_fields['question_result'] = data['correct_choice']
                 filter_fields['review'] = data['review']
-
-                # Give 1 mark for correct answer
-                print('Check for mark :',filter_fields['selected_choice_id'] == filter_fields['question_result'])
-                if filter_fields['selected_choice_id'] == filter_fields['question_result']:
-                    filter_fields['mark'] = 1
-                else:
-                    filter_fields['mark'] = 0
 
                 obj = models.exam_response.objects.create(**filter_fields)
                 #print('Exception in exam_response :',e)
