@@ -10,7 +10,7 @@ import datetime
 def fetch_attendance_object(user_detail,event_id):
 
     '''
-    Function to fetch event_attendance object for given user and event_id
+    Function to fetch event_attendance object for given username and event_id
 
 
     Returns the first entry from the filter if available 
@@ -19,7 +19,7 @@ def fetch_attendance_object(user_detail,event_id):
     '''
 
     #print('======',user_detail.profile.name_text,event_id)
-    attendance_obj_query = models.event_attendance.objects.filter(event_id=event_id,student_id=user_detail.id)
+    attendance_obj_query = models.event_attendance.objects.filter(event_id=event_id,student_username=user_detail.username)
     if len(attendance_obj_query) == 0:
         print('<---No attendance Entry found--->')
         return None
@@ -40,7 +40,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     
     '''
 
-
+    
     exam_status             = serializers.SerializerMethodField('get_exam_status')
     event_status            = serializers.SerializerMethodField('get_event_status')
     event_completion_status = serializers.SerializerMethodField('get_event_completion_status')

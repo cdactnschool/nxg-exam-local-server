@@ -88,8 +88,7 @@ class Choice(models.Model):
 
 class exam_response(models.Model):
     event_id                            = models.BigIntegerField()
-    user                                = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    #student_id                          = models.BigIntegerField()
+    student_username                    = models.IntegerField()
     qp_set_id                           = models.IntegerField()
     question_id                         = models.IntegerField()
     selected_choice_id                  = models.IntegerField(null=True, blank=True)
@@ -103,8 +102,7 @@ class exam_response(models.Model):
 
 class event_attendance(models.Model):
     event_id            = models.BigIntegerField()
-    student_id          = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    student_username    = models.CharField(max_length=30,null=True,blank=True)
+    student_username    = models.IntegerField()
     qp_set              = models.CharField(max_length=30,null=True,blank=True)
     start_time          = models.DateTimeField(null=True,blank=True)
     end_time            = models.DateTimeField(null=True,blank=True)

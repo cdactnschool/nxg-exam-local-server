@@ -15,6 +15,7 @@ urlpatterns = [
     path('token',                           views.MyTokenObtainPairView.as_view(),      name='token-obtain-pair'),
     path('token/refresh',                   TokenRefreshView.as_view(),                 name='token_refresh'),
     path('token/verify',                    TokenVerifyView.as_view(),                  name='token_verify'),
+    path('get-user-detail',                 views.GetUserDetail.as_view(),              name='GetUserDetail'),
 
     path('initial-reg',                     views.InitialReg.as_view(),                 name='initial-reg'),
     path('load-reg',                        views.LoadReg.as_view(),                    name='event_list'), 
@@ -31,4 +32,6 @@ urlpatterns = [
     path('event_summary',                   views.SummaryAll.as_view(),                 name='SummaryAll'),
     
     path('school_exam_summary',             views.school_exam_summary.as_view(),        name='school_exam_summary'),
+
+    path('cons-summary',                    views.ConsSummary.as_view(),               name='cons-summary'),
     ]

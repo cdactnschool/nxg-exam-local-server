@@ -426,12 +426,27 @@ class db_auth(APIView):
     
 
 class exam_response(APIView):
+
+    '''
+    Class to mark response of for each question per candidate
+
+    input parameters
+    ````````````````
+
+    qid <- question_id
+    qp_set_id
+    event_id
+    ans <- answer id
+    correct_choice <- id of the correct choice
+    review <- bool whether marked for review or not
+    
+    '''
     
     def post(self,request,*args, **kwargs):
         data = JSONParser().parse(request)
 
         filter_fields = {
-            'user':request.user,
+            'student_username':request.user.username,
             'question_id':data['qid'],
             'qp_set_id':data['qp_set_id'],
             'event_id':data['event_id']
@@ -475,7 +490,7 @@ class exam_response(APIView):
                 return Response({'status': False,'message': 'Error in saving'})
 
 
-def get_summary(event_id,student_id):
+def get_summary(event_id,student_username):
 
     '''
     
@@ -495,16 +510,16 @@ def get_summary(event_id,student_id):
     '''
 
     try:
-        event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_id = student_id)
+        event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_username = student_username)
         dict_obj = {}
-        dict_obj['total_question'] = 0
-        dict_obj['not_answered'] = 0
-        dict_obj['answered'] = 0
-        dict_obj['reviewed'] = 0
-        dict_obj['vistedQuestion'] = 0
-        dict_obj['correct_answered'] = 0
-        dict_obj['wrong_answered'] = 0
-        dict_obj['marks'] = 0
+        dict_obj['total_question'] = '-'
+        dict_obj['not_answered'] = '-'
+        dict_obj['answered'] = '-'
+        dict_obj['reviewed'] = '-'
+        dict_obj['vistedQuestion'] = '-'
+        dict_obj['correct_answered'] = '-'
+        dict_obj['wrong_answered'] = '-'
+        dict_obj['marks'] = '-'
 
         if event_attendance_query:
             event_attendance_object             = event_attendance_query[0]
@@ -546,8 +561,8 @@ class summary(APIView):
         
             data = JSONParser().parse(request)
             #print(data,data['event_id'])
-            #print('---------',data['event_id'],request.user.id)
-            return Response(get_summary(data['event_id'],request.user.id))
+            #print('---------',data['event_id'],request.user.username)
+            return Response(get_summary(data['event_id'],request.user.username))
 
         except Exception as e:
             return Response({'status':False,'message':f'Exception occured {e}'})
@@ -573,11 +588,11 @@ class SummaryAll(APIView):
             data = JSONParser().parse(request)
 
             for attendance_object in models.event_attendance.objects.filter(event_id=data['event_id']):
-                #print(attendance_object.event_id,attendance_object.student_id.id)
+                #print(attendance_object.event_id,attendance_object.student_username)
                 
                 if attendance_object.end_time != None:
                 #summary_consolidated
-                    summary_consolidated = get_summary(attendance_object.event_id,attendance_object.student_id.id)
+                    summary_consolidated = get_summary(attendance_object.event_id,attendance_object.student_username)
                     summary_consolidated['completed'] = 1
                 else:
                     summary_consolidated={}
@@ -592,9 +607,9 @@ class SummaryAll(APIView):
                     summary_consolidated['completed'] = 0
 
                 summary_consolidated['username'] = attendance_object.student_username
-                summary_consolidated['name'] = attendance_object.student_id.profile.name_text
-                summary_consolidated['section'] = attendance_object.student_id.profile.section
-                summary_consolidated['class'] = attendance_object.student_id.profile.student_class
+                #summary_consolidated['name'] = attendance_object.student_id.profile.name_text
+                #summary_consolidated['section'] = attendance_object.student_id.profile.section
+                #summary_consolidated['class'] = attendance_object.student_id.profile.student_class
 
                 summary_list.append(summary_consolidated)
             
@@ -623,16 +638,18 @@ class get_my_events(APIView):
             #data = JSONParser().parse(request)
 
             # Filter based on the window allowed window size
-            print('Fetch schedules between',(datetime.datetime.now().date() - datetime.timedelta(days=15)),(datetime.datetime.now().date() + datetime.timedelta(days=15)))
+            print('Fetch schedules between',(datetime.datetime.now().date() - datetime.timedelta(days=30)),(datetime.datetime.now().date() + datetime.timedelta(days=30)))
             
             events_queryset = models_scheduler.scheduling.objects.filter(
-                event_enddate__gte = (datetime.datetime.now().date() - datetime.timedelta(days=15)),    # Greater than exam end date
-                event_startdate__lte = (datetime.datetime.now().date() + datetime.timedelta(days=15))   # Lesser than exam start date
+                event_enddate__gte = (datetime.datetime.now().date() - datetime.timedelta(days=30)),    # Greater than exam end date
+                event_startdate__lte = (datetime.datetime.now().date() + datetime.timedelta(days=30))   # Lesser than exam start date
             )
 
             if request.user.profile.usertype == 'student':  # filter class for students
                 events_queryset = events_queryset.filter(class_std=request.user.profile.student_class)
-            
+
+                # Add filters if section is available in the scheduling [TODO ]
+
             events_serialized = serializers.exam_events_schedule_serializer(events_queryset,many=True,context={'user':request.user})
             return Response(events_serialized.data)
 
@@ -647,7 +664,7 @@ class update_remtime(APIView):
     Input fields
     ````````````
     event_id <- id
-    student_id <- request.user.id
+    student_id <- request.user.username
 
     rem_time <- remaining time in seconds
     
@@ -657,7 +674,7 @@ class update_remtime(APIView):
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
 
-            attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_id = request.user)
+            attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
             if attendance_object_check:
                 attendance_object_check = attendance_object_check[0]
@@ -687,7 +704,7 @@ class exam_submit(APIView):
         except Exception as e:
             return Response({'message':"event_id 'id' not passed",'status':'false','exception':e})
 
-        attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_id = request.user.id)
+        attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
         #print('Attendance object ',len(attendance_object_check))
 
@@ -705,7 +722,7 @@ class exam_submit(APIView):
             reviewed_questions  = 0
             correct_answers     = 0
             wrong_answers       = 0
-            for resp_obj in models.exam_response.objects.filter(event_id=data['event_id'],user=request.user.id):
+            for resp_obj in models.exam_response.objects.filter(event_id=data['event_id'],student_username=request.user.username):
                 visited_questions += 1
                 
                 if resp_obj.selected_choice_id:
@@ -747,7 +764,8 @@ class school_exam_summary(APIView):
 
     {
         "event_id":123,
-        "user":13, #13,16
+        #"user":13, #13,16
+        "student_username": 123456
         "qp_set_id":15
     }
 
@@ -764,7 +782,7 @@ class school_exam_summary(APIView):
 
             filter_dict = {}
             filter_dict['event_id'] = data['event_id']
-            filter_dict['user'] = data['user']
+            filter_dict['student_username'] = data['student_username']
             filter_dict['qp_set_id'] = data['qp_set_id']
 
             file_name = f"cons_data/{data['event_id']}_{school_id}.json"
@@ -791,7 +809,7 @@ class school_exam_summary(APIView):
                 consolidated_data = json.load(input_file)
 
             candidate_consolidated = {}
-            candidate_consolidated['student_username'] = data['user']
+            candidate_consolidated['student_username'] = data['student_username']
             candidate_consolidated['qp_set_id'] = data['qp_set_id']
             candidate_consolidated['start_time'] = None
             candidate_consolidated['end_time'] = None
@@ -821,8 +839,9 @@ class school_exam_summary(APIView):
 
 def get_answers(username,qid,qp_set_id,event_id):
     try:
+        print('&&&& Fetching answers for ',username,qid,qp_set_id,event_id)
         filter_fields = {
-            'user':username,
+            'student_username':username,
             'question_id':qid,
             'qp_set_id':qp_set_id,
             'event_id':event_id
@@ -831,7 +850,8 @@ def get_answers(username,qid,qp_set_id,event_id):
 
         ans = "" if obj.selected_choice_id == None else obj.selected_choice_id
         return obj.review, ans
-    except:
+    except Exception as e:
+        print(e)
         return "",""
 
 class GenerateQuestionPaper(APIView):
@@ -864,7 +884,7 @@ class GenerateQuestionPaper(APIView):
         print('---------------',request_data)
 
     
-        event_attendance_check = models.event_attendance.objects.filter(event_id = request_data['event_id'] ,student_id = request.user.id)
+        event_attendance_check = models.event_attendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
 
       
         question_meta_object = models.ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
@@ -881,7 +901,6 @@ class GenerateQuestionPaper(APIView):
         if len(event_attendance_check) == 0:
             event_attendance_obj = models.event_attendance.objects.create(
                 event_id = request_data['event_id'],
-                student_id = request.user,
                 student_username =request.user.username,
                 qp_set = random.choice(eval(question_meta_object.qp_set_list)),
                 remaining_time = question_meta_object.duration_mins * 60,  # return duration in seconds
@@ -925,6 +944,10 @@ class GenerateQuestionPaper(APIView):
             print('Event ID and QP SET ID already exists in local school database..')
                     
             print('----------------------------------------------------------------')
+
+            for answers in question_paper_data['ans']:
+                answers['review'], answers['ans'] = get_answers(request.user.username,answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
+
 
             return Response(question_paper_data)
 
@@ -998,7 +1021,7 @@ class GenerateQuestionPaper(APIView):
             for q_id in qid_list:
                 tmp = {}
                 tmp['qid'] = q_id
-                tmp['review'], tmp['ans'] = get_answers(request.user,q_id,event_attendance_obj.qp_set,request_data['event_id'])
+                tmp['review'], tmp['ans'] = get_answers(request.user.username,q_id,event_attendance_obj.qp_set,request_data['event_id'])
 
                 get_ans_api.append(tmp)
 
@@ -1433,6 +1456,10 @@ class MetaData(APIView):
             })
 
             get_meta_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
+            if get_meta_response.headers.get('content-type') == 'application/json':
+                get_meta_response_json = get_meta_response.json()
+                if get_meta_response_json['api_status'] == False:
+                    return Response({'api_status':False,'message':'Question paper not available in central server'})
 
             if get_meta_response.status_code != 200:
                 return Response({'api_status':False,'message':'Unable to load exam data','error':'Status not equal to 200'})
@@ -1725,3 +1752,125 @@ class SchoolDetails(APIView):
         except Exception as e:
             print('Exception caused while fetching school details :',e)
             return Response({'api_status':False,'message':'Unable to fetch school details','school_name':''})
+
+
+class ConsSummary(APIView):
+    '''
+    Class to fetch display all candidates details and exam result for the particular event
+
+    input parameter
+    ```````````````
+
+    event_id <- schedule_id or event_id
+
+    '''
+
+    def post(self,request,*args, **kwargs):
+        try:
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['api_status'] = False
+                data['message'] = 'Server Not reachable'
+                data['status'] = status.HTTP_504_GATEWAY_TIMEOUT
+                return Response(data)
+            
+            emisuser_student = auth_fields['student']['auth_table']
+            students_child_detail = auth_fields['student']['master_table']
+
+            mycursor = cn.cursor()
+
+            request_data = request.data
+            print('request data :',request_data)
+
+            scheduling_queryset = models_scheduler.scheduling.objects.filter(schedule_id=request_data['event_id'])
+
+            if len(scheduling_queryset) == 0:
+                return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
+            scheduling_obj = scheduling_queryset[0]
+
+            students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
+
+            if scheduling_obj.class_section != None:
+                students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+
+
+            # inner_query = f"SELECT {auth_fields['student']['school_field_foreign_ref']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
+
+
+            # if scheduling_obj.class_section != None:
+            #     inner_query = f"{inner_query} AND {auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+
+            # students_query = f"SELECT {auth_fields['student']['username_field']},student_name FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['school_field_foreign']} IN ({inner_query}) ;"
+
+            
+            
+            print('students_query :',students_query)
+
+            mycursor.execute(students_query)
+            students_emis_username = mycursor.fetchall()
+
+
+            # loop through each student's attendance entry if available
+            consolidated_summary = []
+            for student_emis in students_emis_username:
+                individual_summary = {}
+                individual_summary['event_id'] = request_data['event_id']
+                individual_summary['emis_username'] = student_emis[0]
+                individual_summary['name'] = student_emis[1]
+                individual_summary['class_std'] = student_emis[2]
+                individual_summary['class_section'] = student_emis[3]
+
+                individual_summary.update(get_summary(event_id=request_data['event_id'],student_username = individual_summary['emis_username'] ))
+
+                print(individual_summary)
+                consolidated_summary.append(individual_summary)
+
+
+            print('Total number of students',len(students_emis_username))
+
+            return Response(consolidated_summary)
+        except Exception as e:
+            print('Exception caused while fetching consolidated summary :',e)
+            return Response({'api_status':False,'message':'Unable to fetch consolidated summary'})
+
+
+class GetUserDetail(APIView):
+
+    '''
+
+    Class to fetch the details store in Django's builtin User model and One-to-One linked Profile model
+
+    Sample Output
+    ``````````````
+        "user"          : "xxxx",
+        "username"      : "xxxx",
+        "group"         : "xxxx",
+        "usertype"      : "xxxx",
+        "udise_code"    : "xxxx"
+
+    '''
+
+    if settings.AUTH_ENABLE:
+        permission_classes = (IsAuthenticated,) # Allow only if authenticated
+
+    def post(self,request):
+        data = {}
+        data['user'] = str(request.user)
+        print(str(request.user) == 'AnonymousUser')
+        if str(request.user) != 'AnonymousUser':
+            try:
+                data['username']    = request.user.username
+                data['groups']      = request.user.groups.values_list('name', flat=True)[0]
+                data['name_text']   = request.user.profile.name_text
+                data['student_class']   = request.user.profile.student_class
+                data['usertype']    = request.user.profile.usertype
+                data['priority']    = request.user.profile.priority
+                data['udise_code']  = request.user.profile.udise_code
+                data['district_id'] = request.user.profile.district_id
+                data['block_id']    = request.user.profile.block_id
+                data['school_id']   = request.user.profile.school_id
+            except Exception as e:
+                pass
+        return Response({"status":status.HTTP_200_OK,"content":data})
