@@ -459,7 +459,11 @@ class exam_response(APIView):
             object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
             object_edit.question_result = data['correct_choice']
             object_edit.review = data['review']
-            
+            print('Check for mark :',object_edit.selected_choice_id == object_edit.question_result)
+            if object_edit.selected_choice_id == object_edit.question_result:
+                object_edit.mark = 1
+            else:
+                object_edit.mark = 0
             object_edit.save()
             
             return Response({'api_status': True,'message':'updated'})
@@ -470,6 +474,13 @@ class exam_response(APIView):
                 filter_fields['selected_choice_id'] = None if data['ans'] == '' else data['ans']
                 filter_fields['question_result'] = data['correct_choice']
                 filter_fields['review'] = data['review']
+
+                # Give 1 mark for correct answer
+                print('Check for mark :',filter_fields['selected_choice_id'] == filter_fields['question_result'])
+                if filter_fields['selected_choice_id'] == filter_fields['question_result']:
+                    filter_fields['mark'] = 1
+                else:
+                    filter_fields['mark'] = 0
 
                 obj = models.exam_response.objects.create(**filter_fields)
                 #print('Exception in exam_response :',e)
@@ -1617,8 +1628,6 @@ class MetaData(APIView):
 
 
                     #print('qpdownload list -------------',qpdownload_list)
-
-
                     event_meta_data['qp_set_data'] = qp_set_data
                     event_meta_data.update(qpdownload_list)
 
@@ -1807,13 +1816,10 @@ class ConsSummary(APIView):
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
             scheduling_obj = scheduling_queryset[0]
 
-            students_query = f"  SELECT emis_username,  student_name, class_studying_id, class_section FROM emisuser_student WHERE class_studying_id = {scheduling_obj.class_std} "
-
-            #students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
+            students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
 
             if scheduling_obj.class_section != None:
-                #students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
-                students_query = f"{students_query} AND class_section = '{scheduling_obj.class_section}'"
+                students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
 
 
             # inner_query = f"SELECT {auth_fields['student']['school_field_foreign_ref']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
