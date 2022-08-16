@@ -1730,6 +1730,8 @@ class MetaData(APIView):
 
             requests.request("POST", ack_url, data=ack_payload) 
             event_meta_data['api_status'] = True
+
+            os.system('rm -rf ' + json_file_path)
             return Response(event_meta_data)
          
         except Exception as e:
