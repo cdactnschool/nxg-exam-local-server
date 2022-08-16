@@ -1790,10 +1790,13 @@ class ConsSummary(APIView):
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
             scheduling_obj = scheduling_queryset[0]
 
-            students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
+            students_query = f"  SELECT emis_username,  student_name, class_studying_id, class_section FROM emisuser_student WHERE class_studying_id = {scheduling_obj.class_std} "
+
+            #students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
 
             if scheduling_obj.class_section != None:
-                students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+                #students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+                students_query = f"{students_query} AND class_section = '{scheduling_obj.class_section}'"
 
 
             # inner_query = f"SELECT {auth_fields['student']['school_field_foreign_ref']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
