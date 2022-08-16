@@ -2,6 +2,8 @@ from django.urls import path
 
 from . import views, localserver as ls
 
+from . import views_adv
+
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -33,5 +35,7 @@ urlpatterns = [
     
     path('school_exam_summary',             views.school_exam_summary.as_view(),        name='school_exam_summary'),
 
-    path('cons-summary',                    views.ConsSummary.as_view(),               name='cons-summary'),
+    path('cons-summary',                    views.ConsSummary.as_view(),                name='cons-summary'),
+    path('gen-json',                        views_adv.GenerateSentJSON.as_view(),       name='gen-json'),
+
     ]

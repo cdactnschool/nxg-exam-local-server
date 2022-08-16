@@ -1,7 +1,3 @@
-
-#path('gen-json',                        views_adv.GenerateSentJSON.as_view()),
-
-
 from . import models
 
 from rest_framework import status
@@ -25,6 +21,8 @@ class GenerateSentJSON(APIView):
 
     id : event/schedule_id
     
+
+    # Note: Remove json_created=False to generate JSON file irrespective of JSON created or note
     
     '''
 
@@ -80,17 +78,21 @@ class GenerateSentJSON(APIView):
                 'qp_set_id': event_attendance_obj.qp_set,
                 'start_time': str(event_attendance_obj.start_time),
                 'end_time': str(event_attendance_obj.end_time),
-                'total_marks': event_attendance_obj.total_marks,
+                'total_questions':str(event_attendance_obj.total_questions),
+                'visited_questions':str(event_attendance_obj.visited_questions),
+                'answered_questions':str(event_attendance_obj.answered_questions),
+                'reviewed_questions':str(event_attendance_obj.reviewed_questions),
+                'correct_answers':str(event_attendance_obj.correct_answers),
+                'wrong_answers':str(event_attendance_obj.wrong_answers),
             }
 
-            obj = models.exam_response.objects.filter(event_id = data['event_id'],user = event_attendance_obj.student_id,qp_set_id = event_attendance_obj.qp_set)
+            obj = models.exam_response.objects.filter(event_id = data['event_id'],student_username = event_attendance_obj.student_username,qp_set_id = event_attendance_obj.qp_set)
             responses = []
             for obj_instance in obj:
                 responses.append({
                     'question_id':obj_instance.question_id,
                     'selected_choice_id':obj_instance.selected_choice_id,
                     'correct_choice_id':obj_instance.question_result,
-                    'mark':obj_instance.mark,
                     'created_on':str(obj_instance.created_on)
                 })
             details_dict['responses'] = responses

@@ -519,7 +519,6 @@ def get_summary(event_id,student_username):
         dict_obj['vistedQuestion'] = '-'
         dict_obj['correct_answered'] = '-'
         dict_obj['wrong_answered'] = '-'
-        dict_obj['marks'] = '-'
 
         if event_attendance_query:
             event_attendance_object             = event_attendance_query[0]
@@ -1502,8 +1501,7 @@ class MetaData(APIView):
 
             base_sqlite_path = settings.DATABASES['default']['NAME']
             print('DB name :',base_sqlite_path)
-
-            json_file_path = os.path.join(questionpath,'qpdownload_json')
+            json_file_path = os.path.join(questionpath,f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
             # request_data = {} 
             
@@ -1824,10 +1822,9 @@ class ConsSummary(APIView):
                 print(individual_summary)
                 consolidated_summary.append(individual_summary)
 
-
             print('Total number of students',len(students_emis_username))
 
-            return Response(consolidated_summary)
+            return Response({'api_status':True,'data':consolidated_summary})
         except Exception as e:
             print('Exception caused while fetching consolidated summary :',e)
             return Response({'api_status':False,'message':'Unable to fetch consolidated summary'})
