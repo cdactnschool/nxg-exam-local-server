@@ -1430,6 +1430,46 @@ class InitialReg(APIView):
             print('Exception caused during Initial Registeration :',e)
             return Response({'api_status':False,'message':'Exception caused during Initial Registeration'})
 
+def load_question_choice_data(qpdownload_list):
+    for img_data in qpdownload_list['questions']:
+        question = {}
+        choice = {}
+        questions_filter  = {
+                            "qid" : img_data['qid']
+                    }
+        questions_object_edit = models.Question.objects.filter(**questions_filter)
+        if len(questions_object_edit) == 0:
+            question['qid'] = img_data['qid']
+            question['qimage'] = img_data['qimage']
+            question['no_of_choices'] = img_data['no_of_choices']
+            question['correct_choice'] = img_data['correct_choice']
+
+            serialized_questions = serializers.QuestionsSerializer(data=question,many=False)
+            if serialized_questions.is_valid():
+                serialized_questions.save()
+                for ch_image_data in img_data['q_choices']:
+                    choice['qid'] = img_data['qid']
+                    choice['cid'] = ch_image_data['cid']
+                    choice['cimage'] = ch_image_data['cimage']
+                    
+                    serialized_choice= serializers.ChoicesSerializer(data=choice,many=False)
+                    if serialized_choice.is_valid():
+                            serialized_choice.save()
+                            
+                    else:
+                        print(f'Error in serialization of choices : {serialized_choice.errors}')
+                        return Response({"api_status":False,"message":"Incorrect data in serializing choices","error":serialized_choice.errors})
+            else:
+                print(f'Error in serialization of questions : {serialized_questions.errors}')
+                return Response({"api_status":False,"message":"Incorrect data in serializing questions","error":serialized_questions.errors})
+        else:
+            print('\n')
+            print('-----------------------------------------------------------')
+            print('Question ID is already present into school local database....')
+            
+            print('-----------------------------------------------------------')
+
+
 class MetaData(APIView):
     if settings.AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
@@ -1516,16 +1556,11 @@ class MetaData(APIView):
             print('DB name :',base_sqlite_path)
             json_file_path = os.path.join(questionpath,f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
-            # request_data = {} 
-            
-            print('+++++++++++++++++++++++++++++++')
-            #exammgt/media/examdata/qpdownload_json/meta_data_1_2022_08_12_14_55_35.json
-
-            print('question path',questionpath)
-            print('json file path',json_file_path)
+            # print('question path',questionpath)
+            # print('json file path',json_file_path)
             for file in os.listdir(json_file_path):
                 if file.startswith('meta'):
-                    print('File :',file)
+                    # print('File :',file)
                     print('full path :',os.path.join(json_file_path,file))
                     with open(os.path.join(json_file_path,file), 'r') as f:
                         meta_data = json.load(f)
@@ -1574,8 +1609,6 @@ class MetaData(APIView):
                 "event_id" : request_data['event_id']
              
                 }
-
-            print(exam_meta_filter)
             exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
                 serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
@@ -1621,113 +1654,21 @@ class MetaData(APIView):
                         
                         print('-----------------------------------------------------------')
 
-
-
-
-
             #Read the question .json -> Qpset, Question and Choices
-
             for file in os.listdir(json_file_path):
                 if file.startswith('qpdownload'):
-                    print('File :',file)
+                    # print('File :',file)
                     print('full path :',os.path.join(json_file_path,file))
                     with open(os.path.join(json_file_path,file), 'r') as f:
                         qpdownload_list = json.load(f)
 
-
-                    #print('qpdownload list -------------',qpdownload_list)
-                    event_meta_data['qp_set_data'] = qp_set_data
-                    event_meta_data.update(qpdownload_list)
-
-                #     ######
-
-                    for qp_data in event_meta_data['qp_set_data']:
-                        tmp_qp_sets_data = {}
-                        tmp_qp_sets_data['event_id'] = event_meta_data['event_id']
-                        tmp_qp_sets_data['qp_set_id'] = qp_data['qp_set_id']
-                        tmp_qp_sets_data['qid_list'] = str(qp_data['q_ids'])
-                        
-                    
-                        qp_sets_filter  = {
-                                        "qp_set_id" : qp_data['qp_set_id']
-                                    }
-                        
-                        qp_set_object_edit = models.QpSet.objects.filter(**qp_sets_filter)
-                        if len(qp_set_object_edit) == 0:
-                            serialized_qp_sets = serializers.QpSetsSerializer(data=tmp_qp_sets_data,many=False)
-                            if serialized_qp_sets.is_valid():
-                                serialized_qp_sets.save()
-                                
-                            else:
-                                print(f'Error in serialization of QP Sets : {serialized_qp_sets.errors}')
-                                return Response({"api_status":False,"message":"Incorrect data in serializing QP Sets","error":serialized_qp_sets.errors})
-                        else:
-                            print('\n')
-                            print('-----------------------------------------------------------')
-                            print('QP SET ID is already present into school local database....')
-                            
-                            print('-----------------------------------------------------------')
+                    #print(qpdownload_list)
+                    try:
+                        load_question_choice_data(qpdownload_list)
+                    except:
+                        return Response({'api_status':False,'message':'Error reading json meta data...!'})
 
 
-                
-                    for qp in event_meta_data['questions']:
-                        tmp_questions_data = {}
-                        tmp_questions_data['qid'] = qp['qid']
-                        tmp_questions_data['qimage'] = qp['qimage']
-                        tmp_questions_data['no_of_choices'] = qp['no_of_choices']
-                        tmp_questions_data['correct_choice'] = qp['correct_choice']
-                        
-                        questions_filter  = {
-                                    "qid" : qp['qid']
-                                }
-
-                        questions_object_edit = models.Question.objects.filter(**questions_filter)
-                        if len(questions_object_edit) == 0:
-                            serialized_questions = serializers.QuestionsSerializer(data=tmp_questions_data,many=False)
-                            if serialized_questions.is_valid():
-                                serialized_questions.save()
-                                
-                            else:
-                                print(f'Error in serialization of questions : {serialized_questions.errors}')
-                                return Response({"api_status":False,"message":"Incorrect data in serializing questions","error":serialized_questions.errors})
-                        else:
-                            print('\n')
-                            print('-----------------------------------------------------------')
-                            print('Question ID is already present into school local database....')
-                            
-                            print('-----------------------------------------------------------')
-                            
-
-
-                    
-                    for ch in event_meta_data['questions']:
-                        for ch_img in ch['q_choices']:
-                            tmp_choice_data = {}
-                            tmp_choice_data['qid'] = ch['qid']
-                            tmp_choice_data['cid'] = ch_img['cid']
-                            tmp_choice_data['cimage'] = ch_img['cimage']
-
-                            choice_filter  = {
-                                    # "qid" : qp['qid'],
-                                    "cid" : ch_img['cid']
-                                }
-
-                            choice_object_edit = models.Choice.objects.filter(**choice_filter)
-                            if len(choice_object_edit) == 0:
-                                serialized_choice= serializers.ChoicesSerializer(data=tmp_choice_data,many=False)
-                                if serialized_choice.is_valid():
-                                    serialized_choice.save()
-                                    
-                                else:
-                                    print(f'Error in serialization of choices : {serialized_choice.errors}')
-                                    return Response({"api_status":False,"message":"Incorrect data in serializing choices","error":serialized_choice.errors})
-                            else:
-                                print('\n')
-                                print('------------------------------------------------------------------------')
-                                print('Question ID and Choice ID is already present into school local database..')
-                                
-                                print('-------------------------------------------------------------------------')
-            
             ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
@@ -1737,8 +1678,7 @@ class MetaData(APIView):
             })
 
             requests.request("POST", ack_url, data=ack_payload) 
-            # event_meta_data['api_status'] = True
-
+      
             os.system('rm -rf ' + json_file_path)
             return Response({'api_status':True,'message':'Meta data loaded successfully'})
          
