@@ -1726,10 +1726,10 @@ class MetaData(APIView):
             })
 
             requests.request("POST", ack_url, data=ack_payload) 
-            event_meta_data['api_status'] = True
+            # event_meta_data['api_status'] = True
 
             os.system('rm -rf ' + json_file_path)
-            return Response(event_meta_data)
+            return Response({'api_status':True,'message':'Meta data loaded successfully'})
          
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
@@ -1896,5 +1896,5 @@ class GetUserDetail(APIView):
                 data['block_id']    = request.user.profile.block_id
                 data['school_id']   = request.user.profile.school_id
             except Exception as e:
-                pass
-        return Response({"status":status.HTTP_200_OK,"content":data})
+                return Response({'api_status':False,'message':'Error in fetching user details'})
+        return Response({"api_status":True,"content":data})
