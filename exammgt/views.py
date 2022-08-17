@@ -1725,6 +1725,7 @@ class SchoolDetails(APIView):
                 'block_id':school_detail_response[0][6],
                 'block_name':school_detail_response[0][7],
                 'api_status':True
+                
             })
 
         except Exception as e:
