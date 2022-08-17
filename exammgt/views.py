@@ -650,11 +650,8 @@ class get_my_events(APIView):
 
             if request.user.profile.usertype == 'student':  # filter class for students
                 events_queryset = events_queryset.filter(class_std=request.user.profile.student_class)
-
-                
-
-                # Add filters if section is available in the scheduling todo
-
+                # Addition of section
+                events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
 
             events_serialized = serializers.exam_events_schedule_serializer(events_queryset,many=True,context={'user':request.user})
 
