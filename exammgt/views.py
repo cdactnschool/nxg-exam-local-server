@@ -1389,6 +1389,17 @@ class LoadReg(APIView):
 
             requests.request("POST", ack_url, data=ack_payload)
 
+            # Create groups
+            try:
+                Group.objects.create(name='student')
+                Group.objects.create(name='teacher')
+                Group.objects.create(name='hm')
+                Group.objects.create(name='department')
+                print('^^^Created Groups^^^^')
+            except Exception as e:
+                print('Exception in creating groups :',e)
+
+
             return Response({'reg_status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while load registeration data throught API : {e}')
