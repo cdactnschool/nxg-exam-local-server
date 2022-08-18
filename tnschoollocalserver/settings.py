@@ -291,9 +291,10 @@ LOGGING = {
 # Enable authentication for the api calls
 AUTH_ENABLE = False # Enable is_authentication in views.py file
 
-CENTRAL_SERVER_IP = 'http://10.184.36.118:8000'
+CENTRAL_SERVER_IP = 'https://exam.tnschools.gov.in'
+# CENTRAL_SERVER_IP = 'http://10.184.36.118:8000'
 
-
+CERT_FILE = 'cert/schoolexam-RootCA.cert.pem'
 # Remote DB names
 DB_BASEAPP_GROUP_CODE           = 'baseapp_group_code'
 DB_EMIS_USERLOGIN               = 'emis_userlogin'

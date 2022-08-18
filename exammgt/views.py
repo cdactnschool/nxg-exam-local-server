@@ -51,6 +51,8 @@ student_log = logging.getLogger('student_log')
 import sqlite3
 import py7zr
 
+
+
 from django.db.models import Q
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -1101,7 +1103,7 @@ class LoadEvent(APIView):
 
 
             #get_events_response = requests.request("POST", req_url, data=payload)
-            get_events_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
+            get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
 
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
@@ -1212,7 +1214,7 @@ class LoadEvent(APIView):
                 "zip_hash":res_md5sum
             })
 
-            requests.request("POST", ack_url, data=ack_payload)
+            requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
             return Response({'api_status':True,'message':'Event data loaded'})
         except Exception as e:
@@ -1242,7 +1244,7 @@ class LoadReg(APIView):
             })
           
             # get_events_response = requests.request("POST", reqUrl, data=payload)
-            get_events_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
+            get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
 
 
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
@@ -1387,7 +1389,7 @@ class LoadReg(APIView):
                 "zip_hash":res_md5sum
             })
 
-            requests.request("POST", ack_url, data=ack_payload)
+            requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
             # Create groups
             try:
@@ -1423,7 +1425,7 @@ class InitialReg(APIView):
             payload = json.dumps({"udise_code": data['udise_code']})
             
             try:
-                get_udise_response = requests.request("POST",req_url,data = payload)
+                get_udise_response = requests.request("POST",req_url,data = payload,verify=settings.CERT_FILE)
                 if get_udise_response.status_code != 200:
                     return Response({'api_status':False,'message':'Central server not reachable'})
             except Exception as e:
@@ -1511,7 +1513,7 @@ class MetaData(APIView):
                 'school_id':school_id_response[0][0]
             })
 
-            get_meta_response = requests.request("POST", req_url, data=payload, verify=False, stream = True)
+            get_meta_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
             if get_meta_response.headers.get('content-type') == 'application/json':
                 get_meta_response_json = get_meta_response.json()
                 if get_meta_response_json['api_status'] == False:
@@ -1682,14 +1684,14 @@ class MetaData(APIView):
                 "zip_hash":res_md5sum
             })
 
-            requests.request("POST", ack_url, data=ack_payload) 
+            requests.request("POST", ack_url, data=ack_payload, verify=settings.CERT_FILE) 
       
             os.system('rm -rf ' + json_file_path)
             return Response({'api_status':True,'message':'Meta data loaded successfully'})
          
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
-            return Response({"api_status":False,"message":"Error in creating meta data","exception": f'{e}'})
+            return Response({"api_status":False,"message":"Error in fetching meta data","exception": f'{e}'})
 
         #     return Response({'api_status':True})
         # except Exception as e:
