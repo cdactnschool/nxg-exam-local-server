@@ -949,6 +949,9 @@ class GenerateQuestionPaper(APIView):
             for answers in question_paper_data['ans']:
                 answers['review'], answers['ans'] = get_answers(request.user.username,answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
             question_paper_data['user'] = request.user.username
+            question_paper_data['qp_set_id'] = event_attendance_obj.qp_set
+            question_paper_data['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
+            #question_paper_data['end_alert_seconds'] = question_paper_data['end_alert_time'] * 60 # Convert to seconds
 
             return Response(question_paper_data)
 
@@ -963,7 +966,7 @@ class GenerateQuestionPaper(APIView):
                 
                 tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
                 tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
-                tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
+                #tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
                 exam_meta_data.append(tmp_exam_dict)
 
          
