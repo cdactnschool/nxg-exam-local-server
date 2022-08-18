@@ -495,7 +495,6 @@ def get_summary(event_id,student_username):
     vistedQuestions     - Total number of visited questions (Total number of entries in exam_response table)
     correct_answered    - Total number of questions which are correct (selected_choice_id == question_result)
     wrong_answered      - Total number of question which are incorrectly marked (selected_choice_id != question _result)
-    marks               - Fetch from the event_attendance table
 
     '''
 
@@ -596,7 +595,6 @@ class SummaryAll(APIView):
                     summary_consolidated['vistedQuestion'] = '-'
                     summary_consolidated['correct_answered'] = '-'
                     summary_consolidated['wrong_answered'] = '-'
-                    summary_consolidated['marks'] = '-'
                     summary_consolidated['completed'] = 0
 
                 summary_consolidated['username'] = attendance_object.student_username
@@ -726,13 +724,14 @@ class exam_submit(APIView):
                 if resp_obj.selected_choice_id:
                     answered_questions += 1
                 
+                    if resp_obj.selected_choice_id == resp_obj.question_result:
+                        correct_answers += 1
+                    else:
+                        wrong_answers += 1
+                
                 if resp_obj.review:
                     reviewed_questions += 1
                 
-                if resp_obj.selected_choice_id == resp_obj.question_result:
-                    correct_answers += 1
-                else:
-                    wrong_answers += 1
 
                 
             attendance_object_check.visited_questions   = visited_questions
