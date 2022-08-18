@@ -46,6 +46,7 @@ infolog     = logging.getLogger('infolog')
 apilog      = logging.getLogger('apilog')
 student_start_log = logging.getLogger('student_start_log')
 student_end_log = logging.getLogger('student_end_log')
+student_log = logging.getLogger('student_log')
 
 import sqlite3
 import py7zr
@@ -743,7 +744,8 @@ class exam_submit(APIView):
             attendance_object_check.save()
 
             # Adding data for filebeat
-            student_end_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
+            #student_end_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
+            student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
 
             print(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
 
@@ -906,7 +908,8 @@ class GenerateQuestionPaper(APIView):
             event_attendance_obj.save()
             
             # Adding data for filebeat
-            student_start_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
+            #student_start_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
+            student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
 
         else:
             event_attendance_obj = event_attendance_check[0]
@@ -1086,7 +1089,7 @@ class LoadEvent(APIView):
             
             # school_id = 30488
             CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
-            req_url = f"http://{CENTRAL_SERVER_IP}/scheduler/get_events"
+            req_url = f"{CENTRAL_SERVER_IP}/scheduler/get_events"
        
             school_id = school_id_response[0][0]
             payload = {
@@ -1201,7 +1204,7 @@ class LoadEvent(APIView):
 
             # send ack to central server
 
-            ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
@@ -1227,7 +1230,7 @@ class LoadReg(APIView):
             # Extration of 7zip file
 
             CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
-            req_url = "http://" + CENTRAL_SERVER_IP + "/exammgt/registeration-data"
+            req_url = f"{CENTRAL_SERVER_IP}/exammgt/registeration-data"
        
             udise_code = request.data['udise']
             print(udise_code)
@@ -1376,7 +1379,7 @@ class LoadReg(APIView):
 
             # send ack to central server
 
-            ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
@@ -1404,7 +1407,7 @@ class InitialReg(APIView):
             if 'udise_code' not in data:
                 return Response({'api_status':False,'message':'udise_code not provided','school_name':''})
             
-            req_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
+            req_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
 
             payload = json.dumps({"udise_code": data['udise_code']})
             
@@ -1491,7 +1494,7 @@ class MetaData(APIView):
             print('-------------------------')
 
             #request_data['event_id'] = 2349
-            req_url = f"http://{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
+            req_url = f"{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
             payload = json.dumps({
                 'event_id':request_data['event_id'],
                 'school_id':school_id_response[0][0]
@@ -1660,7 +1663,7 @@ class MetaData(APIView):
                         return Response({'api_status':False,'message':'Error reading json meta data...!'})
 
 
-            ack_url = f"http://{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],

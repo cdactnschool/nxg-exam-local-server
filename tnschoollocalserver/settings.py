@@ -238,6 +238,11 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'log/student_end.log')
         },
+        'student_log': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'log/student_log.log')
+        },
     },
     'loggers': {
         'monitoringdebug': {
@@ -275,13 +280,18 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'student_log': {
+            'handlers': ['student_log'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
 
 # Enable authentication for the api calls
 AUTH_ENABLE = False # Enable is_authentication in views.py file
 
-CENTRAL_SERVER_IP = '10.184.36.118:8000'
+CENTRAL_SERVER_IP = 'http://10.184.36.118:8000'
 
 
 # Remote DB names
