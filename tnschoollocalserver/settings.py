@@ -127,7 +127,7 @@ WSGI_APPLICATION = 'tnschoollocalserver.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR,'db.sqlite3'),
     }
 }
 
@@ -294,7 +294,7 @@ AUTH_ENABLE = False # Enable is_authentication in views.py file
 CENTRAL_SERVER_IP = 'https://exam.tnschools.gov.in'
 # CENTRAL_SERVER_IP = 'http://10.184.36.118:8000'
 
-CERT_FILE = 'cert/schoolexam-RootCA.cert.pem'
+CERT_FILE = os.path.join(BASE_DIR, 'cert/schoolexam-RootCA.cert.pem')
 # Remote DB names
 DB_BASEAPP_GROUP_CODE           = 'baseapp_group_code'
 DB_EMIS_USERLOGIN               = 'emis_userlogin'

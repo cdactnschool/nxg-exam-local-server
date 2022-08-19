@@ -93,7 +93,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 def connection():
     try:
         print('=============================')
-        conn = sqlite3.connect('db.sqlite3')
+        conn = sqlite3.connect(settings.DATABASES['default']['NAME'])
         return conn
     except Exception as e:
         print('connection error :',e)
@@ -925,22 +925,18 @@ class GenerateQuestionPaper(APIView):
         exam_filter = {
             "event_id": request_data['event_id']
         }
-
-        exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_filter)
-        print('------------------',len(exam_meta_object_edit))
-
-        if len(exam_meta_object_edit) == 0:
-            return Response({'api_status': False, 'message': 'Event is not present.'})
         
         #Save Json File Into Schhool Local Server
-        file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
-        json_path =  file_name + '.json'
-        FOLDER = 'questions_json'
+        #file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
+        json_path = "{0}_{1}.json".format(request_data['event_id'] ,event_attendance_obj.qp_set)
+          
+        FOLDER = os.path.join(settings.MEDIA_ROOT,'questions_json')
+
         if not os.path.exists(FOLDER):
             os.mkdir(FOLDER)
-
-        MEDIA_PATH ="/".join(settings.MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
-        json_file_path =  os.path.join(MEDIA_PATH, json_path)
+        exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_filter)
+        #MEDIA_PATH ="/".join(settings.MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
+        json_file_path =  os.path.join(FOLDER, json_path)
      
         if os.path.exists(json_file_path):
             with open(json_file_path, 'r') as f:
@@ -1041,8 +1037,8 @@ class GenerateQuestionPaper(APIView):
             configure_qp_data['ans'] = get_ans_api
             
             
-            if not os.path.exists(MEDIA_PATH):
-                os.makedirs(MEDIA_PATH)
+            #if not os.path.exists(MEDIA_PATH):
+            #    os.makedirs(MEDIA_PATH)
             with open(json_file_path , 'w') as f :
                 json.dump(configure_qp_data, f)
             configure_qp_data['user'] = request.user.username
@@ -1113,13 +1109,14 @@ class LoadEvent(APIView):
             print(res_fname, res_md5sum)
 
             file_path = os.path.join(settings.MEDIA_ROOT, 'eventdata', res_fname.strip())
-            eventpath = file_path.split(res_fname)[0]
+            #eventpath = file_path.split(res_fname)[0]
+            eventpath = os.path.join(file_path.split(res_fname)[0],'tn_school_event')
 
             print(file_path, '-=--=--', eventpath)
 
             if not os.path.exists(eventpath):
                 os.makedirs(eventpath)
-
+            # regpath = os.path.join(file_path.split(res_fname)[0],'eventdata')
             print('status code :',get_events_response.status_code)
 
 
@@ -1162,7 +1159,7 @@ class LoadEvent(APIView):
             base_sqlite_path = settings.DATABASES['default']['NAME']
             print('DB name :',base_sqlite_path)
 
-            eventcsvpath = os.path.join(eventpath,'tn_school_event')
+            eventcsvpath = eventpath #os.path.join(eventpath,'tn_school_event')
 
                         #Drop table
             for file in os.listdir(eventcsvpath):
@@ -1194,7 +1191,7 @@ class LoadEvent(APIView):
                     csv_full_path = os.path.join(eventcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
                     df = pd.read_csv(csv_full_path)
-                    with sqlite3.connect('db.sqlite3') as conn:
+                    with sqlite3.connect(base_sqlite_path) as conn:
                         c = conn.cursor()
                         df.to_sql(table_name,conn,if_exists='replace')
                         print('Data inserted successfully for :',table_name)
@@ -1264,6 +1261,7 @@ class LoadReg(APIView):
             # if os.path.exists(file_path.split(res_fname)[0]):
             #     os.mkdir(file_path.split(res_fname)[0])
 
+            
             if not os.path.exists(file_path.split(res_fname)[0]):
                 os.makedirs(file_path.split(res_fname)[0])
 
@@ -1301,9 +1299,9 @@ class LoadReg(APIView):
 
             # events_response_data = get_events_response.json()
 
-            #regpath = os.path.join(file_path.split(res_fname)[0],'tn_registeration_data')
+            regpath = os.path.join(file_path.split(res_fname)[0],'tn_registeration_data')
 
-            regpath=file_path.split(res_fname)[0]
+            #regpath=file_path.split(res_fname)[0]
 
             # print('--- regpath',regpath)
             # if os.path.isdir(regpath):
@@ -1323,7 +1321,8 @@ class LoadReg(APIView):
 
             print('List of file',os.listdir(regpath))
 
-            regcsvpath = os.path.join(regpath,'tn_registeration_data')
+            #regcsvpath = os.path.join(regpath,'tn_registeration_data')
+            regcsvpath = regpath
 
             #Drop table
             for file in os.listdir(regcsvpath):
@@ -1331,9 +1330,10 @@ class LoadReg(APIView):
                     csv_full_path = os.path.join(regcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
                     with sqlite3.connect(base_sqlite_path) as conn:
+                    
                         c = conn.cursor()
                         c.executescript(f"DROP TABLE IF EXISTS {table_name}")
-                    conn.commit()
+                        conn.commit()
             print('Dropped old tables')
 
             # Load schema
@@ -1346,7 +1346,7 @@ class LoadReg(APIView):
                         with open(schema_path,'r') as file:
                             content = file.read()
                         c.executescript(content)
-                    conn.commit()
+                        conn.commit()
             print('Loaded the schema')
 
             # Load data
@@ -1355,7 +1355,7 @@ class LoadReg(APIView):
                     csv_full_path = os.path.join(regcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
                     df = pd.read_csv(csv_full_path)
-                    with sqlite3.connect('db.sqlite3') as conn:
+                    with sqlite3.connect(base_sqlite_path) as conn:
                         c = conn.cursor()
                         df.to_sql(table_name,conn,if_exists='replace')
                         print('Data inserted successfully for ;',table_name)
@@ -1429,7 +1429,7 @@ class InitialReg(APIView):
                 if get_udise_response.status_code != 200:
                     return Response({'api_status':False,'message':'Central server not reachable'})
             except Exception as e:
-                return Response({'api_status':False,'message':'Central serval not reachable'})
+                return Response({'api_status':False,'message':'Central server not reachable','exception':str(e)})
 
             return Response(get_udise_response.json())
         
@@ -1530,7 +1530,7 @@ class MetaData(APIView):
             print(res_fname, res_md5sum)
 
             file_path = os.path.join(settings.MEDIA_ROOT, 'examdata', res_fname.strip())
-            questionpath = file_path.split(res_fname)[0]
+            questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
             print(file_path, '-=--=--', questionpath)
 
@@ -1561,7 +1561,7 @@ class MetaData(APIView):
 
             base_sqlite_path = settings.DATABASES['default']['NAME']
             print('DB name :',base_sqlite_path)
-            json_file_path = os.path.join(questionpath,f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
+            json_file_path = questionpath #os.path.join(questionpath,f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
             # print('question path',questionpath)
             # print('json file path',json_file_path)
