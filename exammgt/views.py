@@ -77,7 +77,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['district_id'] = self.user.profile.district_id
         data['block_id']    = self.user.profile.block_id
         data['school_id']   = self.user.profile.school_id
-        data['dataStatus']  = True
+        data['api_status']  = True
         data['message']     = 'User authenticated'
         
         return data
@@ -270,7 +270,7 @@ class db_auth(APIView):
         "district_id": "123456",
         "block_id": "123456",
         "school_id": "123456",
-        "dataStatus": true,
+        "api_status": true,
         "message": "User authenticated"
         }
 
@@ -282,7 +282,7 @@ class db_auth(APIView):
         if cn == None:
             data = {}
             data['api_status'] = False
-            data['message'] = 'Server Not reachable'
+            data['message'] = 'School server Not reachable'
             return Response(data)
 
         
@@ -305,7 +305,7 @@ class db_auth(APIView):
             auth_detail_response = mycursor.fetchall()
             
             if len(auth_detail_response) == 0:
-                return Response({'api_status':False,'message':'No data found'})
+                return Response({'api_status':False,'message':'Incorrect username'})
             #print(auth_detail_response)
             print('Records matching the username @ teacher_hm',auth_detail_response)
 
@@ -366,7 +366,7 @@ class db_auth(APIView):
                     return Response(token_response)
 
             else:
-                return Response({'possible_type':possible_type,'message':'Incorrect Username/password','api_status':False})
+                return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
 
         # student
 
@@ -384,7 +384,7 @@ class db_auth(APIView):
 
 
             if len(auth_detail_response) == 0:
-                return Response({'message':'No data found','api_status':False})
+                return Response({'api_status':False,'message':'No data found'})
             
             user_detail['emis_user_id'] = auth_detail_response[0][2]
             
@@ -422,14 +422,14 @@ class db_auth(APIView):
                 token_response = create_local_user(request,user_detail)
                 return Response(token_response)
             else:
-                return Response({'possible_type':possible_type,'message':'Incorrect Username/password','api_status':False})
+                return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
         
         # No authentication for department user in local
         else:
-            return Response({'message':'Incorrect Username/password','api_status':False})
+            return Response({'api_status':False,'message':'Incorrect Username/password'})
     
 
-class exam_response(APIView):
+class ExamResponse(APIView):
 
     '''
     Class to mark response of for each question per candidate
@@ -458,7 +458,7 @@ class exam_response(APIView):
         try:
             print(request.user.username)
             print(filter_fields)
-            object_edit = get_object_or_404(models.exam_response,**filter_fields)
+            object_edit = get_object_or_404(models.ExamResponse,**filter_fields)
             print('--------------',object_edit)
             object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
             object_edit.question_result = data['correct_choice']
@@ -475,12 +475,12 @@ class exam_response(APIView):
                 filter_fields['review'] = data['review']
 
 
-                obj = models.exam_response.objects.create(**filter_fields)
-                #print('Exception in exam_response :',e)
+                obj = models.ExamResponse.objects.create(**filter_fields)
+                #print('Exception in ExamResponse :',e)
                 return Response({'api_status': True,'message': 'new entry'})
             except Exception as e:
-                print('Exception in exam_response :',e)
-                return Response({'api_status': False,'message': 'Error in saving'})
+                print('Exception in ExamResponse :',e)
+                return Response({'api_status': False,'message': 'Error in saving response'})
 
 
 def get_summary(event_id,student_username):
@@ -495,7 +495,7 @@ def get_summary(event_id,student_username):
     not_answered        - Total questions not answered (Total number of questions - Number of visited questions)
     answered            - Total number of questions where answered field is not null
     reviewed            - Total number of questions where 'review' button is set as True
-    vistedQuestions     - Total number of visited questions (Total number of entries in exam_response table)
+    vistedQuestions     - Total number of visited questions (Total number of entries in ExamResponse table)
     correct_answered    - Total number of questions which are correct (selected_choice_id == question_result)
     wrong_answered      - Total number of question which are incorrectly marked (selected_choice_id != question _result)
 
@@ -503,7 +503,7 @@ def get_summary(event_id,student_username):
 
     
     try:
-        event_attendance_query = models.event_attendance.objects.filter(event_id = event_id ,student_username = student_username)
+        event_attendance_query = models.EventAttendance.objects.filter(event_id = event_id ,student_username = student_username)
         dict_obj = {}
         dict_obj['total_question'] = '-'
         dict_obj['not_answered'] = '-'
@@ -560,7 +560,7 @@ class summary(APIView):
             return Response(get_summary(data['event_id'],request.user.username))
 
         except Exception as e:
-            return Response({'api_status':False,'message':f'Exception occured {e}'})
+            return Response({'api_status':False,'message':'Error in generating summary','exception':f'Exception occured in message : {e}'})
 
 class SummaryAll(APIView):
     '''
@@ -582,7 +582,7 @@ class SummaryAll(APIView):
             summary_list = []
             data = JSONParser().parse(request)
 
-            for attendance_object in models.event_attendance.objects.filter(event_id=data['event_id']):
+            for attendance_object in models.EventAttendance.objects.filter(event_id=data['event_id']):
                 #print(attendance_object.event_id,attendance_object.student_username)
                 
                 if attendance_object.end_time != None:
@@ -614,7 +614,7 @@ class SummaryAll(APIView):
             return Response({'api_status':False,'message':f'Exception occured {e}'})
 
 
-class get_my_events(APIView):
+class GetMyEvents(APIView):
 
     '''
     Class to fetch events for the users
@@ -644,7 +644,7 @@ class get_my_events(APIView):
                 # Addition of section
                 events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
 
-            events_serialized = serializers.exam_events_schedule_serializer(events_queryset,many=True,context={'user':request.user})
+            events_serialized = serializers.ExamEventsScheduleSerializer(events_queryset,many=True,context={'user':request.user})
 
             events_serialized_data = {
                 'api_status':True,
@@ -654,9 +654,9 @@ class get_my_events(APIView):
             return Response(events_serialized_data)
 
         except Exception as e:
-            return Response({'api_status':False,'message':f'Error in get_my_events class {e}'})
+            return Response({'api_status':False,'message':f'Error in getting my events','exception':str(e)})
 
-class update_remtime(APIView):
+class UpdateRemtime(APIView):
     '''
     
     Store remaining time (Seconds)
@@ -674,26 +674,26 @@ class update_remtime(APIView):
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
 
-            attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
+            attendance_object_check = models.EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
             if attendance_object_check:
                 attendance_object_check = attendance_object_check[0]
                 attendance_object_check.remaining_time = data['rem_time']
                 attendance_object_check.save()
 
-                return Response({'message':'Remaining time updated successfully', 'api_status': True})
+                return Response({'api_status': True, 'message':'Remaining time updated successfully'})
             else:
-                return Response({'message':'No entry in the table availble for update','api_status':False})
+                return Response({'api_status':False,'message':'No entry in the table availble for update'})
             #rem_time
         except Exception as e:
-            return Response({'message':'No respose available','api_status':False,'Exception':e})
+            return Response({'api_status':False,'message':'No respose available','Exception':e})
 
-class exam_submit(APIView):
+class ExamSubmit(APIView):
 
     '''
 
     submit the exam
-    set end_time in the event_attendance table
+    set end_time in the EventAttendance table
     
     '''
     #permission_classes = (IsAuthenticated,) # Allow only if authenticated
@@ -702,9 +702,9 @@ class exam_submit(APIView):
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
         except Exception as e:
-            return Response({'message':"event_id 'id' not passed",'api_status':False,'exception':e})
+            return Response({'api_status':False,'message':"event_id 'id' not passed",'exception':e})
 
-        attendance_object_check = models.event_attendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
+        attendance_object_check = models.EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
         #print('Attendance object ',len(attendance_object_check))
 
@@ -721,7 +721,7 @@ class exam_submit(APIView):
             reviewed_questions  = 0
             correct_answers     = 0
             wrong_answers       = 0
-            for resp_obj in models.exam_response.objects.filter(event_id=data['event_id'],student_username=request.user.username):
+            for resp_obj in models.ExamResponse.objects.filter(event_id=data['event_id'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set):
                 visited_questions += 1
                 
                 if resp_obj.selected_choice_id:
@@ -751,12 +751,12 @@ class exam_submit(APIView):
 
             print(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
 
-            return Response({'message' : 'Exam submitted','api_status':True})
+            return Response({'api_status':True,'message' : 'Exam submitted'})
         else:
-            return Response({'message': 'No reponse available','api_status':True})
+            return Response({'api_status':True,'message': 'No attendance record available'})
 
 
-class school_exam_summary(APIView):
+class SchoolExamSummary(APIView):
     '''
     Class to consolidate responses of a candidate upon completion
 
@@ -790,10 +790,10 @@ class school_exam_summary(APIView):
             
             
             print('Filtered values :',filter_dict)
-            obj = models.exam_response.objects.filter(**filter_dict)
+            obj = models.ExamResponse.objects.filter(**filter_dict)
 
             if len(obj) == 0:
-                return Response({"status":"No repsonse given by user for exam is available"})
+                return Response({'api_status':False,"message":"No repsonse given by user for exam is available"})
 
             if not os.path.exists(file_name) or os.stat(file_name).st_size == 0:
                 consolidated_data = {}
@@ -832,7 +832,7 @@ class school_exam_summary(APIView):
             print(consolidated_data)
 
             # todo json= 1 to be checked
-
+            consolidated_data['api_status'] = True
             return Response(consolidated_data)
         except Exception as e:
             print(f'Exception raised while creating a candidate question meta data object throught API : {e}')
@@ -847,7 +847,7 @@ def get_answers(username,qid,qp_set_id,event_id):
             'qp_set_id':qp_set_id,
             'event_id':event_id
         }
-        obj = get_object_or_404(models.exam_response,**filter_fields)
+        obj = get_object_or_404(models.ExamResponse,**filter_fields)
 
         ans = "" if obj.selected_choice_id == None else obj.selected_choice_id
         return obj.review, ans
@@ -885,7 +885,7 @@ class GenerateQuestionPaper(APIView):
         print('---------------',request_data)
 
     
-        event_attendance_check = models.event_attendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
+        event_attendance_check = models.EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
 
       
         question_meta_object = models.ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
@@ -895,12 +895,12 @@ class GenerateQuestionPaper(APIView):
             question_meta_object = question_meta_object[0] # get the first instance
             print('question_meta_object Content',question_meta_object)
         else:
-            return Response({'message':'No question set for this student','api_status':False})
+            return Response({'api_status':False,'message':'No question set for this student'})
 
 
         #Add an entry in the event_attenance_check
         if len(event_attendance_check) == 0:
-            event_attendance_obj = models.event_attendance.objects.create(
+            event_attendance_obj = models.EventAttendance.objects.create(
                 event_id = request_data['event_id'],
                 student_username =request.user.username,
                 qp_set = random.choice(eval(question_meta_object.qp_set_list)),
@@ -953,6 +953,8 @@ class GenerateQuestionPaper(APIView):
             question_paper_data['qp_set_id'] = event_attendance_obj.qp_set
             question_paper_data['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
             #question_paper_data['end_alert_seconds'] = question_paper_data['end_alert_time'] * 60 # Convert to seconds
+
+            question_paper_data['api_status'] = True
 
             return Response(question_paper_data)
 
@@ -1042,6 +1044,7 @@ class GenerateQuestionPaper(APIView):
             with open(json_file_path , 'w') as f :
                 json.dump(configure_qp_data, f)
             configure_qp_data['user'] = request.user.username
+            configure_qp_data['api_status'] = True
             return Response(configure_qp_data)
    
        
@@ -1059,8 +1062,8 @@ class LoadEvent(APIView):
 
     '''
 
-    if settings.AUTH_ENABLE:
-        permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    # if settings.AUTH_ENABLE:
+    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
         try :
@@ -1070,7 +1073,7 @@ class LoadEvent(APIView):
             if cn == None:
                 data = {}
                 data['api_status'] = False
-                data['message'] = 'Server Not reachable'
+                data['message'] = 'School server Not reachable'
                 return Response(data)
             
             mycursor = cn.cursor()
@@ -1162,40 +1165,44 @@ class LoadEvent(APIView):
             eventcsvpath = eventpath #os.path.join(eventpath,'tn_school_event')
 
                         #Drop table
-            for file in os.listdir(eventcsvpath):
-                if file.endswith(".csv"):
-                    csv_full_path = os.path.join(eventcsvpath,file)
-                    table_name = os.path.basename(csv_full_path).split('.')[0]
-                    with sqlite3.connect(base_sqlite_path) as conn:
-                        c = conn.cursor()
-                        c.executescript(f"DROP TABLE IF EXISTS {table_name}")
-                    conn.commit()
-            print('Dropped old tables')
+            # for file in os.listdir(eventcsvpath):
+            #     if file.endswith(".csv"):
+            #         csv_full_path = os.path.join(eventcsvpath,file)
+            #         table_name = os.path.basename(csv_full_path).split('.')[0]
+            #         with sqlite3.connect(base_sqlite_path) as conn:
+            #             c = conn.cursor()
+            #             c.executescript(f"DROP TABLE IF EXISTS {table_name}")
+            #         conn.commit()
+            # print('Dropped old tables')
 
-            # Load schema
-            for file in os.listdir(eventcsvpath):
-                if file.endswith(".sql"):
-                    schema_path = os.path.join(eventcsvpath, file)
-                    # load schema
-                    with sqlite3.connect(base_sqlite_path) as conn:
-                        c = conn.cursor()
-                        with open(schema_path,'r') as file:
-                            content = file.read()
-                        c.executescript(content)
-                    conn.commit()
-            print('Loaded the schema')
+            # # Load schema
+            # for file in os.listdir(eventcsvpath):
+            #     if file.endswith(".sql"):
+            #         schema_path = os.path.join(eventcsvpath, file)
+            #         # load schema
+            #         with sqlite3.connect(base_sqlite_path) as conn:
+            #             c = conn.cursor()
+            #             with open(schema_path,'r') as file:
+            #                 content = file.read()
+            #             c.executescript(content)
+            #         conn.commit()
+            # print('Loaded the schema')
 
             # Load data
             for file in os.listdir(eventcsvpath):
                 if file.endswith(".csv"):
                     csv_full_path = os.path.join(eventcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
-                    df = pd.read_csv(csv_full_path)
-                    with sqlite3.connect(base_sqlite_path) as conn:
-                        c = conn.cursor()
-                        df.to_sql(table_name,conn,if_exists='replace')
-                        print('Data inserted successfully for :',table_name)
-                        conn.commit()
+                    #if os.stat(csv_full_path).st_size != 0:
+                    try:
+                        df = pd.read_csv(csv_full_path)
+                        with sqlite3.connect(base_sqlite_path) as conn:
+                            c = conn.cursor()
+                            df.to_sql(table_name,conn,if_exists='replace')
+                            print('Data inserted successfully for :',table_name)
+                            conn.commit()
+                    except Exception as e:
+                        print(f"Exception : {e}")
             print('Loaded the csv file')
 
             print('Deleting all the file in ',eventpath)
@@ -1367,7 +1374,7 @@ class LoadReg(APIView):
             if cn == None:
                 data = {}
                 data['api_status'] = False
-                data['message'] = 'Server Not reachable'
+                data['message'] = 'School server Not reachable'
                 return Response(data)
             
             mycursor = cn.cursor()
@@ -1429,9 +1436,9 @@ class InitialReg(APIView):
                 if get_udise_response.status_code != 200:
                     return Response({'api_status':False,'message':'Central server not reachable'})
             except Exception as e:
-                return Response({'api_status':False,'message':'Central server not reachable','exception':str(e)})
-
-            return Response(get_udise_response.json())
+                return Response({'api_status':False,'message':'Error in fetching data from Central server','exception':str(e)})
+            udise_response_json = get_udise_response.json()
+            return Response(udise_response_json)
         
         except Exception as e:
             print('Exception caused during Initial Registeration :',e)
@@ -1478,8 +1485,8 @@ def load_question_choice_data(qpdownload_list):
 
 
 class MetaData(APIView):
-    if settings.AUTH_ENABLE:
-        permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    # if settings.AUTH_ENABLE:
+    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
         try :
@@ -1489,7 +1496,7 @@ class MetaData(APIView):
             if cn == None:
                 data = {}
                 data['api_status'] = False
-                data['message'] = 'Server Not reachable'
+                data['message'] = 'School server Not reachable'
                 return Response(data)
             
             mycursor = cn.cursor()
@@ -1709,7 +1716,7 @@ class SchoolDetails(APIView):
             if cn == None:
                 data = {}
                 data['api_status'] = False
-                data['message'] = 'Server Not reachable'
+                data['message'] = 'School server Not reachable'
                 return Response(data)
             
             field_names = ['udise_code','school_id','school_name','school_type','district_id','district_name','block_id','block_name']
@@ -1736,8 +1743,8 @@ class SchoolDetails(APIView):
             })
 
         except Exception as e:
-            print('Exception caused while fetching school details :',e)
-            return Response({'api_status':False,'message':'Unable to fetch school details','school_name':''})
+            print('No school details :',e)
+            return Response({'api_status':False,'message':'No school details'})
 
 
 class ConsSummary(APIView):
@@ -1758,7 +1765,7 @@ class ConsSummary(APIView):
             if cn == None:
                 data = {}
                 data['api_status'] = False
-                data['message'] = 'Server Not reachable'
+                data['message'] = 'School server Not reachable'
                 return Response(data)
             
             emisuser_student = auth_fields['student']['auth_table']

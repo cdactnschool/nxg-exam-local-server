@@ -1,4 +1,4 @@
-from . import models
+from .models import EventAttendance, ExamResponse
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -9,8 +9,9 @@ from rest_framework.parsers import JSONParser
 
 import os
 import json
+import datetime
 
-class GenerateSentJSON(APIView):
+class GenerateJSON(APIView):
 
     '''
     Generate the JSON file
@@ -31,28 +32,26 @@ class GenerateSentJSON(APIView):
 
     def post(self,request,*args, **kwargs):
         
-        if request.user.profile.usertype == 'student':
-            return Response ({'api_status':False,'message':'Student not authorized for JSON generation'})
+        if request.user.profile.usertype != 'hm':
+            return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
         
         data = JSONParser().parse(request)
         data['event_id'] = data ['id']
 
         # Fetch events where json_created is False and end_time is none
-        event_attendances = models.event_attendance.objects.filter(event_id = data['event_id'],json_created=False).exclude(end_time=None)
+        event_attendances = EventAttendance.objects.filter(event_id = data['event_id'],json_created=False).exclude(end_time=None)
 
         if len(event_attendances) == 0:
-            return Response ({'api_status':True,'message':'No entries left for JSON append'})
+            return Response ({'api_status':True,'message':'No new candidates completed the exam'})
         
-
-        folder_dir = f"cons_data/"
-
+        folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}")
         os.makedirs(folder_dir, exist_ok=True)
 
+
+        '''
         file_name = os.path.join(folder_dir, f"{data['event_id']}_{request.user.profile.school_id}.json")
 
-        #file_name = f"cons_data/{data['event_id']}_{request.user.profile.school_id}.json"
 
-        
         # Create a JSON file if already exist
         if not os.path.exists(file_name) or os.stat(file_name).st_size == 0:
             consolidated_data = {}
@@ -64,10 +63,18 @@ class GenerateSentJSON(APIView):
             with open(file_name, 'w') as outfile:  
                 json.dump(consolidated_data, outfile)
 
-        print('---------------------------------------------------------------')
-        print(file_name)
         with open(file_name,'r') as input_file:
             consolidated_data = json.load(input_file)
+        '''
+
+        file_name = os.path.join(folder_dir,f"{data['event_id']}_{request.user.profile.school_id}_{request.user.profile.udise_code}_{str(datetime.datetime.now().strftime('%d-%m-%Y_%H-%M-%S'))}.json")
+
+        consolidated_data = {
+                'event_id':data['event_id'],
+                'school_id':request.user.profile.school_id,
+                'udise_code':request.user.profile.udise_code,
+                'details':[]
+            }
 
         #Loop through each attendnace entry
         details_object = []
@@ -86,13 +93,14 @@ class GenerateSentJSON(APIView):
                 'wrong_answers':str(event_attendance_obj.wrong_answers),
             }
 
-            obj = models.exam_response.objects.filter(event_id = data['event_id'],student_username = event_attendance_obj.student_username,qp_set_id = event_attendance_obj.qp_set)
+            obj = ExamResponse.objects.filter(event_id = data['event_id'],student_username = event_attendance_obj.student_username,qp_set_id = event_attendance_obj.qp_set)
             responses = []
             for obj_instance in obj:
                 responses.append({
                     'question_id':obj_instance.question_id,
                     'selected_choice_id':obj_instance.selected_choice_id,
                     'correct_choice_id':obj_instance.question_result,
+                    'marked_review':obj_instance.review,
                     'created_on':str(obj_instance.created_on)
                 })
             details_dict['responses'] = responses
@@ -116,7 +124,7 @@ class GenerateSentJSON(APIView):
 
         
 
-        return Response({'api_status':True,'message':'JSON file generated/updated successfully'})
+        return Response({'api_status':True,'message':f"JSON file generated/updated successfully for {len(details_object)} students"})
 
 
 

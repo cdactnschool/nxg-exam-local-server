@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from . import models
-from scheduler import models as models_scheduler
+from .models import EventAttendance, ExamMeta, QpSet, Question, Choice
+from scheduler.models import scheduling, event, participants
 from . import views
+import math
 
 import datetime
 #from .views import connection
@@ -10,7 +11,7 @@ import datetime
 def fetch_attendance_object(user_detail,event_id):
 
     '''
-    Function to fetch event_attendance object for given username and event_id
+    Function to fetch EventAttendance object for given username and event_id
 
 
     Returns the first entry from the filter if available 
@@ -19,7 +20,7 @@ def fetch_attendance_object(user_detail,event_id):
     '''
 
     #print('======',user_detail.profile.name_text,event_id)
-    attendance_obj_query = models.event_attendance.objects.filter(event_id=event_id,student_username=user_detail.username)
+    attendance_obj_query = EventAttendance.objects.filter(event_id=event_id,student_username=user_detail.username)
     if len(attendance_obj_query) == 0:
         print('<---No attendance Entry found--->')
         return None
@@ -27,7 +28,7 @@ def fetch_attendance_object(user_detail,event_id):
         print('<---Attendance Entry found--->')
         return attendance_obj_query[0]
 
-class exam_events_schedule_serializer(serializers.ModelSerializer):
+class ExamEventsScheduleSerializer(serializers.ModelSerializer):
     
     '''
 
@@ -48,12 +49,14 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
     meta_status             = serializers.SerializerMethodField('get_meta_status')
     total_candidates        = serializers.SerializerMethodField('get_total_candidates')
     duration_mins           = serializers.SerializerMethodField('get_duration_minutes')
+    json_count              = serializers.SerializerMethodField('get_json_count')
+    user_type               = serializers.SerializerMethodField('get_user_type')
 
     def create(self, validated_data):
-        return models_scheduler.scheduling.objects.create(**validated_data)
+        return scheduling.objects.create(**validated_data)
 
     class Meta:
-        model = models_scheduler.scheduling
+        model = scheduling
         fields = '__all__'
     
     def get_exam_status(self,obj):
@@ -122,7 +125,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         if user_detail.profile.usertype == 'student':
             return None
 
-        attendance_list = models.event_attendance.objects.filter(event_id=obj.schedule_id).exclude(end_time=None)
+        attendance_list = EventAttendance.objects.filter(event_id=obj.schedule_id).exclude(end_time=None)
 
         return len(attendance_list)
 
@@ -143,15 +146,22 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
             return None
         
 
+        meta_status_query = ExamMeta.objects.filter(event_id = obj.schedule_id)
+        if len(meta_status_query):
+            meta_status_object = meta_status_query[0]
+        else:
+            return '-'
+
+
         attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)
 
         if attendance_obj == None: # return zero if there are not 
-            return 'A'
+            return f"A/{meta_status_object.no_of_questions}"
         
         if attendance_obj.end_time == None:
-            return '-'
+            return f"-/{meta_status_object.no_of_questions}"
 
-        return attendance_obj.correct_answers
+        return f"{attendance_obj.correct_answers}/{meta_status_object.no_of_questions}"
     
     def get_meta_status(self,obj):
         '''
@@ -161,7 +171,7 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         1 -> Meta data set
 
         '''
-        meta_status_query = models.ExamMeta.objects.filter(event_id = obj.schedule_id)
+        meta_status_query = ExamMeta.objects.filter(event_id = obj.schedule_id)
 
         if len(meta_status_query) == 0:
             return 0
@@ -179,7 +189,11 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         try:
             cn = views.connection()
             mycursor = cn.cursor()
-            query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std} ;"
+            query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std}"
+            if obj.class_section != None:
+                obj = f"{obj} AND class_section = '{obj.class_section}' ;"
+            else:
+                obj = f"{obj} ;"
             mycursor.execute(query)
             student_count_result = mycursor.fetchall()
             return student_count_result[0][0]
@@ -193,7 +207,12 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
         Fetch the exam duration from the ExamMeta table
         '''
 
-        meta_duration_query = models.ExamMeta.objects.filter(event_id = obj.schedule_id)
+        attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)
+
+        if attendance_obj:
+            return math.ceil(attendance_obj.remaining_time/60) # Return remaining time in Minutes
+
+        meta_duration_query = ExamMeta.objects.filter(event_id = obj.schedule_id)
 
         if len(meta_duration_query) == 0:
             return '-'
@@ -203,63 +222,75 @@ class exam_events_schedule_serializer(serializers.ModelSerializer):
             # print(meta_duration_query.__dict__)
             # print('duration_mins' in meta_duration_query)
             
-            return meta_duration_entry.duration_mins
-        
+            return meta_duration_entry.duration_mins # Return remaining time in Minutes
 
-class exam_event_serializer(serializers.ModelSerializer):
+    def get_json_count(self,obj):
+        '''
+        Return the count of attendance model where json is created
+        '''
+        if self.context.get('user').profile.usertype == 'hm':
+            return EventAttendance.objects.filter(event_id=obj.schedule_id,json_created=True).count()
+        else:
+            return None
+    
+    def get_user_type(self,obj):
+        return self.context.get('user').profile.usertype
+
+
+class ExamEventSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models_scheduler.event.objects.create(**validated_data)
+        return event.objects.create(**validated_data)
 
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models_scheduler.event
+        model = event
         fields = '__all__'
 
     def getusername(self,obj):
         return obj.user.username
 
-class exam_participants_serializer(serializers.ModelSerializer):
+class ExamParticipantsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models_scheduler.participants.objects.create(**validated_data)
+        return participants.objects.create(**validated_data)
 
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models_scheduler.participants
+        model = participants
         fields = '__all__'
 
     def getusername(self,obj):
         return obj.user.username
 
-class exam_scheduling_serializer(serializers.ModelSerializer):
+class ExamSchedulingSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        return models_scheduler.scheduling.objects.create(**validated_data)
+        return scheduling.objects.create(**validated_data)
 
     class Meta:
-        model = models_scheduler.scheduling
+        model = scheduling
         fields = '__all__'
 
 
 class ExamMetaSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.ExamMeta.objects.create(**validated_data)
+        return ExamMeta.objects.create(**validated_data)
 
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.ExamMeta
+        model = ExamMeta
         fields = '__all__'
 
 class QpSetsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.QpSet.objects.create(**validated_data)
+        return QpSet.objects.create(**validated_data)
     
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.QpSet
+        model = QpSet
         fields = '__all__'
 
 
@@ -268,12 +299,12 @@ class QpSetsSerializer(serializers.ModelSerializer):
 
 class QuestionsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.Question.objects.create(**validated_data)
+        return Question.objects.create(**validated_data)
     
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.Question
+        model = Question
         fields = '__all__'
 
 
@@ -283,12 +314,12 @@ class QuestionsSerializer(serializers.ModelSerializer):
 
 class ChoicesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return models.Choice.objects.create(**validated_data)
+        return Choice.objects.create(**validated_data)
     
     username = serializers.SerializerMethodField('getusername')
 
     class Meta:
-        model = models.Choice
+        model = Choice
         fields = '__all__'
 
     def getusername(self,obj):

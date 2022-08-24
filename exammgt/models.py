@@ -1,5 +1,3 @@
-from configparser import SectionProxy
-import random
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -20,16 +18,16 @@ class Profile(models.Model):
     
     '''
 
-    user        = models.OneToOneField(User, on_delete=models.CASCADE)
-    name_text   = models.CharField(max_length=30,null=True,blank=True)
-    section     = models.CharField(max_length=30,null=True,blank=True)
-    student_class = models.IntegerField(null=True,blank=True)
-    usertype    = models.CharField(max_length=30,null=True,blank=True)
-    udise_code  = models.CharField(max_length=30,null=True,blank=True)
-    district_id = models.CharField(max_length=30,null=True,blank=True)
-    block_id    = models.CharField(max_length=30,null=True,blank=True)
-    school_id   = models.CharField(max_length=30,null=True,blank=True)
-    priority    = models.IntegerField(default=20)
+    user            = models.OneToOneField(User, on_delete=models.CASCADE)
+    name_text       = models.CharField(max_length=30,null=True,blank=True)
+    section         = models.CharField(max_length=30,null=True,blank=True)
+    student_class   = models.IntegerField(null=True,blank=True)
+    usertype        = models.CharField(max_length=30,null=True,blank=True)
+    udise_code      = models.CharField(max_length=30,null=True,blank=True)
+    district_id     = models.CharField(max_length=30,null=True,blank=True)
+    block_id        = models.CharField(max_length=30,null=True,blank=True)
+    school_id       = models.CharField(max_length=30,null=True,blank=True)
+    priority        = models.IntegerField(default=20)
 
 
     def __str__(self):
@@ -39,7 +37,7 @@ class ExamMeta(models.Model):
     event_id                            = models.BigIntegerField(primary_key=True)
     subject                             = models.CharField(max_length=1024)
     no_of_questions                     = models.IntegerField()
-    duration_mins                        = models.IntegerField()
+    duration_mins                       = models.IntegerField()
     qtype                               = models.CharField(max_length=1024)
     total_marks                         = models.IntegerField()
     qshuffle                            = models.BooleanField(default=False)
@@ -77,29 +75,35 @@ class Question(models.Model):
 
 
 class Choice(models.Model):
-    qid                           = models.BigIntegerField()
-    cid                           = models.IntegerField(primary_key=True)
-    cimage                        = models.TextField()
-    created_on                    = models.DateTimeField(auto_now = True)
+    qid         = models.BigIntegerField()
+    cid         = models.IntegerField(primary_key=True)
+    cimage      = models.TextField()
+    created_on  = models.DateTimeField(auto_now = True)
 
     def __str__(self):
         return "{0}-{1}-{2}".format(self.qid, self.cid, self.created_on)
 
 
-class exam_response(models.Model):
-    event_id                            = models.BigIntegerField()
-    student_username                    = models.IntegerField()
-    qp_set_id                           = models.IntegerField()
-    question_id                         = models.IntegerField()
-    selected_choice_id                  = models.IntegerField(null=True, blank=True)
-    question_result                     = models.IntegerField(null=True,  blank=True)
-    review                              = models.BooleanField(default=False)
-    created_on                          = models.DateTimeField(auto_now = True)
+class ExamResponse(models.Model):
+    '''
+    Model to record the response of each candidate
+    '''
+    event_id            = models.BigIntegerField()
+    student_username    = models.IntegerField()
+    qp_set_id           = models.IntegerField()
+    question_id         = models.IntegerField()
+    selected_choice_id  = models.IntegerField(null=True, blank=True)
+    question_result     = models.IntegerField(null=True,  blank=True)
+    review              = models.BooleanField(default=False)
+    created_on          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
         return "{0}-{1}-{2}".format(self.id,self.event_id,self.created_on)
 
-class event_attendance(models.Model):
+class EventAttendance(models.Model):
+    '''
+    Model to record the exam instance of each candidate
+    '''
     event_id            = models.BigIntegerField()
     student_username    = models.IntegerField()
     qp_set              = models.CharField(max_length=30,null=True,blank=True)
