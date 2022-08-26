@@ -42,7 +42,7 @@ class GenerateJSON(APIView):
         event_attendances = EventAttendance.objects.filter(event_id = data['event_id'],json_created=False).exclude(end_time=None)
 
         if len(event_attendances) == 0:
-            return Response ({'api_status':True,'message':'No new candidates completed the exam'})
+            return Response ({'api_status':True,'message':'Atleast one new candidate has to completed the exam'})
         
         folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}")
         os.makedirs(folder_dir, exist_ok=True)
@@ -124,7 +124,7 @@ class GenerateJSON(APIView):
 
         
 
-        return Response({'api_status':True,'message':f"JSON file generated/updated successfully for {len(details_object)} students"})
+        return Response({'api_status':True,'message':f"JSON file generated successfully for {len(details_object)} students"})
 
 
 

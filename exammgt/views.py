@@ -1223,7 +1223,7 @@ class LoadEvent(APIView):
             return Response({'api_status':True,'message':'Event data loaded'})
         except Exception as e:
             print(f'Exception raised while loading event data : {e}')
-            return Response({'api_status':False,'message':f'Exception raised while loading event data : {e}'})
+            return Response({'api_status':False,'message':'unable to fetch events','exception':f'Exception raised while loading event data : {e}'})
 
 class LoadReg(APIView):
 
@@ -1412,7 +1412,7 @@ class LoadReg(APIView):
             return Response({'reg_status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while load registeration data throught API : {e}')
-            return Response({'reg_status':False,'message':f'Exception raised while load registeration data throught API : {e}'})
+            return Response({'reg_status':False,'message':'Error in Registeration','exception':f'Exception raised while load registeration data throught API : {e}'})
 
 class InitialReg(APIView):
     '''
@@ -1782,14 +1782,16 @@ class ConsSummary(APIView):
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
             scheduling_obj = scheduling_queryset[0]
 
-            students_query = f"  SELECT emis_username,  student_name, class_studying_id, class_section FROM emisuser_student WHERE class_studying_id = {scheduling_obj.class_std} "
+            # students_query = f"  SELECT emis_username,  student_name, class_studying_id, class_section FROM emisuser_student WHERE class_studying_id = {scheduling_obj.class_std} "
+            # if scheduling_obj.class_section != None:
+            #     students_query = f"{students_query} AND class_section = '{scheduling_obj.class_section}'"
 
+            students_query = f" SELECT l.emis_username, r.name, r.class_studying_id, r.class_section FROM emisuser_student l LEFT JOIN students_child_detail r ON l.emis_user_id = r.id WHERE r.class_studying_id = {scheduling_obj.class_std}"
+            if scheduling_obj.class_section != None:
+                students_query = f"{students_query} AND r.class_section = '{scheduling_obj.class_section}'"
+            
 
             #students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
-
-            if scheduling_obj.class_section != None:
-                students_query = f"{students_query} AND class_section = '{scheduling_obj.class_section}'"
-
                 #students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
 
 
