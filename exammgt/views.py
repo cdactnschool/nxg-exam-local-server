@@ -39,6 +39,8 @@ import sqlite3
 
 import logging
 
+import shutil
+
 logger      = logging.getLogger('monitoringdebug')
 accesslog   = logging.getLogger('accesslog')
 errorlog    = logging.getLogger('errorlog')
@@ -1046,7 +1048,29 @@ class GenerateQuestionPaper(APIView):
             configure_qp_data['user'] = request.user.username
             configure_qp_data['api_status'] = True
             return Response(configure_qp_data)
-   
+
+def get_school_token():
+    try:
+        cn = connection()
+
+        if cn == None:
+            data = {}
+            data['api_status'] = False
+            data['message'] = 'School server Not reachable'
+            return Response(data)
+        
+        mycursor = cn.cursor()
+
+        query = f"SELECT {settings.SCHOOL_TOKEN} from {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+
+        mycursor.execute(query)
+        school_token_response = mycursor.fetchall()
+
+        return school_token_response[0][0]
+
+    except:
+        return 'first_request'
+
        
 class LoadEvent(APIView):
     '''
@@ -1095,7 +1119,8 @@ class LoadEvent(APIView):
             school_id = school_id_response[0][0]
             payload = {
                 "username" : 'test',
-                "school_id" : school_id
+                "school_id" : school_id,
+                "school_token":get_school_token()
             }
 
             print('-------payload------',payload)
@@ -1110,8 +1135,8 @@ class LoadEvent(APIView):
 
 
             print(res_fname, res_md5sum)
-
-            file_path = os.path.join(settings.MEDIA_ROOT, 'eventdata', res_fname.strip())
+            load_event_base = os.path.join(settings.MEDIA_ROOT, 'eventdata')
+            file_path = os.path.join(load_event_base, res_fname.strip())
             #eventpath = file_path.split(res_fname)[0]
             eventpath = os.path.join(file_path.split(res_fname)[0],'tn_school_event')
 
@@ -1215,15 +1240,20 @@ class LoadEvent(APIView):
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
                 "request_type":request_type,
-                "zip_hash":res_md5sum
+                "zip_hash":res_md5sum,
+                "school_token":get_school_token()
             })
 
             requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
-            return Response({'api_status':True,'message':'Event data loaded'})
+            # Deleting the residual files
+
+            shutil.rmtree(load_event_base,ignore_errors=False,onerror=None)
+
+            return Response({'api_status':True,'message':'Event data loaded','school_token':get_school_token()})
         except Exception as e:
             print(f'Exception raised while loading event data : {e}')
-            return Response({'api_status':False,'message':'unable to fetch events','exception':f'Exception raised while loading event data : {e}'})
+            return Response({'api_status':False,'message':'unable to fetch events','exception':f'Exception raised while loading event data : {e}','school_token':get_school_token()})
 
 class LoadReg(APIView):
 
@@ -1240,10 +1270,12 @@ class LoadReg(APIView):
        
             udise_code = request.data['udise']
             print(udise_code)
+
             payload = json.dumps({
                 "udise_code" : request.data['udise'],
                 "name":request.data['name'],
-                "mobile_no":request.data['mobileno']
+                "mobile_no":request.data['mobileno'],
+                "school_token":get_school_token()
 
             })
           
@@ -1254,13 +1286,15 @@ class LoadReg(APIView):
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
             request_type = get_events_response.headers.get('process_str')
+            school_token = get_events_response.headers.get('school_token')
 
             print(res_fname, res_md5sum)
 
             # os.system()
 
+            load_reg_base = os.path.join(settings.MEDIA_ROOT, 'regdata')
 
-            file_path = os.path.join(settings.MEDIA_ROOT, 'regdata', res_fname.strip())
+            file_path = os.path.join(load_reg_base, res_fname.strip())
             #file_path = os.path.join(settings.MEDIA_ROOT, 'regdata', "regdata.7z")
 
             print(file_path, '-=--=--', file_path.split(res_fname)[0])
@@ -1393,10 +1427,33 @@ class LoadReg(APIView):
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
                 "request_type":request_type,
-                "zip_hash":res_md5sum
+                "zip_hash":res_md5sum,
+                "school_token":get_school_token()
             })
 
             requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
+
+            # update the school token
+
+            try:
+
+                print('--------token------',school_token,'---------')
+
+                query = f"UPDATE {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} SET habitation_name = '{school_token}' WHERE udise_code = {udise_code}"
+                print('-------------query statement-----------',query)
+
+                cursor_response = mycursor.execute(query)
+                print('~~~~~~~~~~~~~~~~~',cursor_response)
+                cn.commit()
+
+
+            except Exception as e:
+                return Response ({"api_status" : False, "message":"Error in updating the school_token", "exception":str(e)})
+
+            print('-----print---token-----',get_school_token(),'-------------')
+
+            # Delete residual files
+            shutil.rmtree(load_reg_base,ignore_errors=False,onerror=None)
 
             # Create groups
             try:
@@ -1425,7 +1482,7 @@ class InitialReg(APIView):
             #data = {'udise_code':33150901903}
 
             if 'udise_code' not in data:
-                return Response({'api_status':False,'message':'udise_code not provided','school_name':''})
+                return Response({'api_status':False,'message':'udise_code not provided'})
             
             req_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
 
@@ -1517,7 +1574,8 @@ class MetaData(APIView):
             req_url = f"{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
             payload = json.dumps({
                 'event_id':request_data['event_id'],
-                'school_id':school_id_response[0][0]
+                'school_id':school_id_response[0][0],
+                'school_token':get_school_token()
             })
 
             get_meta_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
@@ -1536,7 +1594,10 @@ class MetaData(APIView):
 
             print(res_fname, res_md5sum)
 
-            file_path = os.path.join(settings.MEDIA_ROOT, 'examdata', res_fname.strip())
+            # Delete residual files
+            load_meta_base = os.path.join(settings.MEDIA_ROOT, 'examdata')
+
+            file_path = os.path.join(load_meta_base, res_fname.strip())
             questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
             print(file_path, '-=--=--', questionpath)
@@ -1688,12 +1749,19 @@ class MetaData(APIView):
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
                 "request_type":request_type,
-                "zip_hash":res_md5sum
+                "zip_hash":res_md5sum,
+                "school_token":get_school_token()
             })
 
             requests.request("POST", ack_url, data=ack_payload, verify=settings.CERT_FILE) 
       
             os.system('rm -rf ' + json_file_path)
+
+            # Delete residual files
+
+            shutil.rmtree(load_meta_base,ignore_errors=False,onerror=None)
+
+
             return Response({'api_status':True,'message':'Meta data loaded successfully'})
          
         except Exception as e:
@@ -1870,5 +1938,334 @@ class GetUserDetail(APIView):
                 data['block_id']    = request.user.profile.block_id
                 data['school_id']   = request.user.profile.school_id
             except Exception as e:
-                return Response({'api_status':False,'message':'Error in fetching user details'})
+                return Response({'api_status':False,'message':'Error in fetching user details','exception':str(e)})
         return Response({"api_status":True,"content":data})
+
+
+class MetaUpload(APIView):
+    '''
+    API class to manually upload the Meta Data
+
+    Input parameter
+    ```````````````
+
+    event_id -> ID of the event
+    archive -> Compressed 7Zip file
+
+    
+    '''
+    # if settings.AUTH_ENABLE:
+    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    def post(self, request, *args,**kwargs):
+        
+        try:
+            event_id = request.data['event_id']
+            file_obj = request.data['archive']
+            file_name = file_obj.name
+
+            file_path = os.path.join(settings.MEDIA_ROOT,'examdata')
+
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+            
+            zip_file = os.path.join(file_path,file_name)
+            print('----------zipfilepath-------',zip_file)
+            with open(zip_file,'wb') as fle:
+                for chunk in file_obj.chunks():
+                    if chunk:
+                        fle.write(chunk)
+
+            meta_path = os.path.join(file_path,event_id)
+
+            if not os.path.exists(meta_path):
+                os.makedirs(meta_path)
+
+            with py7zr.SevenZipFile(zip_file, mode='r') as z:
+                    z.extractall(path=meta_path)
+
+
+            print('------Uploading Meta Data File-------',file_obj)
+
+            json_file_path = meta_path
+
+            for file in os.listdir(json_file_path):
+                    if file.startswith('meta'):
+                        # print('File :',file)
+                        print('full path :',os.path.join(json_file_path,file))
+                        with open(os.path.join(json_file_path,file), 'r') as f:
+                            meta_data = json.load(f)
+            print(meta_data)
+
+            if meta_data == None:
+                return Response({'api_status':False,'message':'Incorrect Mapping File'})
+
+            print(f"--------{meta_data['event_id']}---------{event_id}")
+            if meta_data['event_id'] != event_id:
+                return Response({'api_status':False,'message':'Incorrect Mapping File'})
+
+            event_meta_data = {}
+            event_meta_data['event_id'] = meta_data['event_id']
+            event_meta_data['subject'] = meta_data['subject']
+            event_meta_data['no_of_questions'] = meta_data['no_of_questions']
+            event_meta_data['duration_mins'] = meta_data['duration_mins']
+            
+            event_meta_data['qtype'] = meta_data["qtype"]
+            event_meta_data['total_marks'] = meta_data['total_marks']
+            event_meta_data['no_of_batches'] = meta_data['no_of_batches']
+            event_meta_data['qshuffle'] = meta_data['qshuffle']
+            event_meta_data['show_submit_at_last_question'] = meta_data['show_submit_at_last_question']
+            event_meta_data['show_summary'] = meta_data['show_summary']
+            event_meta_data['show_result'] = meta_data['show_result']
+            event_meta_data['end_alert_time'] = meta_data['end_alert_time']
+            event_meta_data['show_instruction'] = meta_data['show_instruction']
+            event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
+            print('~~~~~~~~~~~~~~~~~~~')
+            print(event_meta_data)
+
+            iit_qp_set_list = []
+            iit_question_id_list = []
+            for meta in meta_data['qp_set_list']:
+                iit_qp_set_list.append(meta['qp_set_id'])
+                qp_list = meta['question_id_list']
+                iit_question_id_list.append(qp_list)
+
+            # event_meta_data['qp_set_list'] = str(iit_qp_set_list) #we need string for store into database
+            # print('--------',event_meta_data)
+            
+            qp_set_data = []
+            for qp_set, q_id in zip(iit_qp_set_list, iit_question_id_list):
+                tmp_dict_data = {}
+                tmp_dict_data['qp_set_id'] = qp_set
+                tmp_dict_data['q_ids'] = q_id
+                qp_set_data.append(tmp_dict_data)
+            
+            event_meta_data['qp_set_data'] = qp_set_data
+
+            # Push the exam_meta_object_edit
+            exam_meta_filter  = {
+                "event_id" : event_id
+                
+                }
+            exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
+            if len(exam_meta_object_edit) == 0:
+                serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
+                if serialized_exam_meta.is_valid():
+                    serialized_exam_meta.save()
+                    
+                else:
+                    print(f'Error in serialization of Exam meta data : {serialized_exam_meta.errors}')
+                    return Response({"api_status":False,"message":"Incorrect data in serializing Exam Meta data","error":serialized_exam_meta.errors})
+
+            else:
+                print('\n')
+                print('-----------------------------------------------------------')
+                print('Event ID is already present into school local database....')
+                
+                print('-----------------------------------------------------------')
+
+
+            for qp_data in event_meta_data['qp_set_data']:
+                    tmp_qp_sets_data = {}
+                    tmp_qp_sets_data['event_id'] = event_meta_data['event_id']
+                    tmp_qp_sets_data['qp_set_id'] = qp_data['qp_set_id']
+                    tmp_qp_sets_data['qid_list'] = str(qp_data['q_ids'])
+                    
+                
+                    qp_sets_filter  = {
+                                    "qp_set_id" : qp_data['qp_set_id']
+                                }
+                    
+                    qp_set_object_edit = models.QpSet.objects.filter(**qp_sets_filter)
+                    if len(qp_set_object_edit) == 0:
+                        serialized_qp_sets = serializers.QpSetsSerializer(data=tmp_qp_sets_data,many=False)
+                        if serialized_qp_sets.is_valid():
+                            serialized_qp_sets.save()
+                            
+                        else:
+                            print(f'Error in serialization of QP Sets : {serialized_qp_sets.errors}')
+                            return Response({"api_status":False,"message":"Incorrect data in serializing QP Sets","error":serialized_qp_sets.errors})
+                    else:
+                        print('\n')
+                        print('-----------------------------------------------------------')
+                        print('QP SET ID is already present into school local database....')
+                        
+                        print('-----------------------------------------------------------')
+
+            #Read the question .json -> Qpset, Question and Choices
+            for file in os.listdir(json_file_path):
+                if file.startswith('qpdownload'):
+                    # print('File :',file)
+                    print('full path :',os.path.join(json_file_path,file))
+                    with open(os.path.join(json_file_path,file), 'r') as f:
+                        qpdownload_list = json.load(f)
+
+                    #print(qpdownload_list)
+                    try:
+                        load_question_choice_data(qpdownload_list)
+                    except Exception as e:
+                        return Response({'api_status':False,'message':'Error reading qpdownload json data...!','exception':str(e)})
+
+            # Delete residual file
+            shutil.rmtree(file_path,ignore_errors=False,onerror=None)
+            
+
+            # return Response({'api_status':True,'dir':dir(file_obj),'name':file_obj.name,'type':file_obj.content_type})
+            return Response({'api_status':True,'message':'Meta data uploaded successfully'})
+        except Exception as e:
+            return Response({'api_status':False,'message':'Unable to upload the meta data','exception':str(e)})
+
+
+class ResetDB(APIView):
+    '''
+    API class to deregister DB
+
+    Drop the students_school_child_count table
+
+    '''
+
+    def post(self,request,*args,**kwargs):
+        try :
+            
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['api_status'] = False
+                data['message'] = 'School server Not reachable'
+                return Response(data)
+            
+            mycursor = cn.cursor()
+
+            query = f"DROP TABLE {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT};"
+
+            mycursor.execute(query)
+
+            cn.close()
+
+            return Response({'api_status':True,'messge':'De-Registeration successful'})
+        
+        except Exception as e:
+            return Response({'api_status':False,'message':'Unable to De-Register','exception':str(e)})
+
+
+class ListCleanerID(APIView):
+    '''
+    API class to list old event IDs which can be deleted
+    '''
+    def post(self,request,*args,**kwargs):
+        
+        
+
+        return Response({'api_status':True})
+
+class MasterCleaner(APIView):
+    '''
+    API class to delete files and data from DB based on EventID
+
+    InputParameter
+    ``````````````
+
+    event_id : Event id which needs to be deleted
+
+    Files
+    `````
+    1. Delete files in questions_json
+    2. Delete files in cons_data
+
+    DB Tables
+    `````````
+    1. EventAttendance
+    2. ExamResponse
+    3. ExamMeta
+    4. QpSet
+    5. Question
+    6. Choice
+
+    '''
+    def post(self,request,*args,**kwargs):
+
+        # Check condition for delete
+
+
+
+        try:
+
+            event_id = request.data['event_id']
+
+            if models.ExamMeta.objects.filter(event_id=event_id).count() == 0:
+                return Response({'api_status':False,'message':f"Event_id : {event_id} not available !!"})
+
+            # Delete from EventAttendance Table
+            try:
+                models.EventAttendance.objects.filter(event_id=event_id).delete()
+            except Exception as e:
+                return Response({'api_status':False,'message':"Error in deleting data in EventAttendance Table",'exception':str(e)})
+            
+            # Delete from ExamResponse Table
+            try:
+                models.ExamResponse.objects.filter(event_id=event_id).delete()
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting data in ExamResponse Table','exception':str(e)})
+
+            # Delete from ExamMeta Table
+            try:
+                models.ExamMeta.objects.filter(event_id=event_id).delete()
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting data in ExamMeta Table','exception':str(e)})
+
+
+            # Delete from QpSet Table
+            try:
+                qid_list = []
+                qp_objects = models.QpSet.objects.filter(event_id=event_id)
+                for qp_obj in qp_objects:
+                    print('****',eval(qp_obj.qid_list))
+                    for q_element in eval(qp_obj.qid_list):
+                        if q_element not in qid_list:
+                            qid_list.append(q_element)
+                qp_objects.delete()
+
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting data in QpSet Table','exception':str(e)})
+
+            print('-------',qid_list,'---------')
+
+            # Delete from Question Table
+            try:
+                models.Question.objects.filter(qid__in=qid_list).delete()
+            
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting data in Question Table','exception':str(e)})
+
+            # Delete from Choice Table
+            try:
+                models.Choice.objects.filter(qid__in=qid_list).delete()
+            
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting data in Choice Table','exception':str(e)})
+            
+            # Deletion of files
+
+            # Delete the eventID's questions_json files
+            questions_folder = os.path.join(settings.MEDIA_ROOT,'questions_json')
+
+            try:
+                if os.path.exists(questions_folder):
+                    for fname in os.listdir(questions_folder):
+                        if fname.startswith(f"{event_id}_"):
+                            os.remove(os.path.join(questions_folder, fname))
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting files in questions_json folder'})
+
+            # Delete the eventID's cons_data
+            cons_data_folder = os.path.join(settings.MEDIA_ROOT,'cons_data',f'{event_id}')
+            try:
+                if os.path.exists(cons_data_folder):
+                    shutil.rmtree(cons_data_folder,ignore_errors=False,onerror=None)
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in deleting files in cons_data folder'})
+
+            return Response({'api_status':True,'message':f"Clean-up completed for event_id : {event_id}"})
+
+        except Exception as e:
+            return Response({'api_status':False,'message':f'Error in cleaning up event_id : {event_id}','exception':f'{e}'})

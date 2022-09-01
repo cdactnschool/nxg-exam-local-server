@@ -47,10 +47,11 @@ class ExamMeta(models.Model):
     end_alert_time                      = models.IntegerField()
     show_instruction                    = models.BooleanField(default=False)
     qp_set_list                         = models.TextField()
+    sync_done                           = models.BooleanField(default=False)
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return "{0}-{1}-{2}".format(self.event_id, self.subject, self.created_on)
+        return "{0}-{1}-{2}-{3}".format(self.event_id, self.subject, self.created_on,self.sync_done)
 
 class QpSet(models.Model):
     event_id                            = models.BigIntegerField()

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import localserver as ls
-from .views import db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, ExamResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary
+from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, ExamResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner
 from .views_adv import GenerateJSON
 
 from rest_framework_simplejwt.views import (
@@ -37,4 +37,7 @@ urlpatterns = [
     path('cons-summary',                    ConsSummary.as_view(),                  name='cons-summary'),
     path('gen-json',                        GenerateJSON.as_view(),                 name='gen-json'),
 
+    path('meta-upload',                     MetaUpload.as_view(),                   name='qpupload'),
+    path('reset-db',                        ResetDB.as_view(),                      name='reset-db'),
+    path('event-cleaner',                   MasterCleaner.as_view(),                name='event-cleaner')
     ]
