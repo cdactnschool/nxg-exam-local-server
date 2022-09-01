@@ -292,10 +292,11 @@ LOGGING = {
 AUTH_ENABLE = True # Enable is_authentication in views.py file
 
 CENTRAL_SERVER_IP = 'https://exam.tnschools.gov.in'
-# CENTRAL_SERVER_IP = '10.184.36.154:8000'
+# CENTRAL_SERVER_IP = 'http://10.184.36.20:8000'
 
 CERT_FILE = os.path.join(BASE_DIR, 'cert/schoolexam-RootCA.cert.pem')
 # CERT_FILE = False
+
 # Remote DB names:
 DB_BASEAPP_GROUP_CODE           = 'baseapp_group_code'
 DB_EMIS_USERLOGIN               = 'emis_userlogin'
@@ -308,3 +309,6 @@ DB_STUDENTS_SCHOOL_CHILD_COUNT  = 'students_school_child_count'
 DB_UDISE_STAFFREG               = 'udise_staffreg'
 DB_USER_CATEGORY                = 'user_category'
 DB_USER_SELECTED_ANSWERS        = 'user_selected_answers'
+
+
+SCHOOL_TOKEN = 'habitation_name'
