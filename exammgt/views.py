@@ -1118,7 +1118,6 @@ class LoadEvent(APIView):
        
             school_id = school_id_response[0][0]
             payload = {
-                "username" : 'test',
                 "school_id" : school_id,
                 "school_token":get_school_token()
             }
@@ -1132,6 +1131,11 @@ class LoadEvent(APIView):
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
             request_type = get_events_response.headers.get('process_str')
+
+            event_id_list = get_events_response.headers.get('event_id_list')
+            if type(event_id_list) != list:
+                event_id_list = eval(event_id_list)
+
 
 
             print(res_fname, res_md5sum)
@@ -1241,7 +1245,8 @@ class LoadEvent(APIView):
                 "school_id" : school_id_response[0][0],
                 "request_type":request_type,
                 "zip_hash":res_md5sum,
-                "school_token":get_school_token()
+                "school_token":get_school_token(),
+                "event_id_list":event_id_list
             })
 
             requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
@@ -1420,18 +1425,6 @@ class LoadReg(APIView):
             if len(school_id_response) == 0:
                 return Response({'reg_status':False,'message':'Registeration data not loaded yet'})
 
-            # send ack to central server
-
-            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
-
-            ack_payload = json.dumps({
-                "school_id" : school_id_response[0][0],
-                "request_type":request_type,
-                "zip_hash":res_md5sum,
-                "school_token":get_school_token()
-            })
-
-            requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
             # update the school token
 
@@ -1451,6 +1444,19 @@ class LoadReg(APIView):
                 return Response ({"api_status" : False, "message":"Error in updating the school_token", "exception":str(e)})
 
             print('-----print---token-----',get_school_token(),'-------------')
+
+            # send ack to central server
+
+            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+
+            ack_payload = json.dumps({
+                "school_id" : school_id_response[0][0],
+                "request_type":request_type,
+                "zip_hash":res_md5sum,
+                "school_token":get_school_token()
+            })
+
+            requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
             # Delete residual files
             shutil.rmtree(load_reg_base,ignore_errors=False,onerror=None)
@@ -1750,7 +1756,8 @@ class MetaData(APIView):
                 "school_id" : school_id_response[0][0],
                 "request_type":request_type,
                 "zip_hash":res_md5sum,
-                "school_token":get_school_token()
+                "school_token":get_school_token(),
+                "event_id_list":[request_data['event_id']]
             })
 
             requests.request("POST", ack_url, data=ack_payload, verify=settings.CERT_FILE) 
@@ -2150,13 +2157,49 @@ class ResetDB(APIView):
 
 class ListCleanerID(APIView):
     '''
-    API class to list old event IDs which can be deleted
+    API class to list old event IDs which can be deleted -> For Events which are old and ExamMeta.sync_done = False
+
+    Conditions being checked
+    `````````````````````````
+    1. No ExamMeta object with sync_done = False => An Exam is actively running or Meta data is loaded for the upcoming exam
+    2. Check if the event_id is older than the residual delete days (set from settings.RESIDUAL_DELETE_DAYS)
+
     '''
     def post(self,request,*args,**kwargs):
         
-        
+        try:
 
-        return Response({'api_status':True})
+            if models.ExamMeta.objects.filter(sync_done = False).count() > 0:
+                return Response({'api_status':False,'message':'Some exams not completed yet'})
+
+            # Filter only the ExamMeta objects which have sync_done = True
+            list_meta_obj = models.ExamMeta.objects.filter(sync_done = True)
+
+            # list_events_clean
+            data_events = []
+            for meta_obj in list_meta_obj:
+                if SchedulerModels.scheduling.objects.filter(schedule_id=meta_obj.event_id).exists():
+                    sch_obj = SchedulerModels.scheduling.objects.get(schedule_id=meta_obj.event_id)
+                    
+                    # Append only if scheduler endtime is greater than the current date with residual days
+                    if sch_obj.event_enddate < (datetime.datetime.now()-datetime.timedelta(days=settings.RESIDUAL_DELETE_DAYS)).date():
+                        data_events.append({
+                            'event_id':         meta_obj.event_id,
+                            'event_title':      sch_obj.event_title,
+                            'class_std':        sch_obj.class_std,
+                            'class_section':    sch_obj.class_section,
+                            'class_subject':    sch_obj.class_subject,
+                            'event_startdate':  sch_obj.event_startdate,
+                            'event_enddate':    sch_obj.event_enddate
+                            })
+
+            if len(data_events) == 0:
+                return Response({'api_status':False,'message':'No events to delete'})
+
+            return Response({'api_status':True,'data':data_events})
+        
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in fetching list of IDs for cleaner','exception':f'{e}'})
 
 class MasterCleaner(APIView):
     '''
