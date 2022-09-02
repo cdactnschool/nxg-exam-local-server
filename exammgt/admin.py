@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Question, Choice, QpSet, ExamMeta, EventAttendance, ExamResponse
+from .models import Profile, Question, Choice, QpSet, ExamMeta, EventAttendance, ExamResponse, MiscInfo
 
 # Register your models here.
 
@@ -10,3 +10,4 @@ admin.site.register(QpSet)
 admin.site.register(ExamMeta)
 admin.site.register(EventAttendance)
 admin.site.register(ExamResponse)
+admin.site.register(MiscInfo)

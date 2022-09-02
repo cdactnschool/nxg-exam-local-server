@@ -17,11 +17,10 @@ import random
 
 from .import models
 from . import serializers
-from scheduler import models as SchedulerModels
+from scheduler import models as models_scheduler
 
 import itertools
 from collections import OrderedDict
-from scheduler import models as models_scheduler
 
 import datetime
 import os
@@ -1261,6 +1260,13 @@ class LoadEvent(APIView):
 
             shutil.rmtree(load_event_base,ignore_errors=False,onerror=None)
 
+            if models.MiscInfo.objects.all().count() == 0:
+                models.MiscInfo.objects.create(event_dt = datetime.datetime.now())
+            else :
+                misc_obj = models.MiscInfo.objects.all().first()
+                misc_obj.event_dt = datetime.datetime.now()
+                misc_obj.save()
+
             return Response({'api_status':True,'message':'Event data loaded','school_token':get_school_token()})
         except Exception as e:
             print(f'Exception raised while loading event data : {e}')
@@ -1477,6 +1483,12 @@ class LoadReg(APIView):
             except Exception as e:
                 print('Exception in creating groups :',e)
 
+            if models.MiscInfo.objects.all().count() == 0:
+                models.MiscInfo.objects.create(reg_dt = datetime.datetime.now())
+            else :
+                misc_obj = models.MiscInfo.objects.all().first()
+                misc_obj.reg_dt = datetime.datetime.now()
+                misc_obj.save()
 
             return Response({'reg_status':True,'message':'Registeration data loaded'})
         except Exception as e:
@@ -1581,6 +1593,13 @@ class MetaData(APIView):
             request_data = request.data
 
             print('-------------------------')
+            
+            if models_scheduler.scheduling.objects.filter(schedule_id=request_data['event_id']).exists() == False:
+                return Response({'api_status':False,'message':'Event Not allocated for this school'})
+
+            
+            scheduling_queryset = models_scheduler.scheduling.objects.get(schedule_id=request_data['event_id'])
+            
 
             #request_data['event_id'] = 2349
             req_url = f"{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
@@ -1696,6 +1715,13 @@ class MetaData(APIView):
                 "event_id" : request_data['event_id']
              
                 }
+            
+            event_meta_data['event_title'] = scheduling_queryset.event_title
+            event_meta_data['class_std'] = scheduling_queryset.class_std
+            event_meta_data['class_section'] = scheduling_queryset.class_section
+            event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
+            event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
+
             exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
                 serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
@@ -2163,29 +2189,35 @@ class ResetDB(APIView):
 
 class ListCleanerID(APIView):
     '''
-    API class to list old event IDs which can be deleted -> For Events which are old and ExamMeta.sync_done = False
+    API class to list old event IDs which can be deleted -> For Events which are old and ExamMeta.sync_done = 1
 
     Conditions being checked
     `````````````````````````
-    1. No ExamMeta object with sync_done = False => An Exam is actively running or Meta data is loaded for the upcoming exam
+    1. No ExamMeta object with sync_done = 0 => An Exam is actively running or Meta data is loaded for the upcoming exam
     2. Check if the event_id is older than the residual delete days (set from settings.RESIDUAL_DELETE_DAYS)
+
+    sync_done -> status
+    ```````````````````
+    0 -> Default
+    1 -> Exam completed
+    2 -> Cleanup completed
 
     '''
     def post(self,request,*args,**kwargs):
         
         try:
 
-            if models.ExamMeta.objects.filter(sync_done = False).count() > 0:
+            if models.ExamMeta.objects.filter(sync_done = 0).count() > 0:
                 return Response({'api_status':False,'message':'Some exams not completed yet'})
 
             # Filter only the ExamMeta objects which have sync_done = True
-            list_meta_obj = models.ExamMeta.objects.filter(sync_done = True)
+            list_meta_obj = models.ExamMeta.objects.filter(sync_done = 1)
 
             # list_events_clean
             data_events = []
             for meta_obj in list_meta_obj:
-                if SchedulerModels.scheduling.objects.filter(schedule_id=meta_obj.event_id).exists():
-                    sch_obj = SchedulerModels.scheduling.objects.get(schedule_id=meta_obj.event_id)
+                if models_scheduler.scheduling.objects.filter(schedule_id=meta_obj.event_id).exists():
+                    sch_obj = models_scheduler.scheduling.objects.get(schedule_id=meta_obj.event_id)
                     
                     # Append only if scheduler endtime is greater than the current date with residual days
                     if sch_obj.event_enddate < (datetime.datetime.now()-datetime.timedelta(days=settings.RESIDUAL_DELETE_DAYS)).date():
@@ -2223,9 +2255,9 @@ class MasterCleaner(APIView):
 
     DB Tables
     `````````
-    1. EventAttendance
+    1. EventAttendance (Commented)
     2. ExamResponse
-    3. ExamMeta
+    3. ExamMeta (Commented)
     4. QpSet
     5. Question
     6. Choice
@@ -2241,14 +2273,17 @@ class MasterCleaner(APIView):
 
             event_id = request.data['event_id']
 
+            # Check if event_id is available or not
             if models.ExamMeta.objects.filter(event_id=event_id).count() == 0:
                 return Response({'api_status':False,'message':f"Event_id : {event_id} not available !!"})
+            
+            metaObj = models.ExamMeta.objects.get(event_id=event_id)
 
             # Delete from EventAttendance Table
-            try:
-                models.EventAttendance.objects.filter(event_id=event_id).delete()
-            except Exception as e:
-                return Response({'api_status':False,'message':"Error in deleting data in EventAttendance Table",'exception':str(e)})
+            # try:
+            #     models.EventAttendance.objects.filter(event_id=event_id).delete()
+            # except Exception as e:
+            #     return Response({'api_status':False,'message':"Error in deleting data in EventAttendance Table",'exception':str(e)})
             
             # Delete from ExamResponse Table
             try:
@@ -2257,10 +2292,10 @@ class MasterCleaner(APIView):
                 return Response({'api_status':False,'message':'Error in deleting data in ExamResponse Table','exception':str(e)})
 
             # Delete from ExamMeta Table
-            try:
-                models.ExamMeta.objects.filter(event_id=event_id).delete()
-            except Exception as e:
-                return Response({'api_status':False,'message':'Error in deleting data in ExamMeta Table','exception':str(e)})
+            # try:
+            #     models.ExamMeta.objects.filter(event_id=event_id).delete()
+            # except Exception as e:
+            #     return Response({'api_status':False,'message':'Error in deleting data in ExamMeta Table','exception':str(e)})
 
 
             # Delete from QpSet Table
@@ -2314,7 +2349,67 @@ class MasterCleaner(APIView):
             except Exception as e:
                 return Response({'api_status':False,'message':'Error in deleting files in cons_data folder'})
 
+            metaObj.sync_done = 2
+            metaObj.save()
             return Response({'api_status':True,'message':f"Clean-up completed for event_id : {event_id}"})
 
         except Exception as e:
             return Response({'api_status':False,'message':f'Error in cleaning up event_id : {event_id}','exception':f'{e}'})
+
+
+class ExamComplete(APIView):
+    
+    '''
+    API class to mark an exam as completed
+
+
+    Input Parameter
+    ````````````````
+
+    event_id -> ID which needs to be marked as completed
+
+    sync_done -> status
+    0 -> Default
+    1 -> Exam completed
+    2 -> Cleanup completed
+
+    '''
+
+    def post(self,request,*args,**kwargs):
+
+        try:
+            event_id = request.data['event_id']
+
+            if models.ExamMeta.objects.filter(event_id=event_id).exists() == False:
+                return Response({'api_status':False,'message':f'Meta data not available for the given event_id :{event_id}'})
+
+            print('-----------------------')
+
+            meta_obj = models.ExamMeta.objects.get(event_id=event_id)
+            meta_obj.sync_done = 1
+            meta_obj.save()
+
+            return Response({'api_status':True,'message':'Exam marked as completed'})
+
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in marking exam as completed','exception':str(e)})
+
+
+class DispMisc(APIView):
+    '''
+    Display misc info like ,
+    
+    reg_dt   -> Last sync datetime of Get-Registeration
+    event_dt -> Last sync datetime of Get-Events
+    
+    '''
+
+    def post(self,request,*args,**kwargs):
+
+        try:
+            misc_obj = models.MiscInfo.objects.all().first()
+
+            return Response({'api_status':True,'data':{'reg_dt':misc_obj.reg_dt,'event_dt':misc_obj.event_dt}})
+
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in fetching misc data','exception':str(e)})

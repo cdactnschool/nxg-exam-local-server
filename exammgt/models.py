@@ -34,7 +34,21 @@ class Profile(models.Model):
         return "{0}-{1}".format(self.user.username, self.usertype)
 
 class ExamMeta(models.Model):
+    '''
+    sync_done
+    ``````````
+
+    0 -> Default
+    1 -> Exam completed
+    2 -> Cleanup completed
+
+    '''
     event_id                            = models.BigIntegerField(primary_key=True)
+    event_title                         = models.CharField(max_length=1024,null=True,blank=True)
+    class_std                           = models.CharField(max_length=1024,null=True,blank=True)
+    class_section                       = models.CharField(max_length=1024,null=True,blank=True)
+    event_startdate                     = models.DateField(blank=True, null=True)
+    event_enddate                       = models.DateField(blank=True, null=True)
     subject                             = models.CharField(max_length=1024)
     no_of_questions                     = models.IntegerField()
     duration_mins                       = models.IntegerField()
@@ -47,7 +61,7 @@ class ExamMeta(models.Model):
     end_alert_time                      = models.IntegerField()
     show_instruction                    = models.BooleanField(default=False)
     qp_set_list                         = models.TextField()
-    sync_done                           = models.BooleanField(default=False)
+    sync_done                           = models.IntegerField(default=0)
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
@@ -122,3 +136,17 @@ class EventAttendance(models.Model):
 
     def __str__(self):
         return f"{self.event_id}-{self.student_username}-{self.qp_set}-{self.json_created}-{self.sync_done}"
+
+
+class MiscInfo(models.Model):
+    '''
+    Model to store miscellaneous info
+    1. Last Registeration sync time
+    2. Last Events sync time
+    '''
+
+    reg_dt      = models.DateTimeField(null=True,blank=True)
+    event_dt    = models.DateTimeField(null=True,blank=True)
+
+    def __str__(self):
+        return f"{self.id} - {str(self.reg_dt)} - {str(self.event_dt)}"

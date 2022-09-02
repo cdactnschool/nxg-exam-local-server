@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import localserver as ls
-from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, ExamResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID
+from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, ExamResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc
 from .views_adv import GenerateJSON
 
 from rest_framework_simplejwt.views import (
@@ -41,4 +41,6 @@ urlpatterns = [
     path('reset-db',                        ResetDB.as_view(),                      name='reset-db'),
     path('event-cleaner',                   MasterCleaner.as_view(),                name='event-cleaner'),
     path('list-cleaner',                    ListCleanerID.as_view(),                name='list-cleaner'),
+    path('exam-complete',                   ExamComplete.as_view(),                 name='exam-complete'),
+    path('disp-misc',                       DispMisc.as_view(),                     name='disp-misc')
     ]
