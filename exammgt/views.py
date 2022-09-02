@@ -15,12 +15,10 @@ from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 import random
 
-from .import models
-from . import serializers
-from scheduler import models as models_scheduler
 
-import itertools
-from collections import OrderedDict
+from .serializers import ExamEventsScheduleSerializer, QuestionsSerializer, ChoicesSerializer, ExamMetaSerializer, QpSetsSerializer
+from .models import Profile, ExamResponse, EventAttendance, ExamMeta, QpSet, Question, Choice, MiscInfo 
+from scheduler.models import scheduling
 
 import datetime
 import os
@@ -191,10 +189,10 @@ def create_local_user(request,data):
         db_user = User.objects.create_user(username=data['username'],password = data['password'])
     db_user.save()
 
-    if models.Profile.objects.filter(user=db_user).exists():
-        profile_instance = models.Profile.objects.get(user=db_user)
+    if Profile.objects.filter(user=db_user).exists():
+        profile_instance = Profile.objects.get(user=db_user)
     else:
-        profile_instance = models.Profile.objects.create(user=db_user)
+        profile_instance = Profile.objects.create(user=db_user)
     
     #print('^^^^^^^^^^^^^^^^^^^^^^',data)
     if 'priority' in data:
@@ -289,7 +287,6 @@ class db_auth(APIView):
                 data['api_status'] = False
                 data['message'] = 'School server Not reachable'
                 return Response(data)
-
             
 
             mycursor = cn.cursor()
@@ -465,7 +462,7 @@ class ExamResponse(APIView):
         try:
             print(request.user.username)
             print(filter_fields)
-            object_edit = get_object_or_404(models.ExamResponse,**filter_fields)
+            object_edit = get_object_or_404(ExamResponse,**filter_fields)
             print('--------------',object_edit)
             object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
             object_edit.question_result = data['correct_choice']
@@ -482,7 +479,7 @@ class ExamResponse(APIView):
                 filter_fields['review'] = data['review']
 
 
-                obj = models.ExamResponse.objects.create(**filter_fields)
+                obj = ExamResponse.objects.create(**filter_fields)
                 #print('Exception in ExamResponse :',e)
                 return Response({'api_status': True,'message': 'new entry'})
             except Exception as e:
@@ -510,7 +507,7 @@ def get_summary(event_id,student_username):
 
     
     try:
-        event_attendance_query = models.EventAttendance.objects.filter(event_id = event_id ,student_username = student_username)
+        event_attendance_query = EventAttendance.objects.filter(event_id = event_id ,student_username = student_username)
         dict_obj = {}
         dict_obj['total_question'] = '-'
         dict_obj['not_answered'] = '-'
@@ -589,7 +586,7 @@ class SummaryAll(APIView):
             summary_list = []
             data = JSONParser().parse(request)
 
-            for attendance_object in models.EventAttendance.objects.filter(event_id=data['event_id']):
+            for attendance_object in EventAttendance.objects.filter(event_id=data['event_id']):
                 #print(attendance_object.event_id,attendance_object.student_username)
                 
                 if attendance_object.end_time != None:
@@ -641,7 +638,7 @@ class GetMyEvents(APIView):
             # Filter based on the window allowed window size
             print('Fetch schedules between',(datetime.datetime.now().date() - datetime.timedelta(days=30)),(datetime.datetime.now().date() + datetime.timedelta(days=30)))
             
-            events_queryset = models_scheduler.scheduling.objects.filter(
+            events_queryset = scheduling.objects.filter(
                 event_enddate__gte = (datetime.datetime.now().date() - datetime.timedelta(days=30)),    # Greater than exam end date
                 event_startdate__lte = (datetime.datetime.now().date() + datetime.timedelta(days=30))   # Lesser than exam start date
             )
@@ -651,7 +648,7 @@ class GetMyEvents(APIView):
                 # Addition of section
                 events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
 
-            events_serialized = serializers.ExamEventsScheduleSerializer(events_queryset,many=True,context={'user':request.user})
+            events_serialized = ExamEventsScheduleSerializer(events_queryset,many=True,context={'user':request.user})
 
             events_serialized_data = {
                 'api_status':True,
@@ -681,7 +678,7 @@ class UpdateRemtime(APIView):
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
 
-            attendance_object_check = models.EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
+            attendance_object_check = EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
             if attendance_object_check:
                 attendance_object_check = attendance_object_check[0]
@@ -711,7 +708,7 @@ class ExamSubmit(APIView):
         except Exception as e:
             return Response({'api_status':False,'message':"event_id 'id' not passed",'exception':e})
 
-        attendance_object_check = models.EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
+        attendance_object_check = EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
 
         #print('Attendance object ',len(attendance_object_check))
 
@@ -722,13 +719,13 @@ class ExamSubmit(APIView):
 
             attendance_object_check = attendance_object_check[0]
             attendance_object_check.end_time = datetime.datetime.now()
-            attendance_object_check.total_questions = models.ExamMeta.objects.filter(event_id = data['event_id'])[0].no_of_questions
+            attendance_object_check.total_questions = ExamMeta.objects.filter(event_id = data['event_id'])[0].no_of_questions
             visited_questions   = 0
             answered_questions  = 0
             reviewed_questions  = 0
             correct_answers     = 0
             wrong_answers       = 0
-            for resp_obj in models.ExamResponse.objects.filter(event_id=data['event_id'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set):
+            for resp_obj in ExamResponse.objects.filter(event_id=data['event_id'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set):
                 visited_questions += 1
                 
                 if resp_obj.selected_choice_id:
@@ -797,7 +794,7 @@ class SchoolExamSummary(APIView):
             
             
             print('Filtered values :',filter_dict)
-            obj = models.ExamResponse.objects.filter(**filter_dict)
+            obj = ExamResponse.objects.filter(**filter_dict)
 
             if len(obj) == 0:
                 return Response({'api_status':False,"message":"No repsonse given by user for exam is available"})
@@ -854,7 +851,7 @@ def get_answers(username,qid,qp_set_id,event_id):
             'qp_set_id':qp_set_id,
             'event_id':event_id
         }
-        obj = get_object_or_404(models.ExamResponse,**filter_fields)
+        obj = get_object_or_404(ExamResponse,**filter_fields)
 
         ans = "" if obj.selected_choice_id == None else obj.selected_choice_id
         return obj.review, ans
@@ -892,10 +889,10 @@ class GenerateQuestionPaper(APIView):
         print('---------------',request_data)
 
     
-        event_attendance_check = models.EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
+        event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
 
       
-        question_meta_object = models.ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
+        question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
 
 
         if len(question_meta_object) > 0:
@@ -907,7 +904,7 @@ class GenerateQuestionPaper(APIView):
 
         #Add an entry in the event_attenance_check
         if len(event_attendance_check) == 0:
-            event_attendance_obj = models.EventAttendance.objects.create(
+            event_attendance_obj = EventAttendance.objects.create(
                 event_id = request_data['event_id'],
                 student_username =request.user.username,
                 qp_set = random.choice(eval(question_meta_object.qp_set_list)),
@@ -941,7 +938,7 @@ class GenerateQuestionPaper(APIView):
 
         if not os.path.exists(FOLDER):
             os.mkdir(FOLDER)
-        exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_filter)
+        exam_meta_object_edit = ExamMeta.objects.filter(**exam_filter)
         #MEDIA_PATH ="/".join(settings.MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
         json_file_path =  os.path.join(FOLDER, json_path)
      
@@ -986,7 +983,7 @@ class GenerateQuestionPaper(APIView):
             }
     
             print('--------------------------')
-            qp_sets_object_edit = models.QpSet.objects.filter(**qpset_filter)
+            qp_sets_object_edit = QpSet.objects.filter(**qpset_filter)
             qp_set_data = []  
             print('--------------------------')
             for qp_data in qp_sets_object_edit:
@@ -997,7 +994,7 @@ class GenerateQuestionPaper(APIView):
         
 
             qp_base64_list = []
-            qp_base64_list_object_edit = models.Question.objects.filter(qid__in=qid_list)
+            qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
             for qp_data in qp_base64_list_object_edit:
                 qp_base64_list.append(model_to_dict(qp_data))
 
@@ -1009,7 +1006,7 @@ class GenerateQuestionPaper(APIView):
                     "qid": qid
                 }
 
-                choice_base64_list_object_edit = models.Choice.objects.filter(**filter)
+                choice_base64_list_object_edit = Choice.objects.filter(**filter)
                 choice_base64_list_object = []
                 for ch_data in choice_base64_list_object_edit:
                     tmp_dict_data = model_to_dict(ch_data)
@@ -1260,10 +1257,10 @@ class LoadEvent(APIView):
 
             shutil.rmtree(load_event_base,ignore_errors=False,onerror=None)
 
-            if models.MiscInfo.objects.all().count() == 0:
-                models.MiscInfo.objects.create(event_dt = datetime.datetime.now())
+            if MiscInfo.objects.all().count() == 0:
+                MiscInfo.objects.create(event_dt = datetime.datetime.now())
             else :
-                misc_obj = models.MiscInfo.objects.all().first()
+                misc_obj = MiscInfo.objects.all().first()
                 misc_obj.event_dt = datetime.datetime.now()
                 misc_obj.save()
 
@@ -1483,10 +1480,10 @@ class LoadReg(APIView):
             except Exception as e:
                 print('Exception in creating groups :',e)
 
-            if models.MiscInfo.objects.all().count() == 0:
-                models.MiscInfo.objects.create(reg_dt = datetime.datetime.now())
+            if MiscInfo.objects.all().count() == 0:
+                MiscInfo.objects.create(reg_dt = datetime.datetime.now())
             else :
-                misc_obj = models.MiscInfo.objects.all().first()
+                misc_obj = MiscInfo.objects.all().first()
                 misc_obj.reg_dt = datetime.datetime.now()
                 misc_obj.save()
 
@@ -1532,14 +1529,14 @@ def load_question_choice_data(qpdownload_list):
         questions_filter  = {
                             "qid" : img_data['qid']
                     }
-        questions_object_edit = models.Question.objects.filter(**questions_filter)
+        questions_object_edit = Question.objects.filter(**questions_filter)
         if len(questions_object_edit) == 0:
             question['qid'] = img_data['qid']
             question['qimage'] = img_data['qimage']
             question['no_of_choices'] = img_data['no_of_choices']
             question['correct_choice'] = img_data['correct_choice']
 
-            serialized_questions = serializers.QuestionsSerializer(data=question,many=False)
+            serialized_questions = QuestionsSerializer(data=question,many=False)
             if serialized_questions.is_valid():
                 serialized_questions.save()
                 for ch_image_data in img_data['q_choices']:
@@ -1547,7 +1544,7 @@ def load_question_choice_data(qpdownload_list):
                     choice['cid'] = ch_image_data['cid']
                     choice['cimage'] = ch_image_data['cimage']
                     
-                    serialized_choice= serializers.ChoicesSerializer(data=choice,many=False)
+                    serialized_choice= ChoicesSerializer(data=choice,many=False)
                     if serialized_choice.is_valid():
                             serialized_choice.save()
                             
@@ -1594,11 +1591,11 @@ class MetaData(APIView):
 
             print('-------------------------')
             
-            if models_scheduler.scheduling.objects.filter(schedule_id=request_data['event_id']).exists() == False:
+            if scheduling.objects.filter(schedule_id=request_data['event_id']).exists() == False:
                 return Response({'api_status':False,'message':'Event Not allocated for this school'})
 
             
-            scheduling_queryset = models_scheduler.scheduling.objects.get(schedule_id=request_data['event_id'])
+            scheduling_queryset = scheduling.objects.get(schedule_id=request_data['event_id'])
             
 
             #request_data['event_id'] = 2349
@@ -1722,9 +1719,9 @@ class MetaData(APIView):
             event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
             event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
 
-            exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
+            exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
-                serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
+                serialized_exam_meta = ExamMetaSerializer(data=event_meta_data,many=False)
                 if serialized_exam_meta.is_valid():
                     serialized_exam_meta.save()
                     
@@ -1751,9 +1748,9 @@ class MetaData(APIView):
                                     "qp_set_id" : qp_data['qp_set_id']
                                 }
                     
-                    qp_set_object_edit = models.QpSet.objects.filter(**qp_sets_filter)
+                    qp_set_object_edit = QpSet.objects.filter(**qp_sets_filter)
                     if len(qp_set_object_edit) == 0:
-                        serialized_qp_sets = serializers.QpSetsSerializer(data=tmp_qp_sets_data,many=False)
+                        serialized_qp_sets = QpSetsSerializer(data=tmp_qp_sets_data,many=False)
                         if serialized_qp_sets.is_valid():
                             serialized_qp_sets.save()
                             
@@ -1883,7 +1880,7 @@ class ConsSummary(APIView):
             request_data = request.data
             print('request data :',request_data)
 
-            scheduling_queryset = models_scheduler.scheduling.objects.filter(schedule_id=request_data['event_id'])
+            scheduling_queryset = scheduling.objects.filter(schedule_id=request_data['event_id'])
 
             if len(scheduling_queryset) == 0:
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
@@ -1999,6 +1996,13 @@ class MetaUpload(APIView):
         
         try:
             event_id = request.data['event_id']
+
+            if scheduling.objects.filter(schedule_id=event_id).exists() == False:
+                return Response({'api_status':False,'message':'Event Not allocated for this school'})
+
+            
+            scheduling_queryset = scheduling.objects.get(schedule_id=event_id)
+
             file_obj = request.data['archive']
             file_name = file_obj.name
 
@@ -2085,9 +2089,16 @@ class MetaUpload(APIView):
                 "event_id" : event_id
                 
                 }
-            exam_meta_object_edit = models.ExamMeta.objects.filter(**exam_meta_filter)
+            
+            event_meta_data['event_title'] = scheduling_queryset.event_title
+            event_meta_data['class_std'] = scheduling_queryset.class_std
+            event_meta_data['class_section'] = scheduling_queryset.class_section
+            event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
+            event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
+
+            exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
-                serialized_exam_meta = serializers.ExamMetaSerializer(data=event_meta_data,many=False)
+                serialized_exam_meta = ExamMetaSerializer(data=event_meta_data,many=False)
                 if serialized_exam_meta.is_valid():
                     serialized_exam_meta.save()
                     
@@ -2114,9 +2125,9 @@ class MetaUpload(APIView):
                                     "qp_set_id" : qp_data['qp_set_id']
                                 }
                     
-                    qp_set_object_edit = models.QpSet.objects.filter(**qp_sets_filter)
+                    qp_set_object_edit = QpSet.objects.filter(**qp_sets_filter)
                     if len(qp_set_object_edit) == 0:
-                        serialized_qp_sets = serializers.QpSetsSerializer(data=tmp_qp_sets_data,many=False)
+                        serialized_qp_sets = QpSetsSerializer(data=tmp_qp_sets_data,many=False)
                         if serialized_qp_sets.is_valid():
                             serialized_qp_sets.save()
                             
@@ -2207,17 +2218,17 @@ class ListCleanerID(APIView):
         
         try:
 
-            if models.ExamMeta.objects.filter(sync_done = 0).count() > 0:
+            if ExamMeta.objects.filter(sync_done = 0).count() > 0:
                 return Response({'api_status':False,'message':'Some exams not completed yet'})
 
             # Filter only the ExamMeta objects which have sync_done = True
-            list_meta_obj = models.ExamMeta.objects.filter(sync_done = 1)
+            list_meta_obj = ExamMeta.objects.filter(sync_done = 1)
 
             # list_events_clean
             data_events = []
             for meta_obj in list_meta_obj:
-                if models_scheduler.scheduling.objects.filter(schedule_id=meta_obj.event_id).exists():
-                    sch_obj = models_scheduler.scheduling.objects.get(schedule_id=meta_obj.event_id)
+                if scheduling.objects.filter(schedule_id=meta_obj.event_id).exists():
+                    sch_obj = scheduling.objects.get(schedule_id=meta_obj.event_id)
                     
                     # Append only if scheduler endtime is greater than the current date with residual days
                     if sch_obj.event_enddate < (datetime.datetime.now()-datetime.timedelta(days=settings.RESIDUAL_DELETE_DAYS)).date():
@@ -2274,26 +2285,26 @@ class MasterCleaner(APIView):
             event_id = request.data['event_id']
 
             # Check if event_id is available or not
-            if models.ExamMeta.objects.filter(event_id=event_id).count() == 0:
+            if ExamMeta.objects.filter(event_id=event_id).count() == 0:
                 return Response({'api_status':False,'message':f"Event_id : {event_id} not available !!"})
             
-            metaObj = models.ExamMeta.objects.get(event_id=event_id)
+            metaObj = ExamMeta.objects.get(event_id=event_id)
 
             # Delete from EventAttendance Table
             # try:
-            #     models.EventAttendance.objects.filter(event_id=event_id).delete()
+            #     EventAttendance.objects.filter(event_id=event_id).delete()
             # except Exception as e:
             #     return Response({'api_status':False,'message':"Error in deleting data in EventAttendance Table",'exception':str(e)})
             
             # Delete from ExamResponse Table
             try:
-                models.ExamResponse.objects.filter(event_id=event_id).delete()
+                ExamResponse.objects.filter(event_id=event_id).delete()
             except Exception as e:
                 return Response({'api_status':False,'message':'Error in deleting data in ExamResponse Table','exception':str(e)})
 
             # Delete from ExamMeta Table
             # try:
-            #     models.ExamMeta.objects.filter(event_id=event_id).delete()
+            #     ExamMeta.objects.filter(event_id=event_id).delete()
             # except Exception as e:
             #     return Response({'api_status':False,'message':'Error in deleting data in ExamMeta Table','exception':str(e)})
 
@@ -2301,7 +2312,7 @@ class MasterCleaner(APIView):
             # Delete from QpSet Table
             try:
                 qid_list = []
-                qp_objects = models.QpSet.objects.filter(event_id=event_id)
+                qp_objects = QpSet.objects.filter(event_id=event_id)
                 for qp_obj in qp_objects:
                     print('****',eval(qp_obj.qid_list))
                     for q_element in eval(qp_obj.qid_list):
@@ -2316,14 +2327,14 @@ class MasterCleaner(APIView):
 
             # Delete from Question Table
             try:
-                models.Question.objects.filter(qid__in=qid_list).delete()
+                Question.objects.filter(qid__in=qid_list).delete()
             
             except Exception as e:
                 return Response({'api_status':False,'message':'Error in deleting data in Question Table','exception':str(e)})
 
             # Delete from Choice Table
             try:
-                models.Choice.objects.filter(qid__in=qid_list).delete()
+                Choice.objects.filter(qid__in=qid_list).delete()
             
             except Exception as e:
                 return Response({'api_status':False,'message':'Error in deleting data in Choice Table','exception':str(e)})
@@ -2380,12 +2391,12 @@ class ExamComplete(APIView):
         try:
             event_id = request.data['event_id']
 
-            if models.ExamMeta.objects.filter(event_id=event_id).exists() == False:
+            if ExamMeta.objects.filter(event_id=event_id).exists() == False:
                 return Response({'api_status':False,'message':f'Meta data not available for the given event_id :{event_id}'})
 
             print('-----------------------')
 
-            meta_obj = models.ExamMeta.objects.get(event_id=event_id)
+            meta_obj = ExamMeta.objects.get(event_id=event_id)
             meta_obj.sync_done = 1
             meta_obj.save()
 
@@ -2407,7 +2418,7 @@ class DispMisc(APIView):
     def post(self,request,*args,**kwargs):
 
         try:
-            misc_obj = models.MiscInfo.objects.all().first()
+            misc_obj = MiscInfo.objects.all().first()
 
             return Response({'api_status':True,'data':{'reg_dt':misc_obj.reg_dt,'event_dt':misc_obj.event_dt}})
 
