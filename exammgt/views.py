@@ -41,6 +41,7 @@ import logging
 
 import shutil
 
+
 logger      = logging.getLogger('monitoringdebug')
 accesslog   = logging.getLogger('accesslog')
 errorlog    = logging.getLogger('errorlog')
@@ -79,7 +80,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['district_id'] = self.user.profile.district_id
         data['block_id']    = self.user.profile.block_id
         data['school_id']   = self.user.profile.school_id
-        data['api_status']  = True
+        data['api_status']  = True    
         data['message']     = 'User authenticated'
         
         return data
@@ -279,157 +280,162 @@ class db_auth(APIView):
     '''
 
     def post(self,request):
-        cn = connection()
 
-        if cn == None:
-            data = {}
-            data['api_status'] = False
-            data['message'] = 'School server Not reachable'
-            return Response(data)
+        try:
 
-        
+            cn = connection()
 
-        mycursor = cn.cursor()
+            if cn == None:
+                data = {}
+                data['api_status'] = False
+                data['message'] = 'School server Not reachable'
+                return Response(data)
 
-        data = JSONParser().parse(request)
-        possible_type = ''
-        user_detail = {}
-
-        # Teacher /HM
-        if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
-            possible_type = 'teacher_hm'
-            #print('Possible user type - ',possible_type)
-            query = f"SELECT {auth_fields['teacher_hm']['username_field']}, {auth_fields['teacher_hm']['hash_field']} FROM {auth_fields['teacher_hm']['auth_table']} WHERE {auth_fields['teacher_hm']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"     
-
-                       
-            #print('###########',query)
-            mycursor.execute(query)
-            auth_detail_response = mycursor.fetchall()
             
-            if len(auth_detail_response) == 0:
-                return Response({'api_status':False,'message':'Incorrect username'})
-            #print(auth_detail_response)
-            print('Records matching the username @ teacher_hm',auth_detail_response)
 
-            # logger - addd number of records returned & print without LIMIT
+            mycursor = cn.cursor()
 
-            #auth_detail_response = auth_detail_response[0]
-            #print('!!!!!',auth_detail_response)
-            #print(hashlib.md5(data['password'].encode('utf-8')).hexdigest())
-            #print(auth_detail_response[1])
+            data = JSONParser().parse(request)
+            possible_type = ''
+            user_detail = {}
 
-            # use first record
+            # Teacher /HM
+            if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
+                possible_type = 'teacher_hm'
+                #print('Possible user type - ',possible_type)
+                query = f"SELECT {auth_fields['teacher_hm']['username_field']}, {auth_fields['teacher_hm']['hash_field']} FROM {auth_fields['teacher_hm']['auth_table']} WHERE {auth_fields['teacher_hm']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"     
 
-
-            if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
-
-                query = f"SELECT {auth_fields['teacher_hm']['type_checker_field']},{auth_fields['teacher_hm']['school_key_ref_master']},{auth_fields['teacher_hm']['name_field_master']} FROM {auth_fields['teacher_hm']['master_table']} WHERE {auth_fields['teacher_hm']['type_checker_foreign_key']} = {data['username']}"
-                print('!!!',query)
-                
+                        
+                #print('###########',query)
                 mycursor.execute(query)
-                teacher_hm_master_response = mycursor.fetchall()
-
-                if len(teacher_hm_master_response) == 0:
-                    return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
-
-                print('**teacher_hm_master_response',teacher_hm_master_response[0])
-                user_detail['school_id'] = teacher_hm_master_response[0][1]
-                user_detail['name_text'] = teacher_hm_master_response[0][2]
-                #print('*****************',teacher_hm_master_response[0][0],list(auth_fields['teacher_hm']['type_checker_value']))
+                auth_detail_response = mycursor.fetchall()
                 
-                
-                # Fetch school, district, block details
-                user_detail['school_id'], user_detail['district_id'], user_detail['block_id'], user_detail['udise_code'] = fetch_school_details(mycursor=mycursor,school_id=user_detail['school_id'])
-                #print(user_detail)
+                if len(auth_detail_response) == 0:
+                    return Response({'api_status':False,'message':'Incorrect username'})
+                #print(auth_detail_response)
+                print('Records matching the username @ teacher_hm',auth_detail_response)
 
-                # Differentiate between teacher and hm
-                if teacher_hm_master_response[0][0] in list(auth_fields['teacher_hm']['type_checker_value']):
-                    possible_type = 'hm'
-                    user_detail['user_type'] = 'hm'
-                    user_detail['user_type_id'] = teacher_hm_master_response[0][0]
+                # logger - addd number of records returned & print without LIMIT
+
+                #auth_detail_response = auth_detail_response[0]
+                #print('!!!!!',auth_detail_response)
+                #print(hashlib.md5(data['password'].encode('utf-8')).hexdigest())
+                #print(auth_detail_response[1])
+
+                # use first record
+
+
+                if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
+
+                    query = f"SELECT {auth_fields['teacher_hm']['type_checker_field']},{auth_fields['teacher_hm']['school_key_ref_master']},{auth_fields['teacher_hm']['name_field_master']} FROM {auth_fields['teacher_hm']['master_table']} WHERE {auth_fields['teacher_hm']['type_checker_foreign_key']} = {data['username']}"
+                    print('!!!',query)
+                    
+                    mycursor.execute(query)
+                    teacher_hm_master_response = mycursor.fetchall()
+
+                    if len(teacher_hm_master_response) == 0:
+                        return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
+
+                    print('**teacher_hm_master_response',teacher_hm_master_response[0])
+                    user_detail['school_id'] = teacher_hm_master_response[0][1]
+                    user_detail['name_text'] = teacher_hm_master_response[0][2]
+                    #print('*****************',teacher_hm_master_response[0][0],list(auth_fields['teacher_hm']['type_checker_value']))
+                    
+                    
+                    # Fetch school, district, block details
+                    user_detail['school_id'], user_detail['district_id'], user_detail['block_id'], user_detail['udise_code'] = fetch_school_details(mycursor=mycursor,school_id=user_detail['school_id'])
+                    #print(user_detail)
+
+                    # Differentiate between teacher and hm
+                    if teacher_hm_master_response[0][0] in list(auth_fields['teacher_hm']['type_checker_value']):
+                        possible_type = 'hm'
+                        user_detail['user_type'] = 'hm'
+                        user_detail['user_type_id'] = teacher_hm_master_response[0][0]
+                        user_detail['username'] = data['username']
+                        user_detail['password'] = data['password']
+                        user_detail['priority'] = auth_fields['teacher_hm']['hm_priority']
+                        print('Given user is HM')
+                        print('=====\n',user_detail)
+                        token_response = create_local_user(request,user_detail)
+                        return Response(token_response)
+                    else:
+                        possible_type = 'teacher'
+                        user_detail['user_type'] = 'teacher'
+                        user_detail['user_type_id'] = teacher_hm_master_response[0][0]
+                        user_detail['username'] = data['username']
+                        user_detail['password'] = data['password']
+                        user_detail['priority'] = auth_fields['teacher_hm']['teacher_priority']
+
+                        print('Given user is a teacher')
+                        print('=====\n',user_detail)
+                        token_response = create_local_user(request,user_detail)
+                        return Response(token_response)
+
+                else:
+                    return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
+
+            # student
+
+
+            elif (str(data['username']).isnumeric()) and (len(str(data['username'])) == auth_fields['student']['username_len']):
+                possible_type = 'student'
+
+                query = f"SELECT {auth_fields['student']['username_field']},{auth_fields['student']['hash_field']},{auth_fields['student']['school_field_foreign']} FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"
+
+                print(query)
+                mycursor.execute(query)
+                auth_detail_response = mycursor.fetchall()
+                
+                print('Records matching the username @ student',auth_detail_response)
+
+
+                if len(auth_detail_response) == 0:
+                    return Response({'api_status':False,'message':'No data found'})
+                
+                user_detail['emis_user_id'] = auth_detail_response[0][2]
+                
+                #print('Records matching the username',auth_detail_response)
+
+                if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
+                    user_detail['user_type'] = 'student'
+
+                    # Fetch school id
+
+                    query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
+                    #print('school id fetch query',query)
+
+                    mycursor.execute(query)
+                    school_id_fetch = mycursor.fetchall()
+
+                    if len(school_id_fetch) == 0:
+                        return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
+
+                    #print('----------',school_id_fetch[0][0])
+                    user_detail['school_id'] = school_id_fetch[0][0]
+                    user_detail['name_text'] = school_id_fetch[0][1]
+                    user_detail['student_class'] = school_id_fetch[0][2]
+                    user_detail['section'] = school_id_fetch[0][3]
+
+
+                    # Fetch school, district, block details
+                    user_detail['school_id'], user_detail['district_id'], user_detail['block_id'], user_detail['udise_code'] = fetch_school_details(mycursor=mycursor,school_id=user_detail['school_id'])
+
                     user_detail['username'] = data['username']
                     user_detail['password'] = data['password']
-                    user_detail['priority'] = auth_fields['teacher_hm']['hm_priority']
-                    print('Given user is HM')
-                    print('=====\n',user_detail)
+                    user_detail['priority'] = auth_fields['student']['student_priority']
+
+                    print('@@@@@@@@@@@@@@@@',user_detail)
                     token_response = create_local_user(request,user_detail)
                     return Response(token_response)
                 else:
-                    possible_type = 'teacher'
-                    user_detail['user_type'] = 'teacher'
-                    user_detail['user_type_id'] = teacher_hm_master_response[0][0]
-                    user_detail['username'] = data['username']
-                    user_detail['password'] = data['password']
-                    user_detail['priority'] = auth_fields['teacher_hm']['teacher_priority']
-
-                    print('Given user is a teacher')
-                    print('=====\n',user_detail)
-                    token_response = create_local_user(request,user_detail)
-                    return Response(token_response)
-
+                    return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
+            
+            # No authentication for department user in local
             else:
-                return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
-
-        # student
-
-
-        elif (str(data['username']).isnumeric()) and (len(str(data['username'])) == auth_fields['student']['username_len']):
-            possible_type = 'student'
-
-            query = f"SELECT {auth_fields['student']['username_field']},{auth_fields['student']['hash_field']},{auth_fields['student']['school_field_foreign']} FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"
-
-            print(query)
-            mycursor.execute(query)
-            auth_detail_response = mycursor.fetchall()
-            
-            print('Records matching the username @ student',auth_detail_response)
-
-
-            if len(auth_detail_response) == 0:
-                return Response({'api_status':False,'message':'No data found'})
-            
-            user_detail['emis_user_id'] = auth_detail_response[0][2]
-            
-            #print('Records matching the username',auth_detail_response)
-
-            if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
-                user_detail['user_type'] = 'student'
-
-                # Fetch school id
-
-                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
-                #print('school id fetch query',query)
-
-                mycursor.execute(query)
-                school_id_fetch = mycursor.fetchall()
-
-                if len(school_id_fetch) == 0:
-                    return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
-
-                #print('----------',school_id_fetch[0][0])
-                user_detail['school_id'] = school_id_fetch[0][0]
-                user_detail['name_text'] = school_id_fetch[0][1]
-                user_detail['student_class'] = school_id_fetch[0][2]
-                user_detail['section'] = school_id_fetch[0][3]
-
-
-                # Fetch school, district, block details
-                user_detail['school_id'], user_detail['district_id'], user_detail['block_id'], user_detail['udise_code'] = fetch_school_details(mycursor=mycursor,school_id=user_detail['school_id'])
-
-                user_detail['username'] = data['username']
-                user_detail['password'] = data['password']
-                user_detail['priority'] = auth_fields['student']['student_priority']
-
-                print('@@@@@@@@@@@@@@@@',user_detail)
-                token_response = create_local_user(request,user_detail)
-                return Response(token_response)
-            else:
-                return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
+                return Response({'api_status':False,'message':'Incorrect Username/password'})
         
-        # No authentication for department user in local
-        else:
-            return Response({'api_status':False,'message':'Incorrect Username/password'})
-    
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in authenticating','exception':str(e)})
 
 class ExamResponse(APIView):
 
