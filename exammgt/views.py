@@ -1299,6 +1299,8 @@ class LoadReg(APIView):
             # get_events_response = requests.request("POST", reqUrl, data=payload)
             get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
 
+            if get_events_response.headers.get('content-type') == 'application/json':
+                return Response(get_events_response.json())
 
             res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             res_md5sum = get_events_response.headers.get('md5sum')
