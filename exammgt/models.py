@@ -45,6 +45,7 @@ class ExamMeta(models.Model):
     '''
     event_id                            = models.BigIntegerField(primary_key=True)
     event_title                         = models.CharField(max_length=1024,null=True,blank=True)
+    class_subject                       = models.CharField(max_length=200,null=True,blank=True)
     class_std                           = models.CharField(max_length=1024,null=True,blank=True)
     class_section                       = models.CharField(max_length=1024,null=True,blank=True)
     event_startdate                     = models.DateField(blank=True, null=True)

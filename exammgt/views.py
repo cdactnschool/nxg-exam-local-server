@@ -1718,6 +1718,7 @@ class MetaData(APIView):
             event_meta_data['class_section'] = scheduling_queryset.class_section
             event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
             event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
+            event_meta_data['class_subject'] = scheduling_queryset.class_subject
 
             exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
@@ -2095,6 +2096,8 @@ class MetaUpload(APIView):
             event_meta_data['class_section'] = scheduling_queryset.class_section
             event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
             event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
+            event_meta_data['class_subject'] = scheduling_queryset.class_subject
+
 
             exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
@@ -2424,3 +2427,38 @@ class DispMisc(APIView):
 
         except Exception as e:
             return Response({'api_status':False,'message':'Error in fetching misc data','exception':str(e)})
+
+
+class ToComplete(APIView):
+
+    '''
+
+    API class to list the events which can be marked as completed
+
+    '''
+
+    def post(self,request,*args,**kwargs):
+        
+        try:
+            exam_objs = ExamMeta.objects.filter(sync_done = 0,event_enddate__lt = datetime.datetime.now())
+
+            data_meta = []
+            for meta_obj in exam_objs:
+                data_meta.append({
+                    'event_id':         meta_obj.event_id,
+                    'event_title':      meta_obj.event_title,
+                    'class_std':        meta_obj.class_std,
+                    'class_section':    meta_obj.class_section,
+                    'class_subject':    meta_obj.class_subject,
+                    'event_startdate':  meta_obj.event_startdate,
+                    'event_enddate':    meta_obj.event_enddate
+
+                })
+            
+            if len(data_meta) == 0:
+                return Response({'api_status':True,'message':'No Events available to mark as complete'})
+
+            return Response({'api_status':True,'data':data_meta})
+        
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in listing event to mark as complete','exception':str(e)})
