@@ -142,12 +142,13 @@ class EventAttendance(models.Model):
 class MiscInfo(models.Model):
     '''
     Model to store miscellaneous info
+    1. school_token (For future communication)
     1. Last Registeration sync time
     2. Last Events sync time
     '''
-
-    reg_dt      = models.DateTimeField(null=True,blank=True)
-    event_dt    = models.DateTimeField(null=True,blank=True)
+    school_token    = models.CharField(max_length=1024,null=True,blank=True)
+    reg_dt          = models.DateTimeField(null=True,blank=True)
+    event_dt        = models.DateTimeField(null=True,blank=True)
 
     def __str__(self):
-        return f"{self.id} - {str(self.reg_dt)} - {str(self.event_dt)}"
+        return f"{self.id} - {str(self.school_token)} - {str(self.reg_dt)} - {str(self.event_dt)}"

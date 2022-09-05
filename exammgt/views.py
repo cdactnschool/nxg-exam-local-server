@@ -18,7 +18,7 @@ import random
 
 from .serializers import ExamEventsScheduleSerializer, QuestionsSerializer, ChoicesSerializer, ExamMetaSerializer, QpSetsSerializer
 from .models import Profile, ExamResponse, EventAttendance, ExamMeta, QpSet, Question, Choice, MiscInfo 
-from scheduler.models import scheduling
+from scheduler.models import participants, scheduling, event
 
 import datetime
 import os
@@ -1052,25 +1052,19 @@ class GenerateQuestionPaper(APIView):
             return Response(configure_qp_data)
 
 def get_school_token():
+    '''
+    Function to return school_token
+    If not available return string 'first_request'
+    '''
+
     try:
-        cn = connection()
-
-        if cn == None:
-            data = {}
-            data['api_status'] = False
-            data['message'] = 'School server Not reachable'
-            return Response(data)
-        
-        mycursor = cn.cursor()
-
-        query = f"SELECT {settings.SCHOOL_TOKEN} from {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
-
-        mycursor.execute(query)
-        school_token_response = mycursor.fetchall()
-
-        return school_token_response[0][0]
-
-    except:
+        misc_obj = MiscInfo.objects.all().first()
+        if misc_obj:
+            return str(misc_obj.school_token)
+        else:
+            return 'first_request'
+    except Exception as e:
+        print('Exception in getting school token :',e)
         return 'first_request'
 
        
@@ -1130,8 +1124,17 @@ class LoadEvent(APIView):
             #get_events_response = requests.request("POST", req_url, data=payload)
             get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
 
-            res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
+
+            # Check if school has no events
+
+            if get_events_response.headers.get('content-type') == 'application/json':
+                if 'md5sum' in get_events_response.json():
+                    if get_events_response.json()['md5sum'] == 'None':
+                        return Response({'api_status':True,'message':'No Events allocated for this school yet','school_token':get_school_token()})
+
+
             res_md5sum = get_events_response.headers.get('md5sum')
+            res_fname = get_events_response.headers.get('Content-Disposition').split('=')[1]
             request_type = get_events_response.headers.get('process_str')
 
             event_id_list = get_events_response.headers.get('event_id_list')
@@ -1435,23 +1438,6 @@ class LoadReg(APIView):
                 return Response({'reg_status':False,'message':'Registeration data not loaded yet'})
 
 
-            # update the school token
-
-            try:
-
-                print('--------token------',school_token,'---------')
-
-                query = f"UPDATE {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} SET habitation_name = '{school_token}' WHERE udise_code = {udise_code}"
-                print('-------------query statement-----------',query)
-
-                cursor_response = mycursor.execute(query)
-                print('~~~~~~~~~~~~~~~~~',cursor_response)
-                cn.commit()
-
-
-            except Exception as e:
-                return Response ({"api_status" : False, "message":"Error in updating the school_token", "exception":str(e)})
-
             print('-----print---token-----',get_school_token(),'-------------')
 
             # send ack to central server
@@ -1481,10 +1467,11 @@ class LoadReg(APIView):
                 print('Exception in creating groups :',e)
 
             if MiscInfo.objects.all().count() == 0:
-                MiscInfo.objects.create(reg_dt = datetime.datetime.now())
+                MiscInfo.objects.create(reg_dt = datetime.datetime.now(),school_token=school_token)
             else :
                 misc_obj = MiscInfo.objects.all().first()
                 misc_obj.reg_dt = datetime.datetime.now()
+                misc_obj.school_token = school_token
                 misc_obj.save()
 
             return Response({'reg_status':True,'message':'Registeration data loaded'})
@@ -2194,6 +2181,11 @@ class ResetDB(APIView):
             mycursor.execute(query)
 
             cn.close()
+
+            MiscInfo.objects.all().delete()
+            scheduling.objects.all().delete()
+            participants.objects.all().delete()
+            event.objects.all().delete()
 
             return Response({'api_status':True,'messge':'De-Registeration successful'})
         
