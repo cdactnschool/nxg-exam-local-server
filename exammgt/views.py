@@ -751,9 +751,9 @@ class ExamSubmit(APIView):
 
             # Adding data for filebeat
             #student_end_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
-            student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
+            student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)},default=str))
 
-            print(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)}))
+            print(json.dumps({'school_id':request.user.profile.school_id,'event_id':data['event_id'],'emisusername':request.user.username,'end_time':str(attendance_object_check.end_time)},default=str))
 
             return Response({'api_status':True,'message' : 'Exam submitted'})
         else:
@@ -808,7 +808,7 @@ class SchoolExamSummary(APIView):
                 }
 
                 with open(file_name, 'w') as outfile:  
-                    json.dump(consolidated_data, outfile)
+                    json.dump(consolidated_data, outfile,default=str)
 
             with open(file_name,'r') as input_file:
                 consolidated_data = json.load(input_file)
@@ -832,7 +832,7 @@ class SchoolExamSummary(APIView):
             consolidated_data['details'].append(candidate_consolidated)
 
             with open(file_name, 'w') as outfile:  
-                json.dump(consolidated_data, outfile)
+                json.dump(consolidated_data, outfile,default=str)
             print(consolidated_data)
 
             # todo json= 1 to be checked
@@ -923,7 +923,7 @@ class GenerateQuestionPaper(APIView):
                 
                 # Adding data for filebeat
                 #student_start_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
-                student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
+                student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)},default=str))
 
             else:
                 event_attendance_obj = event_attendance_check[0]
@@ -1068,7 +1068,7 @@ class GenerateQuestionPaper(APIView):
                 #if not os.path.exists(MEDIA_PATH):
                 #    os.makedirs(MEDIA_PATH)
                 with open(json_file_path , 'w') as f :
-                    json.dump(configure_qp_data, f)
+                    json.dump(configure_qp_data, f,default=str)
                 configure_qp_data['user'] = request.user.username
                 configure_qp_data['api_status'] = True
                 return Response(configure_qp_data)
@@ -1276,7 +1276,7 @@ class LoadEvent(APIView):
                 "zip_hash":res_md5sum,
                 "school_token":get_school_token(),
                 "event_id_list":event_id_list
-            })
+            },default=str)
 
             requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
@@ -1318,7 +1318,7 @@ class LoadReg(APIView):
                 "mobile_no":request.data['mobileno'],
                 "school_token":get_school_token()
 
-            })
+            },default=str)
           
             # get_events_response = requests.request("POST", reqUrl, data=payload)
             get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
@@ -1475,7 +1475,7 @@ class LoadReg(APIView):
                 "request_type":request_type,
                 "zip_hash":res_md5sum,
                 "school_token":get_school_token()
-            })
+            },default=str)
 
             requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
 
@@ -1520,7 +1520,7 @@ class InitialReg(APIView):
             
             req_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
 
-            payload = json.dumps({"udise_code": data['udise_code']})
+            payload = json.dumps({"udise_code": data['udise_code']},default=str)
             
             try:
                 get_udise_response = requests.request("POST",req_url,data = payload,verify=settings.CERT_FILE)
@@ -1617,7 +1617,7 @@ class MetaData(APIView):
                 'event_id':request_data['event_id'],
                 'school_id':school_id_response[0][0],
                 'school_token':get_school_token()
-            })
+            },default=str)
 
             get_meta_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
             if get_meta_response.headers.get('content-type') == 'application/json':
@@ -1807,7 +1807,7 @@ class MetaData(APIView):
                 "zip_hash":res_md5sum,
                 "school_token":get_school_token(),
                 "event_id_list":[request_data['event_id']]
-            })
+            },default=str)
 
             requests.request("POST", ack_url, data=ack_payload, verify=settings.CERT_FILE) 
       
@@ -2207,6 +2207,35 @@ class ResetDB(APIView):
                 return Response(data)
             
             mycursor = cn.cursor()
+
+            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            mycursor.execute(query)
+            school_id_response = mycursor.fetchall()
+
+            if len(school_id_response) == 0:
+                return Response({'api_status':False,'message':'Registeration data not loaded yet'})
+
+
+            print('-----print---token-----',get_school_token(),'-------------')
+
+            print('-----print--school-id',school_id_response[0][0])
+
+            # API to delete entry from central server
+
+            dereg_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/de-registeration"
+
+            dereg_payload = json.dumps({
+                "school_id" : school_id_response[0][0],
+                "school_token":get_school_token()
+            },default=str)
+
+            req_response = requests.request("POST", dereg_url, data=dereg_payload, verify=settings.CERT_FILE) 
+
+            print('---req---response---',req_response.json())
+
+            if req_response.json()['api_status'] == False:
+                return Response(req_response.json())
+
 
             query = f"DROP TABLE {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT};"
 
