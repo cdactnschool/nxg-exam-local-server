@@ -1461,7 +1461,7 @@ class LoadReg(APIView):
             school_id_response = mycursor.fetchall()
 
             if len(school_id_response) == 0:
-                return Response({'reg_status':False,'message':'Registeration data not loaded yet'})
+                return Response({'api_status':False,'message':'Registeration data not loaded yet'})
 
 
             print('-----print---token-----',get_school_token(),'-------------')
@@ -1500,10 +1500,10 @@ class LoadReg(APIView):
                 misc_obj.school_token = school_token
                 misc_obj.save()
 
-            return Response({'reg_status':True,'message':'Registeration data loaded'})
+            return Response({'api_status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while load registeration data throught API : {e}')
-            return Response({'reg_status':False,'message':'Error in Registeration','exception':f'Exception raised while load registeration data throught API : {e}'})
+            return Response({'api_status':False,'message':'Error in Registeration','exception':f'Exception raised while load registeration data throught API : {e}'})
 
 class InitialReg(APIView):
     '''
