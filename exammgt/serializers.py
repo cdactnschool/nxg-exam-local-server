@@ -207,22 +207,26 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         Fetch the exam duration from the ExamMeta table
         '''
 
-        attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)
+        try:
+            attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)
 
-        if attendance_obj:
-            return math.ceil(attendance_obj.remaining_time/60) # Return remaining time in Minutes
+            if attendance_obj:
+                return math.ceil(attendance_obj.remaining_time/60) # Return remaining time in Minutes
 
-        meta_duration_query = ExamMeta.objects.filter(event_id = obj.schedule_id)
+            meta_duration_query = ExamMeta.objects.filter(event_id = obj.schedule_id)
 
-        if len(meta_duration_query) == 0:
-            return '-'
-        else:
-            meta_duration_entry = meta_duration_query[0]
-            # print('`````````````')
-            # print(meta_duration_query.__dict__)
-            # print('duration_mins' in meta_duration_query)
-            
-            return meta_duration_entry.duration_mins # Return remaining time in Minutes
+            if len(meta_duration_query) == 0:
+                return '-'
+            else:
+                meta_duration_entry = meta_duration_query[0]
+                # print('`````````````')
+                # print(meta_duration_query.__dict__)
+                # print('duration_mins' in meta_duration_query)
+                
+                return meta_duration_entry.duration_mins # Return remaining time in Minutes
+        except Exception as e:
+            print('Exception in getting remaining time ',e)
+            return 'NA'
 
     def get_json_count(self,obj):
         '''

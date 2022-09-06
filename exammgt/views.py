@@ -433,7 +433,7 @@ class db_auth(APIView):
         except Exception as e:
             return Response({'api_status':False,'message':'Error in authenticating','exception':str(e)})
 
-class ExamResponse(APIView):
+class CandidateResponse(APIView):
 
     '''
     Class to mark response of for each question per candidate
@@ -879,177 +879,201 @@ class GenerateQuestionPaper(APIView):
 
     def post(self,request,*args, **kwargs):
 
-        # check if entry already exists and not completed
+        try:
 
-        #print('******',request.data)
-        request_data = JSONParser().parse(request)
+            # check if entry already exists and not completed
 
-        request_data['event_id'] = request_data['id']
+            #print('******',request.data)
+            # request_data = JSONParser().parse(request)
+            request_data = request.data
 
-        print('---------------',request_data)
+            print('-------------request-data-------------',request_data)
 
-    
-        event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
+            request_data['event_id'] = request_data['id']
 
-      
-        question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
+            print('---------------',request_data)
 
-
-        if len(question_meta_object) > 0:
-            question_meta_object = question_meta_object[0] # get the first instance
-            print('question_meta_object Content',question_meta_object)
-        else:
-            return Response({'api_status':False,'message':'No question set for this student'})
-
-
-        #Add an entry in the event_attenance_check
-        if len(event_attendance_check) == 0:
-            event_attendance_obj = EventAttendance.objects.create(
-                event_id = request_data['event_id'],
-                student_username =request.user.username,
-                qp_set = random.choice(eval(question_meta_object.qp_set_list)),
-                remaining_time = question_meta_object.duration_mins * 60,  # return duration in seconds
-                start_time = datetime.datetime.now()
-            )
-            event_attendance_obj.save()
-            
-            # Adding data for filebeat
-            #student_start_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
-            student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
-
-        else:
-            event_attendance_obj = event_attendance_check[0]
         
+            event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
 
-        qpset_filter = {
-            'event_id': request_data['event_id'],
-            'qp_set_id': event_attendance_obj.qp_set
-        }
-
-        exam_filter = {
-            "event_id": request_data['event_id']
-        }
         
-        #Save Json File Into Schhool Local Server
-        #file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
-        json_path = "{0}_{1}.json".format(request_data['event_id'] ,event_attendance_obj.qp_set)
-          
-        FOLDER = os.path.join(settings.MEDIA_ROOT,'questions_json')
+            question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
 
-        if not os.path.exists(FOLDER):
-            os.mkdir(FOLDER)
-        exam_meta_object_edit = ExamMeta.objects.filter(**exam_filter)
-        #MEDIA_PATH ="/".join(settings.MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
-        json_file_path =  os.path.join(FOLDER, json_path)
-     
-        if os.path.exists(json_file_path):
-            with open(json_file_path, 'r') as f:
-                question_paper_data = json.load(f)
-           
-            print('----------------------------------------------------------------')
-            print('Event ID and QP SET ID already exists in local school database..',json_file_path)
-                    
-            print('----------------------------------------------------------------')
 
-            for answers in question_paper_data['ans']:
-                answers['review'], answers['ans'] = get_answers(request.user.username,answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
-            question_paper_data['user'] = request.user.username
-            question_paper_data['qp_set_id'] = event_attendance_obj.qp_set
-            question_paper_data['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
-            #question_paper_data['end_alert_seconds'] = question_paper_data['end_alert_time'] * 60 # Convert to seconds
+            if len(question_meta_object) > 0:
+                question_meta_object = question_meta_object[0] # get the first instance
+                print('question_meta_object Content',question_meta_object)
+            else:
+                return Response({'api_status':False,'message':'No question set for this student'})
 
-            question_paper_data['api_status'] = True
 
-            return Response(question_paper_data)
-
-        else:
-            exam_meta_data = []
-            for exam_data in exam_meta_object_edit:
-                tmp_exam_dict = model_to_dict(exam_data)
-                try:
-                    del tmp_exam_dict['qp_set_list']
-                except KeyError:
-                    pass
+            #Add an entry in the event_attenance_check
+            if len(event_attendance_check) == 0:
                 
-                tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
-                tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
-                #tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
-                exam_meta_data.append(tmp_exam_dict)
+                print('---remaining---time',question_meta_object.duration_mins)
 
-         
+                event_attendance_obj = EventAttendance.objects.create(
+                    event_id = request_data['event_id'],
+                    student_username =request.user.username,
+                    qp_set = random.choice(eval(question_meta_object.qp_set_list)),
+                    remaining_time = int(question_meta_object.duration_mins) * 60,  # return duration in seconds
+                    start_time = datetime.datetime.now()
+                )
+                event_attendance_obj.save()
+                
+                # Adding data for filebeat
+                #student_start_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
+                student_log.info(json.dumps({'school_id':request.user.profile.school_id,'event_id':request_data['event_id'],'emisusername':request.user.username,'start_time':str(event_attendance_obj.start_time)}))
+
+            else:
+                event_attendance_obj = event_attendance_check[0]
+            
+
             qpset_filter = {
-            'event_id': request_data['event_id'],
-            'qp_set_id': event_attendance_obj.qp_set
+                'event_id': request_data['event_id'],
+                'qp_set_id': event_attendance_obj.qp_set
             }
-    
-            print('--------------------------')
-            qp_sets_object_edit = QpSet.objects.filter(**qpset_filter)
-            qp_set_data = []  
-            print('--------------------------')
-            for qp_data in qp_sets_object_edit:
-                print(qp_data)
-                qp_set_data.append(model_to_dict(qp_data))
-        
-            qid_list = eval(qp_set_data[0]['qid_list'])
-        
 
-            qp_base64_list = []
-            qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
-            for qp_data in qp_base64_list_object_edit:
-                qp_base64_list.append(model_to_dict(qp_data))
+            exam_filter = {
+                "event_id": request_data['event_id']
+            }
+            
+            #Save Json File Into Schhool Local Server
+            #file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
+            json_path = "{0}_{1}.json".format(request_data['event_id'] ,event_attendance_obj.qp_set)
+            
+            FOLDER = os.path.join(settings.MEDIA_ROOT,'questions_json')
 
-          
+            if not os.path.exists(FOLDER):
+                os.mkdir(FOLDER)
+            exam_meta_object_edit = ExamMeta.objects.filter(**exam_filter)
+            #MEDIA_PATH ="/".join(settings.MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
+            json_file_path =  os.path.join(FOLDER, json_path)
 
-            choice_base64_list = []
-            for qid in qid_list:
-                filter = {
-                    "qid": qid
+            print('QP json file existance status',os.path.exists(json_file_path))
+
+            if os.path.exists(json_file_path):
+                with open(json_file_path, 'r') as f:
+                    question_paper_data = json.load(f)
+            
+                print('----------------------------------------------------------------')
+                print('Event ID and QP SET ID already exists in local school database..',json_file_path)
+                        
+                print('----------------------------------------------------------------')
+
+                for answers in question_paper_data['ans']:
+                    answers['review'], answers['ans'] = get_answers(request.user.username,answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
+                question_paper_data['user'] = request.user.username
+                question_paper_data['qp_set_id'] = event_attendance_obj.qp_set
+                question_paper_data['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
+                #question_paper_data['end_alert_seconds'] = question_paper_data['end_alert_time'] * 60 # Convert to seconds
+
+                question_paper_data['api_status'] = True
+
+                return Response(question_paper_data)
+
+            else:
+                exam_meta_data = []
+                for exam_data in exam_meta_object_edit:
+                    tmp_exam_dict = model_to_dict(exam_data)
+                    try:
+                        del tmp_exam_dict['event_startdate']
+                        del tmp_exam_dict['event_enddate']
+                        del tmp_exam_dict['qp_set_list']
+                    except:
+                        pass
+                    
+                    tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
+                    tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
+                    #tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
+                    exam_meta_data.append(tmp_exam_dict)
+
+                    print('------exam_meta---------',exam_meta_data)
+            
+                qpset_filter = {
+                'event_id': request_data['event_id'],
+                'qp_set_id': event_attendance_obj.qp_set
                 }
-
-                choice_base64_list_object_edit = Choice.objects.filter(**filter)
-                choice_base64_list_object = []
-                for ch_data in choice_base64_list_object_edit:
-                    tmp_dict_data = model_to_dict(ch_data)
-                    # del tmp_dict_data['qid']
-                    choice_base64_list_object.append(tmp_dict_data)
-
-                choice_base64_list.append(choice_base64_list_object)
-
-
-            questions_data_list =[]
-            for qp_img in qp_base64_list:
-                for ch_img in choice_base64_list:
-                    tmp_ch_dict = {}
-                    if qp_img['qid'] == ch_img[0]['qid']:
-                        tmp_ch_dict['q_choices'] = ch_img
-                        qp_img.update(tmp_ch_dict)
+        
+                print('--------------------------')
+                qp_sets_object_edit = QpSet.objects.filter(**qpset_filter)
+                qp_set_data = []  
+                print('--------------------------')
+                for qp_data in qp_sets_object_edit:
+                    print(qp_data)
+                    qp_set_data.append(model_to_dict(qp_data))
             
-                questions_data_list.append(qp_img)
+                qid_list = eval(qp_set_data[0]['qid_list'])
 
-            
+                print('---------start----qp_base---------')
 
-            get_ans_api = []
-            for q_id in qid_list:
-                tmp = {}
-                tmp['qid'] = q_id
-                tmp['review'], tmp['ans'] = get_answers(request.user.username,q_id,event_attendance_obj.qp_set,request_data['event_id'])
+                qp_base64_list = []
+                qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
+                for qp_data in qp_base64_list_object_edit:
+                    qp_base64_list.append(model_to_dict(qp_data))
 
-                get_ans_api.append(tmp)
+                print('-------qp_base--------')
 
-            configure_qp_data = exam_meta_data[0]
-            configure_qp_data['qp_set_id'] = event_attendance_obj.qp_set
-            configure_qp_data['q_ids'] = qid_list
-            configure_qp_data['questions'] = questions_data_list
-            configure_qp_data['ans'] = get_ans_api
-            
-            
-            #if not os.path.exists(MEDIA_PATH):
-            #    os.makedirs(MEDIA_PATH)
-            with open(json_file_path , 'w') as f :
-                json.dump(configure_qp_data, f)
-            configure_qp_data['user'] = request.user.username
-            configure_qp_data['api_status'] = True
-            return Response(configure_qp_data)
+                choice_base64_list = []
+                for qid in qid_list:
+                    filter = {
+                        "qid": qid
+                    }
+
+                    choice_base64_list_object_edit = Choice.objects.filter(**filter)
+                    choice_base64_list_object = []
+                    for ch_data in choice_base64_list_object_edit:
+                        tmp_dict_data = model_to_dict(ch_data)
+                        # del tmp_dict_data['qid']
+                        choice_base64_list_object.append(tmp_dict_data)
+
+                    choice_base64_list.append(choice_base64_list_object)
+
+                print('-----------choice----------')
+
+                questions_data_list =[]
+                for qp_img in qp_base64_list:
+                    for ch_img in choice_base64_list:
+                        tmp_ch_dict = {}
+                        if qp_img['qid'] == ch_img[0]['qid']:
+                            tmp_ch_dict['q_choices'] = ch_img
+                            qp_img.update(tmp_ch_dict)
+                
+                    questions_data_list.append(qp_img)
+
+                print('-------questions-------------------')
+
+                get_ans_api = []
+                for q_id in qid_list:
+                    tmp = {}
+                    tmp['qid'] = q_id
+                    tmp['review'], tmp['ans'] = get_answers(request.user.username,q_id,event_attendance_obj.qp_set,request_data['event_id'])
+
+                    get_ans_api.append(tmp)
+
+                configure_qp_data = exam_meta_data[0]
+                configure_qp_data['qp_set_id'] = event_attendance_obj.qp_set
+                configure_qp_data['q_ids'] = qid_list
+                configure_qp_data['questions'] = questions_data_list
+                configure_qp_data['ans'] = get_ans_api
+                
+
+                print('------------configure_qp_data------------')
+                print(configure_qp_data)
+
+                for c in configure_qp_data:
+                    print(c,configure_qp_data[c])
+
+
+                #if not os.path.exists(MEDIA_PATH):
+                #    os.makedirs(MEDIA_PATH)
+                with open(json_file_path , 'w') as f :
+                    json.dump(configure_qp_data, f)
+                configure_qp_data['user'] = request.user.username
+                configure_qp_data['api_status'] = True
+                return Response(configure_qp_data)
+        except Exception as e:
+            return Response({'api_status':False,'message':'Unable to fetch question paper','exception':str(e)})
 
 def get_school_token():
     '''
@@ -1686,6 +1710,9 @@ class MetaData(APIView):
 
             # event_meta_data['qp_set_list'] = str(iit_qp_set_list) #we need string for store into database
             # print('--------',event_meta_data)
+
+            print('-----------event---meta-----data-----',event_meta_data)
+
           
             qp_set_data = []
             for qp_set, q_id in zip(iit_qp_set_list, iit_question_id_list):
@@ -1708,6 +1735,9 @@ class MetaData(APIView):
             event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
             event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
             event_meta_data['class_subject'] = scheduling_queryset.class_subject
+
+
+            print('-----------event---meta-----data-----',event_meta_data)
 
             exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
             if len(exam_meta_object_edit) == 0:
