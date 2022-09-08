@@ -99,54 +99,6 @@ def connection():
         print('connection error :',e)
         return None
 
-auth_fields = {
-    'teacher_hm':{
-        'username_len': 8,
-        'teacher_priority':18,
-        'hm_priority':16,
-        'username_field':'emis_username',
-        'password_field':'ref',
-        'hash_field': 'emis_password',
-        'auth_table': settings.DB_EMISUSER_TEACHER,
-        'master_table': settings.DB_UDISE_STAFFREG,
-        'type_checker_foreign_key':'teacher_id',
-        'type_checker_field':'teacher_type',
-        'type_checker_value':[26,27,28,29],
-        'school_key_ref_master' : 'school_key_id',
-        'name_field_master':'teacher_name',
-        #'auth_'
-    },
-    'department':{
-        'department_priority':14,
-        'username_field':'emis_username',
-        'password_field':'ref',
-        'hash_field': 'emis_password',
-        'auth_table':settings.DB_EMIS_USERLOGIN,
-    },
-    'student':{
-        'username_len':16,
-        'student_priority':20,
-        'username_field':'emis_username',
-        'password_field':'ref',
-        'hash_field': 'emis_password',
-        'auth_table': settings.DB_EMISUSER_STUDENT,
-        'type_field': 'emis_usertype',
-        'school_field_foreign' :'emis_user_id',
-        'master_table': settings.DB_STUDENTS_CHILD_DETAIL,
-        'school_field_foreign_ref' : 'id',
-        'school_key_ref_master':'school_id',
-        'name_field_master':'name',
-        'section_field_master':'class_section',
-        'student_class': 'class_studying_id',
-    },
-    'school':{
-        'auth_table':settings.DB_STUDENTS_SCHOOL_CHILD_COUNT,
-        'school_id':'school_id',
-        'district_id': 'district_id',
-        'block_id':'block_id',
-        'udise_code':'udise_code',
-    }
-}
 
 def fetch_school_details(mycursor,school_id):
 
@@ -160,6 +112,8 @@ def fetch_school_details(mycursor,school_id):
         udise_code
     
     '''
+
+    auth_fields = settings.AUTH_FIELDS
 
     query = f"SELECT {auth_fields['school']['school_id']}, {auth_fields['school']['district_id']}, {auth_fields['school']['block_id']}, {auth_fields['school']['udise_code']} FROM {auth_fields['school']['auth_table']} WHERE {auth_fields['school']['school_id']} = {school_id} LIMIT 1"
     print('Fetch school details query :',query)
@@ -294,6 +248,8 @@ class db_auth(APIView):
             data = JSONParser().parse(request)
             possible_type = ''
             user_detail = {}
+
+            auth_fields = settings.AUTH_FIELDS
 
             # Teacher /HM
             if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
@@ -1892,6 +1848,9 @@ class ConsSummary(APIView):
                 data['message'] = 'School server Not reachable'
                 return Response(data)
             
+            auth_fields = settings.AUTH_FIELDS
+
+
             emisuser_student = auth_fields['student']['auth_table']
             students_child_detail = auth_fields['student']['master_table']
 
