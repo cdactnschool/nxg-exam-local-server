@@ -1078,7 +1078,7 @@ class LoadEvent(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -1412,7 +1412,7 @@ class LoadReg(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -1548,7 +1548,7 @@ class MetaData(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -1848,12 +1848,6 @@ class ConsSummary(APIView):
                 data['message'] = 'School server Not reachable'
                 return Response(data)
             
-            auth_fields = settings.AUTH_FIELDS
-
-
-            emisuser_student = auth_fields['student']['auth_table']
-            students_child_detail = auth_fields['student']['master_table']
-
             mycursor = cn.cursor()
 
             request_data = request.data
@@ -1865,25 +1859,25 @@ class ConsSummary(APIView):
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
             scheduling_obj = scheduling_queryset[0]
 
+            students_query = f" SELECT l.{settings.AUTH_FIELDS['student']['username_field']}, r.{settings.AUTH_FIELDS['student']['name_field_master']}, r.{settings.AUTH_FIELDS['student']['student_class']}, r.{settings.AUTH_FIELDS['student']['section_field_master']} FROM {settings.AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {settings.AUTH_FIELDS['student']['master_table']} r ON l.{settings.AUTH_FIELDS['student']['school_field_foreign']} = r.{settings.AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{settings.AUTH_FIELDS['student']['student_class']} = {scheduling_obj.class_std}"
+            if scheduling_obj.class_section != None:
+                students_query = f"{students_query} AND r.{settings.AUTH_FIELDS['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+
+            # # Raw query (working)
+            # students_query = f" SELECT l.emis_username, r.name, r.class_studying_id, r.class_section FROM emisuser_student l LEFT JOIN students_child_detail r ON l.emis_user_id = r.id WHERE r.class_studying_id = {scheduling_obj.class_std}"
+            # if scheduling_obj.class_section != None:
+            #     students_query = f"{students_query} AND r.class_section = '{scheduling_obj.class_section}'"
+            
+
+
             # students_query = f"  SELECT emis_username,  student_name, class_studying_id, class_section FROM emisuser_student WHERE class_studying_id = {scheduling_obj.class_std} "
             # if scheduling_obj.class_section != None:
             #     students_query = f"{students_query} AND class_section = '{scheduling_obj.class_section}'"
-
-            students_query = f" SELECT l.emis_username, r.name, r.class_studying_id, r.class_section FROM emisuser_student l LEFT JOIN students_child_detail r ON l.emis_user_id = r.id WHERE r.class_studying_id = {scheduling_obj.class_std}"
-            if scheduling_obj.class_section != None:
-                students_query = f"{students_query} AND r.class_section = '{scheduling_obj.class_section}'"
-            
-
             #students_query = f"SELECT {emisuser_student}.{auth_fields['student']['username_field']},{emisuser_student}.student_name,{emisuser_student}.class_studying_id,{emisuser_student}.class_section FROM {emisuser_student} INNER JOIN {students_child_detail} ON {emisuser_student}.emis_user_id = {students_child_detail}.id WHERE {students_child_detail}.{auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
                 #students_query = f"{students_query} AND {students_child_detail}.{auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
-
-
             # inner_query = f"SELECT {auth_fields['student']['school_field_foreign_ref']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['student_class']} = {scheduling_obj.class_std}"
-
-
             # if scheduling_obj.class_section != None:
             #     inner_query = f"{inner_query} AND {auth_fields['student']['section_field_master']} = '{scheduling_obj.class_section}'"
-
             # students_query = f"SELECT {auth_fields['student']['username_field']},student_name FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['school_field_foreign']} IN ({inner_query}) ;"
 
             
@@ -2167,7 +2161,7 @@ class ResetDB(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT school_id FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1"
+            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
