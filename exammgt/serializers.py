@@ -3,6 +3,7 @@ from .models import EventAttendance, ExamMeta, QpSet, Question, Choice
 from scheduler.models import scheduling, event, participants
 from . import views
 import math
+from django.conf import settings
 
 import datetime
 #from .views import connection
@@ -189,11 +190,17 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         try:
             cn = views.connection()
             mycursor = cn.cursor()
-            query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std}"
+
+            query = f" SELECT COUNT(l.{settings.AUTH_FIELDS['student']['username_field']}) FROM {settings.AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {settings.AUTH_FIELDS['student']['master_table']} r ON l.{settings.AUTH_FIELDS['student']['school_field_foreign']} = r.{settings.AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{settings.AUTH_FIELDS['student']['student_class']} = {obj.class_std}"
             if obj.class_section != None:
-                obj = f"{obj} AND class_section = '{obj.class_section}' ;"
-            else:
-                obj = f"{obj} ;"
+                query = f"{query} AND r.{settings.AUTH_FIELDS['student']['section_field_master']} = '{obj.class_section}'"
+
+
+            # query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std}"
+            # if obj.class_section != None:
+            #     obj = f"{obj} AND class_section = '{obj.class_section}' ;"
+            # else:
+            #     obj = f"{obj} ;"
             mycursor.execute(query)
             student_count_result = mycursor.fetchall()
             return student_count_result[0][0]
