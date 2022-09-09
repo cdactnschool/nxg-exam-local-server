@@ -52,6 +52,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
     duration_mins           = serializers.SerializerMethodField('get_duration_minutes')
     json_count              = serializers.SerializerMethodField('get_json_count')
     user_type               = serializers.SerializerMethodField('get_user_type')
+    json_available          = serializers.SerializerMethodField('get_json_available')
 
     def create(self, validated_data):
         return scheduling.objects.create(**validated_data)
@@ -244,6 +245,16 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         else:
             return None
     
+    def get_json_available(self,obj):
+        '''
+        Return the count of attendance model where json can be created
+        '''
+        if self.context.get('user').profile.usertype == 'hm':
+            return EventAttendance.objects.filter(event_id=obj.schedule_id,json_created=False).count()
+        else:
+            return None
+
+
     def get_user_type(self,obj):
         return self.context.get('user').profile.usertype
 
