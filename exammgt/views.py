@@ -1132,7 +1132,7 @@ class LoadEvent(APIView):
             
             # school_id = 30488
             CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
-            req_url = f"{CENTRAL_SERVER_IP}/scheduler/get_events"
+            req_url = f"{CENTRAL_SERVER_IP}/scheduler/get-events"
        
             school_id = school_id_response[0][0]
             payload = {
