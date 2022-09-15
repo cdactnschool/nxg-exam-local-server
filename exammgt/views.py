@@ -604,6 +604,48 @@ class GetMyEvents(APIView):
                 # Addition of section
                 events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
 
+                # Filter further for student specific exam
+                
+                
+                # Get emis_user_id
+                cn = connection()
+
+                if cn == None:
+                    data = {}
+                    data['api_status'] = False
+                    data['message'] = 'School server Not reachable'
+                    return Response(data)
+                
+                mycursor = cn.cursor()
+
+                query = f"SELECT emis_user_id FROM emisuser_student WHERE emis_username = {request.user.username} "
+
+                mycursor.execute(query)
+                emis_user_id_response = mycursor.fetchall()
+                emis_user_id = emis_user_id_response[0][0]
+
+                print('_+_+_+_+_+_+',emis_user_id)
+
+                scheduling_list_ids = list(events_queryset.values_list('schedule_id',flat = True))
+                # scheduling_list_ids = [1,2,3,4,5,6,7,8,9]
+                print('-=-=-=-=-',scheduling_list_ids)
+
+                participants_queryset = participants.objects.filter(schedule_id__in = scheduling_list_ids)
+
+                participants_queryset = participants_queryset.filter(
+                    Q(participant_category="DISTRICT") |
+                    Q(participant_category="BLOCK") |
+                    Q(participant_category="SCHOOL") |
+                    Q(participant_category="STUDENT", participant_id = emis_user_id)
+                )
+
+                participants_list_ids = list(participants_queryset.values_list('schedule_id',flat=True))
+
+                # participants_list_ids = [1,2,3,4,5]
+
+                events_queryset = events_queryset.filter(schedule_id__in = participants_list_ids)
+
+
             events_serialized = ExamEventsScheduleSerializer(events_queryset,many=True,context={'user':request.user})
 
             events_serialized_data = {
