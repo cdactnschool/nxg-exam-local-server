@@ -27,7 +27,7 @@ from datetime import timedelta
 SECRET_KEY = 'django-insecure-(y=&ct401vu+=0%l-l485k-5ow=979an+@8+j1fl@h%p3+6)h^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*',]
 
@@ -201,47 +201,47 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/debug.log'),
+            'filename': os.path.join('/var/log', 'assessment/debug.log'),
             'formatter': 'verbose'
         },
         'logins': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/access.log'),
+            'filename': os.path.join('/var/log', 'assessment/access.log'),
             'formatter': 'verbose'
         },
         'error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/error.log'),
+            'filename': os.path.join('/var/log', 'assessment/error.log'),
             'formatter': 'verbose'
         },
         'infos': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/info.log'),
+            'filename': os.path.join('/var/log', 'assessment/info.log'),
             'formatter': 'verbose'
         },
         'api_errors': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/api_error.log'),
+            'filename': os.path.join('/var/log', 'assessment/api_error.log'),
             'formatter': 'verbose'
         },
         'student_start': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/student_start.log')
+            'filename': os.path.join('/var/log', 'assessment/student_start.log')
         },
         'student_end': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/student_end.log')
+            'filename': os.path.join('/var/log', 'assessment/student_end.log')
         },
         'student_log': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log/student_log.log')
+            'filename': os.path.join('/var/log', 'assessment/school_log.log')
         },
     },
     'loggers': {
@@ -292,8 +292,9 @@ LOGGING = {
 AUTH_ENABLE = True # Enable is_authentication in views.py file
 
 CENTRAL_SERVER_IP = 'https://exam.tnschools.gov.in'
-# CENTRAL_SERVER_IP = 'http://10.184.36.20:8000'
+# CENTRAL_SERVER_IP = 'http://10.184.36.118:8000'
 # CENTRAL_SERVER_IP = 'https://10.184.36.231/'
+# CENTRAL_SERVER_IP = 'http://10.184.36.237:8000'
 
 CERT_FILE = os.path.join(BASE_DIR, 'cert/schoolexam-RootCA.cert.pem')
 # CERT_FILE = False
