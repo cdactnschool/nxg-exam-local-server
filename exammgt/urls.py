@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import localserver as ls
-from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, CandidateResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc, ToComplete
+from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, CandidateResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse, VersionNumber
 from .views_adv import GenerateJSON
 
 from rest_framework_simplejwt.views import (
@@ -24,6 +24,7 @@ urlpatterns = [
     path('load_events',                     LoadEvent.as_view(),                    name='event_list'), 
     path('meta_data',                       MetaData.as_view(),                     name='meta_data'),
     path('school-details',                  SchoolDetails.as_view(),                name='school-details'),
+    path('version-number',                  VersionNumber.as_view(),                name='version-number'),
 
     path('get-my-events',                   GetMyEvents.as_view(),                  name='get-my-events'),
     path('qpdownload',                      GenerateQuestionPaper.as_view(),        name='qpdownload'),
@@ -36,6 +37,7 @@ urlpatterns = [
     path('school_exam_summary',             SchoolExamSummary.as_view(),            name='school_exam_summary'),
     path('cons-summary',                    ConsSummary.as_view(),                  name='cons-summary'),
     path('gen-json',                        GenerateJSON.as_view(),                 name='gen-json'),
+    path('send-response',                   SendResponse.as_view(),                 name='send-response'),
 
     path('meta-upload',                     MetaUpload.as_view(),                   name='qpupload'),
     path('de-register',                     ResetDB.as_view(),                      name='reset-db'),

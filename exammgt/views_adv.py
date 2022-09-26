@@ -47,7 +47,7 @@ class GenerateJSON(APIView):
         folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}")
         os.makedirs(folder_dir, exist_ok=True)
 
-
+        print('folder_dir _+_+_+_+_+__+',folder_dir)
         '''
         file_name = os.path.join(folder_dir, f"{data['event_id']}_{request.user.profile.school_id}.json")
 

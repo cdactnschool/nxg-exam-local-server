@@ -37,6 +37,9 @@ import sqlite3
 import logging
 
 import shutil
+import time
+
+import subprocess
 
 
 logger      = logging.getLogger('monitoringdebug')
@@ -780,7 +783,8 @@ class SchoolExamSummary(APIView):
 
     def post(self,request,*args, **kwargs):
         try:
-            school_id = 30488 # Fetch from the API
+            # school_id = 30488 # Fetch from the API
+            school_id = request.user.profile.school_id
             data = JSONParser().parse(request)
 
             filter_dict = {}
@@ -964,7 +968,7 @@ class GenerateQuestionPaper(APIView):
                 question_paper_data['user'] = request.user.username
                 question_paper_data['qp_set_id'] = event_attendance_obj.qp_set
                 question_paper_data['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
-                #question_paper_data['end_alert_seconds'] = question_paper_data['end_alert_time'] * 60 # Convert to seconds
+                question_paper_data['end_alert_seconds'] = question_paper_data['end_alert_time'] * 60 # Convert to seconds
 
                 question_paper_data['api_status'] = True
 
@@ -983,7 +987,7 @@ class GenerateQuestionPaper(APIView):
                     
                     tmp_exam_dict['qp_set_id'] = event_attendance_obj.qp_set
                     tmp_exam_dict['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
-                    #tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
+                    tmp_exam_dict['end_alert_seconds'] = tmp_exam_dict['end_alert_time'] * 60 # Convert to seconds
                     exam_meta_data.append(tmp_exam_dict)
 
                     print('------exam_meta---------',exam_meta_data)
@@ -1868,6 +1872,25 @@ class SchoolDetails(APIView):
             print('No school details :',e)
             return Response({'api_status':False,'message':'No school details'})
 
+class VersionNumber(APIView):
+    
+    '''
+        GET api call to fetch the version number
+    '''
+
+    def get(self, request, *args, **kwargs):
+        try:
+            
+            version_file_path = os.path.join(settings.MEDIA_ROOT,'version.txt')
+            with open(version_file_path) as f:
+                # version_value = f.readlines()
+                version_value = [line.strip() for line in f.readlines()]
+
+            return Response({'api_status':True,'version':version_value})
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in fetching version number','exception':str(e)})
+
+
 
 class ConsSummary(APIView):
     '''
@@ -2510,3 +2533,119 @@ class ToComplete(APIView):
         
         except Exception as e:
             return Response({'api_status':False,'message':'Error in listing event to mark as complete','exception':str(e)})
+
+def ipfetch(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0]
+    else:
+        return request.META.get('REMOTE_ADDR')
+
+class SendResponse(APIView):
+
+    '''
+    API class to send json files if available
+    
+    '''
+
+    def post(self,request,*args,**kwargs):
+        try:
+
+            if request.user.profile.usertype != 'hm':
+                return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
+        
+            data = JSONParser().parse(request)
+            #data['event_id'] = data ['id']
+
+            folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}")
+
+            if os.path.isdir(folder_dir) == False:
+                return Response ({'api_status':False,'message':'No response available to send'})
+
+            
+            timestr = time.strftime("%Y%m%d%H%M%S")
+
+            actualfile = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}.7z")
+
+            with py7zr.SevenZipFile(actualfile, 'w') as archive:
+                archive.writeall(folder_dir, '')
+
+
+            send_response_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/load-responses"
+
+            # Fetch school name
+            cn = connection()
+            mycursor = cn.cursor()
+            query = f"SELECT school_name FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+            mycursor.execute(query)
+            school_detail_response = mycursor.fetchall()
+
+            print('school name _+_+_+_+_+',school_detail_response[0][0])
+
+            calmd5sum = subprocess.Popen(["md5sum", actualfile], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            zip_hash = calmd5sum.communicate()[0].decode("utf-8").split(" ")[0]
+
+            print('----------file---send------------',actualfile)
+
+
+            # with open(actualfile,'rb') as f:  # redundant
+            #     print('-----------type of f---------',type(f))
+                
+            #     f.seek(0)
+            #     with open(os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}_test.7z"), "wb") as file1:
+            #         print(dir(f))
+            #         shutil.copyfileobj(f, file1, length=1024)
+            #         # file1.write(f.read())
+
+
+            #with open(actualfile, 'rb') as f:
+                #print('----file-------content-----',f)
+
+
+
+
+
+            fileobj = open(actualfile, 'rb')
+            sent_request = requests.post(send_response_url, data={
+                'event_id':data['event_id'],
+                # 'archive':  fileobj,
+                'md5sum':zip_hash,
+                'school_token':get_school_token(),
+                'school_id':request.user.profile.school_id,
+                'process_str':'RESPONSE_DATA',
+                'ipaddress': ipfetch(request),
+                'school_name': school_detail_response[0][0],
+                'file_name': os.path.basename(actualfile)
+                },files = {'archive': (actualfile, fileobj, 'application/x-7z-compressed')})
+
+
+            if sent_request.status_code != 200:
+                return Response({'api_status':False,'message':'Unable to send response files to Central Server','error':'Status not equal to 200','Error content':sent_request.reason,'status_code':sent_request.status_code})
+
+            sent_request_response = sent_request.json()
+
+            #print('SendResponse\'s response json :',sent_request_response)
+
+            if sent_request_response['api_status']:
+                print('Deleting the 7zip file :',actualfile)
+                os.remove(actualfile)
+                print('Deleting folder :',folder_dir)
+                shutil.rmtree(folder_dir,ignore_errors=False,onerror=None)
+
+            # import io
+            
+            # print('_+_+_+_',sent_request_response['data'])
+            # test1 = sent_request_response['data']
+            # test = io.BytesIO(test1)
+            # print('test type',type(test))
+
+            # test.seek(0)
+            # with open(os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}_test111111111.7z"), "wb") as file1:
+               
+            #     #shutil.copyfileobj(test, file1, length=1024)
+            #     file1.write(f.read())
+
+            return Response(sent_request_response)
+
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in sending response to the central server','exception':str(e)})
