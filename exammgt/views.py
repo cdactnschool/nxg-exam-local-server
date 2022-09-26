@@ -5,6 +5,7 @@ from django.shortcuts import render
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -191,9 +192,29 @@ def create_local_user(request,data):
     data = {'username':data['username'],'password':data['password']})
     
     res_data = x.json()
+
+    # Access log entry
+
+    accesslog.info(json.dumps({'school_id':data['school_id'],'emisusername':data['username'],'usertype':data['user_type'],'action':'Login','datetime':str(datetime.datetime.now())},default=str))
     
     #return Response(res_data)
     return res_data
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+
+            refresh_token = RefreshToken.for_user(request.user)
+            refresh_token.blacklist()
+            accesslog.info(json.dumps({'school_id':request.user.profile.school_id,'emisusername':request.user.username,'usertype':request.user.profile.usertype,'action':'Logout','datetime':str(datetime.datetime.now())},default=str))
+            return Response({'api_status':True,'message':'Logout successful'})
+        except Exception as e:
+            print('Exception in logout :',e)
+            return Response({'api_status':False,'message':'Error in logging out','exception':str(e)})
+
+
 
 class db_auth(APIView):
 
@@ -1881,7 +1902,7 @@ class VersionNumber(APIView):
     def get(self, request, *args, **kwargs):
         try:
             
-            version_file_path = os.path.join(settings.MEDIA_ROOT,'version.txt')
+            version_file_path = os.path.join(settings.BASE_DIR,'version.txt')
             with open(version_file_path) as f:
                 # version_value = f.readlines()
                 version_value = [line.strip() for line in f.readlines()]

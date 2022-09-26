@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import localserver as ls
-from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, CandidateResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse, VersionNumber
+from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, CandidateResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse, VersionNumber,LogoutView
 from .views_adv import GenerateJSON
 
 from rest_framework_simplejwt.views import (
@@ -17,6 +17,7 @@ urlpatterns = [
     path('token',                           MyTokenObtainPairView.as_view(),        name='token-obtain-pair'),
     path('token/refresh',                   TokenRefreshView.as_view(),             name='token_refresh'),
     path('token/verify',                    TokenVerifyView.as_view(),              name='token_verify'),
+    path('logout',                          LogoutView.as_view(),                   name='logout'),
     path('get-user-detail',                 GetUserDetail.as_view(),                name='GetUserDetail'),
 
     path('initial-reg',                     InitialReg.as_view(),                   name='initial-reg'),
