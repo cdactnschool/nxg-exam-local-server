@@ -2853,15 +2853,16 @@ class SendResponses(APIView):
 
 
             if sent_request.status_code != 200:
+                os.remove(zip_file_name)
                 return Response({'api_status':False,'message':'Unable to send response files to Central Server','error':'Status not equal to 200','Error content':sent_request.reason,'status_code':sent_request.status_code})
 
 
-            print('------------------------')
-            print('Deleting ...',zip_file_name)
+            # print('------------------------')
+            # print('Deleting ...',zip_file_name)
             os.remove(zip_file_name)
             if sent_request_response['api_status']:
                 for i in json_file_list:
-                    print('deleting...',os.path.join(json_dir,i))
+                    # print('deleting...',os.path.join(json_dir,i))
                     os.remove(os.path.join(json_dir,i))   
 
                 # print(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now())},default=str))
@@ -2880,6 +2881,11 @@ class SendResponses(APIView):
 
 
         except Exception as e:
+            
+            try: # Delete the zip file if possible
+                os.remove(zip_file_name)
+            except:
+                pass
 
             api_errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now()), 'exception':str(e)},default=str))
 
