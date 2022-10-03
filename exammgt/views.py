@@ -1351,14 +1351,32 @@ class LoadReg(APIView):
             udise_code = request.data['udise']
             print(udise_code)
 
-            payload = json.dumps({
-                "udise_code" : request.data['udise'],
-                "name":request.data['name'],
-                "mobile_no":request.data['mobileno'],
-                "school_token":get_school_token()
+            if get_school_token() == 'first_request':
+                renewal_status = False
+            else:
+                renewal_status = True
 
-            },default=str)
-          
+            if get_school_token() == 'first_request':
+                payload = json.dumps({
+                    "udise_code" : request.data['udise'],
+                    "name":request.data['name'],
+                    "mobile_no":request.data['mobileno'],
+                    "school_token":get_school_token(),
+                    "renewal":renewal_status
+
+                },default=str)
+            else:
+                
+                # Allow only HM to update credentials 
+                if request.user.profile.usertype != 'hm':
+                    return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
+
+                payload = json.dumps({
+                    "udise_code" : request.user.profile.udise_code,
+                    "school_token":get_school_token(),
+                    "renewal":renewal_status
+                },default=str)
+                
             # get_events_response = requests.request("POST", reqUrl, data=payload)
             get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
 
@@ -1547,13 +1565,21 @@ class LoadReg(APIView):
                 print('Exception in deleting old user\'s entry')
 
             # Logging the school_id, action and datetime to the api_log.info file.
-            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Load_registeration','datetime':str(datetime.datetime.now())},default=str))
+            if renewal_status:
+                api_log.info(json.dumps({'school_id':school_id_response[0][0],'username':request.user.username,'action':'Load_registeration_renewal','datetime':str(datetime.datetime.now())},default=str))
+            else:
+                api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Load_registeration','datetime':str(datetime.datetime.now())},default=str))
+
 
             return Response({'api_status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while load registeration data throught API : {e}')
 
-            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_registeration','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+            if renewal_status:
+                api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'username':request.user.username,'action':'Load_registeration_renewal','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+            else:
+                api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_registeration','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
 
             return Response({'api_status':False,'message':'Error in Registeration','exception':f'Exception raised while load registeration data throught API : {e}'})
 
