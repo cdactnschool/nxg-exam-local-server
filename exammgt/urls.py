@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import localserver as ls
-from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, CandidateResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse, VersionNumber,LogoutView
+from .views import MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail, InitialReg, LoadReg, LoadEvent, MetaData, SchoolDetails, GetMyEvents, GenerateQuestionPaper, CandidateResponse, UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary, ConsSummary, MetaUpload, ResetDB, MasterCleaner, ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse,SendResponses, VersionNumber,LogoutView
 from .views_adv import GenerateJSON
 
 from rest_framework_simplejwt.views import (
@@ -29,7 +29,7 @@ urlpatterns = [
 
     path('get-my-events',                   GetMyEvents.as_view(),                  name='get-my-events'),
     path('qpdownload',                      GenerateQuestionPaper.as_view(),        name='qpdownload'),
-    path('exam_response',                   CandidateResponse.as_view(),                 name='exam_response'),
+    path('exam_response',                   CandidateResponse.as_view(),            name='exam_response'),
     path('update-remtime',                  UpdateRemtime.as_view(),                name='update-remtime'),
     path('exam-submit',                     ExamSubmit.as_view(),                   name='exam-submit'),
     path('summary',                         summary.as_view(),                      name='exam_summary'),
@@ -39,6 +39,7 @@ urlpatterns = [
     path('cons-summary',                    ConsSummary.as_view(),                  name='cons-summary'),
     path('gen-json',                        GenerateJSON.as_view(),                 name='gen-json'),
     path('send-response',                   SendResponse.as_view(),                 name='send-response'),
+    path('send-responses',                  SendResponses.as_view(),                 name='send-response'),
 
     path('meta-upload',                     MetaUpload.as_view(),                   name='qpupload'),
     path('de-register',                     ResetDB.as_view(),                      name='reset-db'),

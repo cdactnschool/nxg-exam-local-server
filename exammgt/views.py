@@ -47,7 +47,8 @@ logger      = logging.getLogger('monitoringdebug')
 accesslog   = logging.getLogger('accesslog')
 errorlog    = logging.getLogger('errorlog')
 infolog     = logging.getLogger('infolog')
-apilog      = logging.getLogger('apilog')
+api_log      = logging.getLogger('api_log')
+api_errorlog = logging.getLogger('api_error')
 student_start_log = logging.getLogger('student_start_log')
 student_end_log = logging.getLogger('student_end_log')
 student_log = logging.getLogger('student_log')
@@ -140,53 +141,54 @@ def create_local_user(request,data):
     '''
     print('````````````````',data)
     if User.objects.filter(username=data['username']).exists():
-        db_user = User.objects.get(username=data['username'])
-        if not db_user.check_password(data['password']):
-            db_user.set_password(data['password'])
+        pass
+        # db_user = User.objects.get(username=data['username'])
+        # if not db_user.check_password(data['password']):
+        #     db_user.set_password(data['password'])
     else:
         db_user = User.objects.create_user(username=data['username'],password = data['password'])
-    db_user.save()
+        db_user.save()
 
-    if Profile.objects.filter(user=db_user).exists():
-        profile_instance = Profile.objects.get(user=db_user)
-    else:
+    # if Profile.objects.filter(user=db_user).exists():
+    #     profile_instance = Profile.objects.get(user=db_user)
+    # else:
         profile_instance = Profile.objects.create(user=db_user)
     
     #print('^^^^^^^^^^^^^^^^^^^^^^',data)
-    if 'priority' in data:
-        profile_instance.priority       = data['priority']
-    
-    if 'name_text' in data:
-        profile_instance.name_text      = data['name_text']
-    
-    if 'section' in data:
-        profile_instance.section        = data['section']
-    
-    if 'user_type' in data:
-        profile_instance.usertype       = data['user_type']
-    
-    if 'udise_code' in data:
-        profile_instance.udise_code     = data['udise_code']
-    
-    if 'district_id' in data:
-        profile_instance.district_id    = data['district_id']
-    
-    if 'block_id' in data:
-        profile_instance.block_id       = data['block_id']
-    
-    if 'school_id' in data:
-        profile_instance.school_id      = data['school_id']
+        if 'priority' in data:
+            profile_instance.priority       = data['priority']
+        
+        if 'name_text' in data:
+            profile_instance.name_text      = data['name_text']
+        
+        if 'section' in data:
+            profile_instance.section        = data['section']
+        
+        if 'user_type' in data:
+            profile_instance.usertype       = data['user_type']
+        
+        if 'udise_code' in data:
+            profile_instance.udise_code     = data['udise_code']
+        
+        if 'district_id' in data:
+            profile_instance.district_id    = data['district_id']
+        
+        if 'block_id' in data:
+            profile_instance.block_id       = data['block_id']
+        
+        if 'school_id' in data:
+            profile_instance.school_id      = data['school_id']
 
-    if 'student_class' in data:
-        profile_instance.student_class  =data['student_class']
+        if 'student_class' in data:
+            profile_instance.student_class  =data['student_class']
 
-    profile_instance.save()
-    if db_user.groups.exists():
-        for g in db_user.groups.all():
-            db_user.groups.remove(g)
-    if data['user_type']:
-        my_group = Group.objects.get(name=data['user_type']) 
-        my_group.user_set.add(db_user)
+        profile_instance.save()
+    # if db_user.groups.exists():
+    #     for g in db_user.groups.all():
+    #         db_user.groups.remove(g)
+        if data['user_type']:
+            my_group = Group.objects.get(name=data['user_type']) 
+            my_group.user_set.add(db_user)
 
     x = requests.post(request.build_absolute_uri(reverse('token-obtain-pair')),
     data = {'username':data['username'],'password':data['password']})
@@ -993,6 +995,8 @@ class GenerateQuestionPaper(APIView):
 
                 question_paper_data['api_status'] = True
 
+                infolog.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now())},default=str))
+
                 return Response(question_paper_data)
 
             else:
@@ -1094,8 +1098,14 @@ class GenerateQuestionPaper(APIView):
                     json.dump(configure_qp_data, f,default=str)
                 configure_qp_data['user'] = request.user.username
                 configure_qp_data['api_status'] = True
+
+                infolog.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now())},default=str))
+
+
                 return Response(configure_qp_data)
         except Exception as e:
+            errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now())},default=str))
+
             return Response({'api_status':False,'message':'Unable to fetch question paper','exception':str(e)})
 
 def get_school_token():
@@ -1314,9 +1324,15 @@ class LoadEvent(APIView):
                 misc_obj.event_dt = datetime.datetime.now()
                 misc_obj.save()
 
+
+            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Load_event','datetime':str(datetime.datetime.now())},default=str))
+
             return Response({'api_status':True,'message':'Event data loaded','school_token':get_school_token()})
         except Exception as e:
             print(f'Exception raised while loading event data : {e}')
+
+            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_event','datetime':str(datetime.datetime.now())},default=str))
+
             return Response({'api_status':False,'message':'unable to fetch events','exception':f'Exception raised while loading event data : {e}','school_token':get_school_token()})
 
 class LoadReg(APIView):
@@ -1523,9 +1539,22 @@ class LoadReg(APIView):
                 misc_obj.school_token = school_token
                 misc_obj.save()
 
+
+            # Deleting old logins
+            try:
+                User.objects.all().delete()
+            except Exception as  e:
+                print('Exception in deleting old user\'s entry')
+
+            # Logging the school_id, action and datetime to the api_log.info file.
+            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Load_registeration','datetime':str(datetime.datetime.now())},default=str))
+
             return Response({'api_status':True,'message':'Registeration data loaded'})
         except Exception as e:
             print(f'Exception raised while load registeration data throught API : {e}')
+
+            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_registeration','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
             return Response({'api_status':False,'message':'Error in Registeration','exception':f'Exception raised while load registeration data throught API : {e}'})
 
 class InitialReg(APIView):
@@ -1552,10 +1581,17 @@ class InitialReg(APIView):
             except Exception as e:
                 return Response({'api_status':False,'message':'Error in fetching data from Central server','exception':str(e)})
             udise_response_json = get_udise_response.json()
+
+            api_log.info(json.dumps({'udise_code':data['udise_code'],'action':'School_initial_info','datetime':str(datetime.datetime.now())},default=str))
+            
             return Response(udise_response_json)
         
         except Exception as e:
+
             print('Exception caused during Initial Registeration :',e)
+            
+            api_errorlog.error(json.dumps({'udise_code':data['udise_code'],'action':'School_initial_info','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+            
             return Response({'api_status':False,'message':'Exception caused during Initial Registeration'})
 
 def load_question_choice_data(qpdownload_list):
@@ -1840,11 +1876,17 @@ class MetaData(APIView):
 
             shutil.rmtree(load_meta_base,ignore_errors=False,onerror=None)
 
+            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Load_meta_data','datetime':str(datetime.datetime.now())},default=str))
+
 
             return Response({'api_status':True,'message':'Meta data loaded successfully'})
          
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
+
+            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_meta_data','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
+
             return Response({"api_status":False,"message":"Error in fetching meta data","exception": f'{e}'})
 
         #     return Response({'api_status':True})
@@ -2221,8 +2263,18 @@ class MetaUpload(APIView):
             
 
             # return Response({'api_status':True,'dir':dir(file_obj),'name':file_obj.name,'type':file_obj.content_type})
+
+
+            infolog.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Meta_Upload','event_id':event_id,'datetime':str(datetime.datetime.now())},default=str))
+
+
             return Response({'api_status':True,'message':'Meta data uploaded successfully'})
+        
         except Exception as e:
+            
+            errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Meta_Upload','event_id':event_id,'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
+
             return Response({'api_status':False,'message':'Unable to upload the meta data','exception':str(e)})
 
 
@@ -2287,9 +2339,15 @@ class ResetDB(APIView):
             participants.objects.all().delete()
             event.objects.all().delete()
 
+            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Reset_DB','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
+
             return Response({'api_status':True,'messge':'De-Registeration successful'})
         
         except Exception as e:
+
+            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Reset_DB','datetime':str(datetime.datetime.now()),'exception':str(e),'exception':str(e)},default=str))
+
             return Response({'api_status':False,'message':'Unable to De-Register','exception':str(e)})
 
 
@@ -2379,6 +2437,20 @@ class MasterCleaner(APIView):
 
             event_id = request.data['event_id']
 
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['api_status'] = False
+                data['message'] = 'School server Not reachable'
+                return Response(data)
+            
+            mycursor = cn.cursor()
+
+            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            mycursor.execute(query)
+            school_id_response = mycursor.fetchall()
+
             # Check if event_id is available or not
             if ExamMeta.objects.filter(event_id=event_id).count() == 0:
                 return Response({'api_status':False,'message':f"Event_id : {event_id} not available !!"})
@@ -2457,9 +2529,16 @@ class MasterCleaner(APIView):
 
             metaObj.sync_done = 2
             metaObj.save()
+
+            infolog.info(json.dumps({'school_id':school_id_response[0][0],'action':'Clean_ID','event_id':event_id,'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
+
             return Response({'api_status':True,'message':f"Clean-up completed for event_id : {event_id}"})
 
         except Exception as e:
+
+            errorlog.info(json.dumps({'school_id':school_id_response[0][0],'action':'Clean_ID','event_id':event_id,'datetime':str(datetime.datetime.now()),'exception':str(e),'exception':str(e)},default=str))
+
             return Response({'api_status':False,'message':f'Error in cleaning up event_id : {event_id}','exception':f'{e}'})
 
 
@@ -2486,6 +2565,20 @@ class ExamComplete(APIView):
         try:
             event_id = request.data['event_id']
 
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['api_status'] = False
+                data['message'] = 'School server Not reachable'
+                return Response(data)
+            
+            mycursor = cn.cursor()
+
+            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            mycursor.execute(query)
+            school_id_response = mycursor.fetchall()
+
             if ExamMeta.objects.filter(event_id=event_id).exists() == False:
                 return Response({'api_status':False,'message':f'Meta data not available for the given event_id :{event_id}'})
 
@@ -2495,9 +2588,16 @@ class ExamComplete(APIView):
             meta_obj.sync_done = 1
             meta_obj.save()
 
+            infolog.info(json.dumps({'school_id':school_id_response[0][0],'action':'Exam_Complete','event_id':event_id,'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
+
             return Response({'api_status':True,'message':'Exam marked as completed'})
 
         except Exception as e:
+            
+            errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Exam_Complete','event_id':event_id,'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+
+
             return Response({'api_status':False,'message':'Error in marking exam as completed','exception':str(e)})
 
 
@@ -2515,7 +2615,7 @@ class DispMisc(APIView):
         try:
             misc_obj = MiscInfo.objects.all().first()
 
-            return Response({'api_status':True,'data':{'reg_dt':misc_obj.reg_dt,'event_dt':misc_obj.event_dt}})
+            return Response({'api_status':True,'data':{'reg_dt':misc_obj.reg_dt.strftime("%Y-%m-%d %-H:%-M"),'event_dt':misc_obj.event_dt.strftime("%Y-%m-%d %-H:%-M")}})
 
         except Exception as e:
             return Response({'api_status':False,'message':'Error in fetching misc data','exception':str(e)})
@@ -2566,6 +2666,8 @@ class SendResponse(APIView):
 
     '''
     API class to send json files if available
+
+    Send event based responses
     
     '''
 
@@ -2666,7 +2768,119 @@ class SendResponse(APIView):
             #     #shutil.copyfileobj(test, file1, length=1024)
             #     file1.write(f.read())
 
+            api_log.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':data['event_id'],'datetime':str(datetime.datetime.now())},default=str))
+
             return Response(sent_request_response)
 
         except Exception as e:
+
+            api_errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':data['event_id'],'datetime':str(datetime.datetime.now()), 'exception':str(e)},default=str))
+
+            return Response({'api_status':False,'message':'Error in sending response to the central server','exception':str(e)})
+
+
+class SendResponses(APIView):
+    '''
+    
+    API class to send JSON response files if available
+    
+    '''
+
+    def post(self,request,*args,**kwargs):
+
+        try:
+            if request.user.profile.usertype != 'hm':
+                return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
+
+            print('-----------------')
+            json_dir = os.path.join(settings.MEDIA_ROOT,'cons_data')
+
+            if os.path.isdir(json_dir) == False:
+                return Response ({'api_status':False,'message':'No response file available to send'})
+
+            json_file_list = os.listdir(json_dir)
+
+            if len(json_file_list) == 0:
+                return Response ({'api_status':False,'message':'No response file available to send'})
+
+            compress_dir = os.path.join(settings.MEDIA_ROOT,'cons_zip')
+            os.makedirs(compress_dir, exist_ok=True)
+
+            timestr = time.strftime("%Y%m%d%H%M%S")
+            
+            
+            zip_file_name = os.path.join(compress_dir,f"{request.user.profile.school_id}_{timestr}.7z")
+
+            with py7zr.SevenZipFile(zip_file_name, 'w') as archive:
+                archive.writeall(json_dir, '')
+
+            print('zipped content :',json_file_list)
+
+            ids = set()
+            for i in json_file_list:
+                ids.add(i.split('_')[0])
+
+            ids_list = str(sorted(ids))
+
+            print('unique IDs :',ids)
+
+            send_response_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/load-responses"
+
+            # Fetch school name
+            cn = connection()
+            mycursor = cn.cursor()
+            query = f"SELECT school_name FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+            mycursor.execute(query)
+            school_detail_response = mycursor.fetchall()
+
+            calmd5sum = subprocess.Popen(["md5sum", zip_file_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            zip_hash = calmd5sum.communicate()[0].decode("utf-8").split(" ")[0]
+
+            fileobj = open(zip_file_name, 'rb')
+            sent_request = requests.post(send_response_url, data={
+                'event_id':ids_list,
+                # 'archive':  fileobj,
+                'md5sum':zip_hash,
+                'school_token':get_school_token(),
+                'school_id':request.user.profile.school_id,
+                'process_str':'RESPONSE_DATA',
+                'ipaddress': ipfetch(request),
+                'school_name': school_detail_response[0][0],
+                'file_name': os.path.basename(zip_file_name)
+                },files = {'archive': (zip_file_name, fileobj, 'application/x-7z-compressed')})
+
+            sent_request_response = sent_request.json()
+
+
+            if sent_request.status_code != 200:
+                return Response({'api_status':False,'message':'Unable to send response files to Central Server','error':'Status not equal to 200','Error content':sent_request.reason,'status_code':sent_request.status_code})
+
+
+            print('------------------------')
+            print('Deleting ...',zip_file_name)
+            os.remove(zip_file_name)
+            if sent_request_response['api_status']:
+                for i in json_file_list:
+                    print('deleting...',os.path.join(json_dir,i))
+                    os.remove(os.path.join(json_dir,i))   
+
+                # print(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now())},default=str))
+
+                api_log.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now())},default=str))
+
+                # sent_request_response = sent_request.json()
+                # print('sent_request_response ',sent_request_response)
+
+                sent_request_response['message'] = f"Responses sent to the central server for event ids {ids}"
+
+                return Response(sent_request_response)
+
+            else:
+                return Response({'api_status':False,'message':'Unable to send files to central server'})
+
+
+        except Exception as e:
+
+            api_errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now()), 'exception':str(e)},default=str))
+
             return Response({'api_status':False,'message':'Error in sending response to the central server','exception':str(e)})
