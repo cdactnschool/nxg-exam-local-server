@@ -2643,7 +2643,12 @@ class DispMisc(APIView):
         try:
             misc_obj = MiscInfo.objects.all().first()
 
-            return Response({'api_status':True,'data':{'reg_dt':misc_obj.reg_dt.strftime("%Y-%m-%d %-H:%-M"),'event_dt':misc_obj.event_dt.strftime("%Y-%m-%d %-H:%-M")}})
+            return Response({'api_status':True,
+            'data':{
+                'reg_dt': misc_obj.reg_dt.strftime("%Y-%m-%d %-H:%-M") if misc_obj.reg_dt else None,
+                'event_dt':misc_obj.event_dt.strftime("%Y-%m-%d %-H:%-M")  if misc_obj.event_dt else None,
+                'resp_dt':misc_obj.resp_dt.strftime("%Y-%m-%d %-H:%-M") if misc_obj.resp_dt else None
+                }})
 
         except Exception as e:
             return Response({'api_status':False,'message':'Error in fetching misc data','exception':str(e)})
@@ -2894,6 +2899,13 @@ class SendResponses(APIView):
                     os.remove(os.path.join(json_dir,i))   
 
                 # print(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now())},default=str))
+
+                if MiscInfo.objects.all().count() == 0:
+                    MiscInfo.objects.create(resp_dt = datetime.datetime.now())
+                else :
+                    misc_obj = MiscInfo.objects.all().first()
+                    misc_obj.resp_dt = datetime.datetime.now()
+                    misc_obj.save()
 
                 api_log.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Send_response','event_id':ids_list,'datetime':str(datetime.datetime.now())},default=str))
 

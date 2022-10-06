@@ -149,6 +149,7 @@ class MiscInfo(models.Model):
     school_token    = models.CharField(max_length=1024,null=True,blank=True)
     reg_dt          = models.DateTimeField(null=True,blank=True)
     event_dt        = models.DateTimeField(null=True,blank=True)
+    resp_dt         = models.DateTimeField(null=True,blank=True)
 
     def __str__(self):
-        return f"{self.id} - {str(self.school_token)} - {str(self.reg_dt)} - {str(self.event_dt)}"
+        return f"{self.id} - {str(self.school_token)} - {str(self.reg_dt)} - {str(self.event_dt)} - {str(self.resp_dt)}"
