@@ -28,7 +28,8 @@ from django.contrib.auth.models import User,Group
 from django.urls import reverse
 
 
-from django.conf import settings
+from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT
+
 import hashlib
 import requests
 
@@ -56,9 +57,9 @@ student_log = logging.getLogger('student_log')
 import sqlite3
 import py7zr
 
-
-
 from django.db.models import Q
+
+# print('---------Centeral server IP----------',CENTRAL_SERVER_IP)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     '''
@@ -98,7 +99,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 def connection():
     try:
         print('=============================')
-        conn = sqlite3.connect(settings.DATABASES['default']['NAME'])
+        conn = sqlite3.connect(DATABASES['default']['NAME'])
         return conn
     except Exception as e:
         print('connection error :',e)
@@ -118,7 +119,7 @@ def fetch_school_details(mycursor,school_id):
     
     '''
 
-    auth_fields = settings.AUTH_FIELDS
+    auth_fields = AUTH_FIELDS
 
     query = f"SELECT {auth_fields['school']['school_id']}, {auth_fields['school']['district_id']}, {auth_fields['school']['block_id']}, {auth_fields['school']['udise_code']} FROM {auth_fields['school']['auth_table']} WHERE {auth_fields['school']['school_id']} = {school_id} LIMIT 1"
     print('Fetch school details query :',query)
@@ -199,6 +200,8 @@ def create_local_user(request,data):
 
     accesslog.info(json.dumps({'school_id':data['school_id'],'emisusername':data['username'],'usertype':data['user_type'],'action':'Login','datetime':str(datetime.datetime.now())},default=str))
     
+    print('User account details ',res_data)
+
     #return Response(res_data)
     return res_data
 
@@ -275,7 +278,7 @@ class db_auth(APIView):
             possible_type = ''
             user_detail = {}
 
-            auth_fields = settings.AUTH_FIELDS
+            auth_fields = AUTH_FIELDS
 
             # Teacher /HM
             if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
@@ -533,7 +536,7 @@ class summary(APIView):
 
     '''
 
-    if settings.AUTH_ENABLE:
+    if AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
     
     def post(self,request,*args, **kwargs):
@@ -559,7 +562,7 @@ class SummaryAll(APIView):
 
 
     '''
-    if settings.AUTH_ENABLE:
+    if AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
     
     def post(self,request,*args, **kwargs):
@@ -609,7 +612,7 @@ class GetMyEvents(APIView):
     
     '''
 
-    if settings.AUTH_ENABLE: 
+    if AUTH_ENABLE: 
         permission_classes = (IsAuthenticated,) # Allow only if authenticated 
     
     def post(self,request,*args, **kwargs): 
@@ -801,7 +804,7 @@ class SchoolExamSummary(APIView):
     
     '''
 
-    if settings.AUTH_ENABLE:
+    if AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
@@ -899,7 +902,7 @@ class GenerateQuestionPaper(APIView):
 
     '''
 
-    if settings.AUTH_ENABLE:
+    if AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
@@ -967,12 +970,12 @@ class GenerateQuestionPaper(APIView):
             #file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
             json_path = "{0}_{1}.json".format(request_data['event_id'] ,event_attendance_obj.qp_set)
             
-            FOLDER = os.path.join(settings.MEDIA_ROOT,'questions_json')
+            FOLDER = os.path.join(MEDIA_ROOT,'questions_json')
 
             if not os.path.exists(FOLDER):
                 os.mkdir(FOLDER)
             exam_meta_object_edit = ExamMeta.objects.filter(**exam_filter)
-            #MEDIA_PATH ="/".join(settings.MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
+            #MEDIA_PATH ="/".join(MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
             json_file_path =  os.path.join(FOLDER, json_path)
 
             print('QP json file existance status',os.path.exists(json_file_path))
@@ -1139,7 +1142,7 @@ class LoadEvent(APIView):
 
     '''
 
-    # if settings.AUTH_ENABLE:
+    # if AUTH_ENABLE:
     #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
@@ -1155,7 +1158,7 @@ class LoadEvent(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -1166,7 +1169,6 @@ class LoadEvent(APIView):
 
             
             # school_id = 30488
-            CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
             req_url = f"{CENTRAL_SERVER_IP}/scheduler/get-events"
        
             school_id = school_id_response[0][0]
@@ -1179,7 +1181,7 @@ class LoadEvent(APIView):
 
 
             #get_events_response = requests.request("POST", req_url, data=payload)
-            get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
+            get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
 
             # Check if school has no events
@@ -1201,7 +1203,7 @@ class LoadEvent(APIView):
 
 
             print(res_fname, res_md5sum)
-            load_event_base = os.path.join(settings.MEDIA_ROOT, 'eventdata')
+            load_event_base = os.path.join(MEDIA_ROOT, 'eventdata')
             file_path = os.path.join(load_event_base, res_fname.strip())
             #eventpath = file_path.split(res_fname)[0]
             eventpath = os.path.join(file_path.split(res_fname)[0],'tn_school_event')
@@ -1250,7 +1252,7 @@ class LoadEvent(APIView):
             
 
 
-            base_sqlite_path = settings.DATABASES['default']['NAME']
+            base_sqlite_path = DATABASES['default']['NAME']
             print('DB name :',base_sqlite_path)
 
             eventcsvpath = eventpath #os.path.join(eventpath,'tn_school_event')
@@ -1301,7 +1303,7 @@ class LoadEvent(APIView):
 
             # send ack to central server
 
-            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+            ack_url = f"{CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
@@ -1311,7 +1313,7 @@ class LoadEvent(APIView):
                 "event_id_list":event_id_list
             },default=str)
 
-            requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
+            requests.request("POST", ack_url, data=ack_payload,verify=CERT_FILE)
 
             # Deleting the residual files
 
@@ -1345,18 +1347,16 @@ class LoadReg(APIView):
 
             # Extration of 7zip file
 
-            CENTRAL_SERVER_IP = settings.CENTRAL_SERVER_IP
             req_url = f"{CENTRAL_SERVER_IP}/exammgt/registeration-data"
-       
-            udise_code = request.data['udise']
-            print(udise_code)
+
+            print('Load registeration url',req_url)
 
             if get_school_token() == 'first_request':
                 renewal_status = False
             else:
                 renewal_status = True
 
-            if get_school_token() == 'first_request':
+            if renewal_status == False:
                 payload = json.dumps({
                     "udise_code" : request.data['udise'],
                     "name":request.data['name'],
@@ -1378,7 +1378,7 @@ class LoadReg(APIView):
                 },default=str)
                 
             # get_events_response = requests.request("POST", reqUrl, data=payload)
-            get_events_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
+            get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
             if get_events_response.headers.get('content-type') == 'application/json':
                 return Response(get_events_response.json())
@@ -1392,10 +1392,10 @@ class LoadReg(APIView):
 
             # os.system()
 
-            load_reg_base = os.path.join(settings.MEDIA_ROOT, 'regdata')
+            load_reg_base = os.path.join(MEDIA_ROOT, 'regdata')
 
             file_path = os.path.join(load_reg_base, res_fname.strip())
-            #file_path = os.path.join(settings.MEDIA_ROOT, 'regdata', "regdata.7z")
+            #file_path = os.path.join(MEDIA_ROOT, 'regdata', "regdata.7z")
 
             print(file_path, '-=--=--', file_path.split(res_fname)[0])
             # check the path exists to check
@@ -1454,9 +1454,9 @@ class LoadReg(APIView):
             
 
 
-            print('DB name :',settings.DATABASES['default']['NAME'])
+            print('DB name :',DATABASES['default']['NAME'])
 
-            base_sqlite_path = settings.DATABASES['default']['NAME']
+            base_sqlite_path = DATABASES['default']['NAME']
 
             print('---------')
 
@@ -1513,7 +1513,7 @@ class LoadReg(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -1525,7 +1525,7 @@ class LoadReg(APIView):
 
             # send ack to central server
 
-            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+            ack_url = f"{CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
@@ -1534,7 +1534,7 @@ class LoadReg(APIView):
                 "school_token":get_school_token()
             },default=str)
 
-            requests.request("POST", ack_url, data=ack_payload,verify=settings.CERT_FILE)
+            requests.request("POST", ack_url, data=ack_payload,verify=CERT_FILE)
 
             # Delete residual files
             shutil.rmtree(load_reg_base,ignore_errors=False,onerror=None)
@@ -1596,12 +1596,12 @@ class InitialReg(APIView):
             if 'udise_code' not in data:
                 return Response({'api_status':False,'message':'udise_code not provided'})
             
-            req_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/udise-info"
+            req_url = f"{CENTRAL_SERVER_IP}/exammgt/udise-info"
 
             payload = json.dumps({"udise_code": data['udise_code']},default=str)
             
             try:
-                get_udise_response = requests.request("POST",req_url,data = payload,verify=settings.CERT_FILE)
+                get_udise_response = requests.request("POST",req_url,data = payload,verify=CERT_FILE)
                 if get_udise_response.status_code != 200:
                     return Response({'api_status':False,'message':'Central server not reachable'})
             except Exception as e:
@@ -1661,7 +1661,7 @@ def load_question_choice_data(qpdownload_list):
 
 
 class MetaData(APIView):
-    # if settings.AUTH_ENABLE:
+    # if AUTH_ENABLE:
     #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
@@ -1677,7 +1677,7 @@ class MetaData(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -1697,14 +1697,14 @@ class MetaData(APIView):
             
 
             #request_data['event_id'] = 2349
-            req_url = f"{settings.CENTRAL_SERVER_IP}/paper/qpdownload"
+            req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload"
             payload = json.dumps({
                 'event_id':request_data['event_id'],
                 'school_id':school_id_response[0][0],
                 'school_token':get_school_token()
             },default=str)
 
-            get_meta_response = requests.request("POST", req_url, data=payload, verify=settings.CERT_FILE, stream = True)
+            get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
             if get_meta_response.headers.get('content-type') == 'application/json':
                 get_meta_response_json = get_meta_response.json()
                 if get_meta_response_json['api_status'] == False:
@@ -1721,7 +1721,7 @@ class MetaData(APIView):
             print(res_fname, res_md5sum)
 
             # Delete residual files
-            load_meta_base = os.path.join(settings.MEDIA_ROOT, 'examdata')
+            load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
 
             file_path = os.path.join(load_meta_base, res_fname.strip())
             questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
@@ -1753,7 +1753,7 @@ class MetaData(APIView):
                 z.extractall(path=questionpath)
             
 
-            base_sqlite_path = settings.DATABASES['default']['NAME']
+            base_sqlite_path = DATABASES['default']['NAME']
             print('DB name :',base_sqlite_path)
             json_file_path = questionpath #os.path.join(questionpath,f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
@@ -1884,7 +1884,7 @@ class MetaData(APIView):
                         return Response({'api_status':False,'message':'Error reading json meta data...!'})
 
 
-            ack_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+            ack_url = f"{CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
 
             ack_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
@@ -1894,7 +1894,7 @@ class MetaData(APIView):
                 "event_id_list":[request_data['event_id']]
             },default=str)
 
-            requests.request("POST", ack_url, data=ack_payload, verify=settings.CERT_FILE) 
+            requests.request("POST", ack_url, data=ack_payload, verify=CERT_FILE) 
       
             os.system('rm -rf ' + json_file_path)
 
@@ -1939,7 +1939,7 @@ class SchoolDetails(APIView):
 
             mycursor = cn.cursor()
 
-            query = f"SELECT {','.join([str(elem) for elem in field_names])} FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+            query = f"SELECT {','.join([str(elem) for elem in field_names])} FROM {DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
             print('query :',query)
             mycursor.execute(query)
             school_detail_response = mycursor.fetchall()
@@ -1970,7 +1970,7 @@ class VersionNumber(APIView):
     def get(self, request, *args, **kwargs):
         try:
             
-            version_file_path = os.path.join(settings.BASE_DIR,'version.txt')
+            version_file_path = os.path.join(BASE_DIR,'version.txt')
             with open(version_file_path) as f:
                 # version_value = f.readlines()
                 version_value = [line.strip() for line in f.readlines()]
@@ -2013,9 +2013,9 @@ class ConsSummary(APIView):
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
             scheduling_obj = scheduling_queryset[0]
 
-            students_query = f" SELECT l.{settings.AUTH_FIELDS['student']['username_field']}, r.{settings.AUTH_FIELDS['student']['name_field_master']}, r.{settings.AUTH_FIELDS['student']['student_class']}, r.{settings.AUTH_FIELDS['student']['section_field_master']} FROM {settings.AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {settings.AUTH_FIELDS['student']['master_table']} r ON l.{settings.AUTH_FIELDS['student']['school_field_foreign']} = r.{settings.AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{settings.AUTH_FIELDS['student']['student_class']} = {scheduling_obj.class_std}"
+            students_query = f" SELECT l.{AUTH_FIELDS['student']['username_field']}, r.{AUTH_FIELDS['student']['name_field_master']}, r.{AUTH_FIELDS['student']['student_class']}, r.{AUTH_FIELDS['student']['section_field_master']} FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {scheduling_obj.class_std}"
             if scheduling_obj.class_section != None:
-                students_query = f"{students_query} AND r.{settings.AUTH_FIELDS['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+                students_query = f"{students_query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{scheduling_obj.class_section}'"
 
             # # Raw query (working)
             # students_query = f" SELECT l.emis_username, r.name, r.class_studying_id, r.class_section FROM emisuser_student l LEFT JOIN students_child_detail r ON l.emis_user_id = r.id WHERE r.class_studying_id = {scheduling_obj.class_std}"
@@ -2081,7 +2081,7 @@ class GetUserDetail(APIView):
 
     '''
 
-    if settings.AUTH_ENABLE:
+    if AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request):
@@ -2117,7 +2117,7 @@ class MetaUpload(APIView):
 
     
     '''
-    # if settings.AUTH_ENABLE:
+    # if AUTH_ENABLE:
     #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
     def post(self, request, *args,**kwargs):
         
@@ -2133,7 +2133,7 @@ class MetaUpload(APIView):
             file_obj = request.data['archive']
             file_name = file_obj.name
 
-            file_path = os.path.join(settings.MEDIA_ROOT,'examdata')
+            file_path = os.path.join(MEDIA_ROOT,'examdata')
 
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
@@ -2325,7 +2325,7 @@ class ResetDB(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -2339,14 +2339,14 @@ class ResetDB(APIView):
 
             # API to delete entry from central server
 
-            dereg_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/de-registeration"
+            dereg_url = f"{CENTRAL_SERVER_IP}/exammgt/de-registeration"
 
             dereg_payload = json.dumps({
                 "school_id" : school_id_response[0][0],
                 "school_token":get_school_token()
             },default=str)
 
-            req_response = requests.request("POST", dereg_url, data=dereg_payload, verify=settings.CERT_FILE) 
+            req_response = requests.request("POST", dereg_url, data=dereg_payload, verify=CERT_FILE) 
 
             print('---req---response---',req_response.json())
 
@@ -2354,7 +2354,7 @@ class ResetDB(APIView):
                 return Response(req_response.json())
 
 
-            query = f"DROP TABLE {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT};"
+            query = f"DROP TABLE {DB_STUDENTS_SCHOOL_CHILD_COUNT};"
 
             mycursor.execute(query)
 
@@ -2365,7 +2365,9 @@ class ResetDB(APIView):
             participants.objects.all().delete()
             event.objects.all().delete()
 
-            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Reset_DB','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+            User.objects.all().delete()
+
+            api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Reset_DB','datetime':str(datetime.datetime.now())},default=str))
 
 
             return Response({'api_status':True,'messge':'De-Registeration successful'})
@@ -2384,7 +2386,7 @@ class ListCleanerID(APIView):
     Conditions being checked
     `````````````````````````
     1. No ExamMeta object with sync_done = 0 => An Exam is actively running or Meta data is loaded for the upcoming exam
-    2. Check if the event_id is older than the residual delete days (set from settings.RESIDUAL_DELETE_DAYS)
+    2. Check if the event_id is older than the residual delete days (set from RESIDUAL_DELETE_DAYS)
 
     sync_done -> status
     ```````````````````
@@ -2410,7 +2412,7 @@ class ListCleanerID(APIView):
                     sch_obj = scheduling.objects.get(schedule_id=meta_obj.event_id)
                     
                     # Append only if scheduler endtime is greater than the current date with residual days
-                    if sch_obj.event_enddate < (datetime.datetime.now()-datetime.timedelta(days=settings.RESIDUAL_DELETE_DAYS)).date():
+                    if sch_obj.event_enddate < (datetime.datetime.now()-datetime.timedelta(days=RESIDUAL_DELETE_DAYS)).date():
                         data_events.append({
                             'event_id':         meta_obj.event_id,
                             'event_title':      sch_obj.event_title,
@@ -2473,7 +2475,7 @@ class MasterCleaner(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -2535,7 +2537,7 @@ class MasterCleaner(APIView):
             # Deletion of files
 
             # Delete the eventID's questions_json files
-            questions_folder = os.path.join(settings.MEDIA_ROOT,'questions_json')
+            questions_folder = os.path.join(MEDIA_ROOT,'questions_json')
 
             try:
                 if os.path.exists(questions_folder):
@@ -2546,7 +2548,7 @@ class MasterCleaner(APIView):
                 return Response({'api_status':False,'message':'Error in deleting files in questions_json folder'})
 
             # Delete the eventID's cons_data
-            cons_data_folder = os.path.join(settings.MEDIA_ROOT,'cons_data',f'{event_id}')
+            cons_data_folder = os.path.join(MEDIA_ROOT,'cons_data',f'{event_id}')
             try:
                 if os.path.exists(cons_data_folder):
                     shutil.rmtree(cons_data_folder,ignore_errors=False,onerror=None)
@@ -2601,7 +2603,7 @@ class ExamComplete(APIView):
             
             mycursor = cn.cursor()
 
-            query = f"SELECT {settings.AUTH_FIELDS['school']['school_id']} FROM {settings.AUTH_FIELDS['school']['auth_table']} LIMIT 1"
+            query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
             mycursor.execute(query)
             school_id_response = mycursor.fetchall()
 
@@ -2706,7 +2708,7 @@ class SendResponse(APIView):
             data = JSONParser().parse(request)
             #data['event_id'] = data ['id']
 
-            folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}")
+            folder_dir = os.path.join(MEDIA_ROOT,'cons_data',f"{data['event_id']}")
 
             if os.path.isdir(folder_dir) == False:
                 return Response ({'api_status':False,'message':'No response available to send'})
@@ -2714,18 +2716,18 @@ class SendResponse(APIView):
             
             timestr = time.strftime("%Y%m%d%H%M%S")
 
-            actualfile = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}.7z")
+            actualfile = os.path.join(MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}.7z")
 
             with py7zr.SevenZipFile(actualfile, 'w') as archive:
                 archive.writeall(folder_dir, '')
 
 
-            send_response_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/load-responses"
+            send_response_url = f"{CENTRAL_SERVER_IP}/exammgt/load-responses"
 
             # Fetch school name
             cn = connection()
             mycursor = cn.cursor()
-            query = f"SELECT school_name FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+            query = f"SELECT school_name FROM {DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
             mycursor.execute(query)
             school_detail_response = mycursor.fetchall()
 
@@ -2741,7 +2743,7 @@ class SendResponse(APIView):
             #     print('-----------type of f---------',type(f))
                 
             #     f.seek(0)
-            #     with open(os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}_test.7z"), "wb") as file1:
+            #     with open(os.path.join(MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}_test.7z"), "wb") as file1:
             #         print(dir(f))
             #         shutil.copyfileobj(f, file1, length=1024)
             #         # file1.write(f.read())
@@ -2789,7 +2791,7 @@ class SendResponse(APIView):
             # print('test type',type(test))
 
             # test.seek(0)
-            # with open(os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}_test111111111.7z"), "wb") as file1:
+            # with open(os.path.join(MEDIA_ROOT,'cons_data',f"{data['event_id']}_{request.user.profile.school_id}_{timestr}_test111111111.7z"), "wb") as file1:
                
             #     #shutil.copyfileobj(test, file1, length=1024)
             #     file1.write(f.read())
@@ -2819,7 +2821,7 @@ class SendResponses(APIView):
                 return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
 
             print('-----------------')
-            json_dir = os.path.join(settings.MEDIA_ROOT,'cons_data')
+            json_dir = os.path.join(MEDIA_ROOT,'cons_data')
 
             if os.path.isdir(json_dir) == False:
                 return Response ({'api_status':False,'message':'No response file available to send'})
@@ -2829,7 +2831,7 @@ class SendResponses(APIView):
             if len(json_file_list) == 0:
                 return Response ({'api_status':False,'message':'No response file available to send'})
 
-            compress_dir = os.path.join(settings.MEDIA_ROOT,'cons_zip')
+            compress_dir = os.path.join(MEDIA_ROOT,'cons_zip')
             os.makedirs(compress_dir, exist_ok=True)
 
             timestr = time.strftime("%Y%m%d%H%M%S")
@@ -2850,12 +2852,12 @@ class SendResponses(APIView):
 
             print('unique IDs :',ids)
 
-            send_response_url = f"{settings.CENTRAL_SERVER_IP}/exammgt/load-responses"
+            send_response_url = f"{CENTRAL_SERVER_IP}/exammgt/load-responses"
 
             # Fetch school name
             cn = connection()
             mycursor = cn.cursor()
-            query = f"SELECT school_name FROM {settings.DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+            query = f"SELECT school_name FROM {DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
             mycursor.execute(query)
             school_detail_response = mycursor.fetchall()
 

@@ -3,7 +3,9 @@ from .models import EventAttendance, ExamMeta, QpSet, Question, Choice
 from scheduler.models import scheduling, event, participants
 from . import views
 import math
-from django.conf import settings
+
+from tnschoollocalserver.tn_variables import AUTH_FIELDS
+
 
 import datetime
 #from .views import connection
@@ -192,9 +194,9 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
             cn = views.connection()
             mycursor = cn.cursor()
 
-            query = f" SELECT COUNT(l.{settings.AUTH_FIELDS['student']['username_field']}) FROM {settings.AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {settings.AUTH_FIELDS['student']['master_table']} r ON l.{settings.AUTH_FIELDS['student']['school_field_foreign']} = r.{settings.AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{settings.AUTH_FIELDS['student']['student_class']} = {obj.class_std}"
+            query = f" SELECT COUNT(l.{AUTH_FIELDS['student']['username_field']}) FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {obj.class_std}"
             if obj.class_section != None:
-                query = f"{query} AND r.{settings.AUTH_FIELDS['student']['section_field_master']} = '{obj.class_section}'"
+                query = f"{query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{obj.class_section}'"
 
 
             # query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std}"

@@ -4,8 +4,9 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.conf import settings
 from rest_framework.parsers import JSONParser
+
+from tnschoollocalserver.tn_variables import AUTH_ENABLE, MEDIA_ROOT
 
 import os
 import json
@@ -32,7 +33,7 @@ class GenerateJSON(APIView):
     
     '''
 
-    if settings.AUTH_ENABLE:
+    if AUTH_ENABLE:
         permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
@@ -51,8 +52,8 @@ class GenerateJSON(APIView):
             if len(event_attendances) == 0:
                 return Response ({'api_status':False,'icon':'info','message':'Atleast one new candidate has to completed the exam'})
             
-            # folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data',f"{data['event_id']}")
-            folder_dir = os.path.join(settings.MEDIA_ROOT,'cons_data')
+            # folder_dir = os.path.join(MEDIA_ROOT,'cons_data',f"{data['event_id']}")
+            folder_dir = os.path.join(MEDIA_ROOT,'cons_data')
             os.makedirs(folder_dir, exist_ok=True)
 
             print('folder_dir _+_+_+_+_+__+',folder_dir)
