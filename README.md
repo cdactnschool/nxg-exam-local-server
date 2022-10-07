@@ -23,8 +23,8 @@ cd tnschool-local-server
 
 pip install -r requirements.txt
 
-mkdir /var/log/assessment
-# sudo chown www-data:www-data assessment # if running from apache
+mkdir /opt/examlogs
+# sudo chown www-data:www-data /opt/examlogs # if running from apache
 
 python manage.py makemigrations
 
