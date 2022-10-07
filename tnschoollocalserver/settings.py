@@ -201,53 +201,53 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/debug.log'),
+            'filename': os.path.join('/opt/examlogs', 'debug.log'),
             # 'formatter': 'verbose'
         },
         'logins': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/access.log'),
+            'filename': os.path.join('/opt/examlogs', 'access.log'),
             # 'formatter': 'verbose'
         },
         'error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/error.log'),
+            'filename': os.path.join('/opt/examlogs', 'error.log'),
             # 'formatter': 'verbose'
         },
         'infos': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/info.log'),
+            'filename': os.path.join('/opt/examlogs', 'info.log'),
             # 'formatter': 'verbose'
         },
         'api_log': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/api_log.log'),
+            'filename': os.path.join('/opt/examlogs', 'api_log.log'),
             # 'formatter': 'verbose'
         },
         'api_error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/api_error.log'),
+            'filename': os.path.join('/opt/examlogs', 'api_error.log'),
             # 'formatter': 'verbose'
         },
         'student_start': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/student_start.log')
+            'filename': os.path.join('/opt/examlogs', 'student_start.log')
         },
         'student_end': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/student_end.log')
+            'filename': os.path.join('/opt/examlogs', 'student_end.log')
         },
         'student_log': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/var/log', 'assessment/school_log.log')
+            'filename': os.path.join('/opt/examlogs', 'school_log.log')
         },
     },
     'loggers': {
