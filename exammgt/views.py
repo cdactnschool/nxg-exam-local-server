@@ -1727,10 +1727,10 @@ class MetaData(APIView):
 
             get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
-            get_meta_response_json = get_meta_response.json()
+            # get_meta_response_json = get_meta_response.json()
 
-            if get_events_response_json['api_status'] == False:
-                return Response(get_events_response_json)
+            # if get_meta_response_json['api_status'] == False:
+            #     return Response(get_meta_response_json)
 
             if get_meta_response.headers.get('content-type') == 'application/json':
                 get_meta_response_json = get_meta_response.json()
