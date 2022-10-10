@@ -1,7 +1,7 @@
 sudo apt update
 
 sudo apt install font-manager
--> install Latha.ttf font in the misc folder
+--> install Latha.ttf font in the misc folder
 
 sudo apt-get install python3-venv 
 
