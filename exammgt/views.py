@@ -1183,6 +1183,21 @@ class LoadEvent(APIView):
             #get_events_response = requests.request("POST", req_url, data=payload)
             get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
+            # print('get_event____',get_events_response)
+
+            # try:
+            #     get_events_response_json = get_events_response.json()
+            # except Exception as e:
+            #     print('Exception in get events response ',e)
+
+            # print('Get Events Response JSON',get_events_response_json)
+
+            # print('```````````````',get_events_response_json['api_status'])
+
+            # if get_events_response_json['api_status'] == False:
+            #     return Response(get_events_response_json)
+
+            # print('1--------------')
 
             # Check if school has no events
 
@@ -1190,6 +1205,10 @@ class LoadEvent(APIView):
                 if 'md5sum' in get_events_response.json():
                     if get_events_response.json()['md5sum'] == 'None':
                         return Response({'api_status':True,'message':'No Events allocated for this school yet','school_token':get_school_token()})
+
+            print('Content Disposition',get_events_response.headers.get('Content-Disposition'))
+            if get_events_response.headers.get('Content-Disposition') == None:
+                return Response({'api_status':True,'message':'No Events allocated to this school','school_token':get_school_token()})
 
 
             res_md5sum = get_events_response.headers.get('md5sum')
@@ -1312,6 +1331,8 @@ class LoadEvent(APIView):
                 "school_token":get_school_token(),
                 "event_id_list":event_id_list
             },default=str)
+
+            print('@@@@@ ack_payload',ack_payload)
 
             requests.request("POST", ack_url, data=ack_payload,verify=CERT_FILE)
 
@@ -1705,10 +1726,19 @@ class MetaData(APIView):
             },default=str)
 
             get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
+
+            get_meta_response_json = get_meta_response.json()
+
+            if get_events_response_json['api_status'] == False:
+                return Response(get_events_response_json)
+
             if get_meta_response.headers.get('content-type') == 'application/json':
                 get_meta_response_json = get_meta_response.json()
                 if get_meta_response_json['api_status'] == False:
                     return Response({'api_status':False,'message':'Question paper not available in central server'})
+
+            if get_meta_response.headers.get('Content-Disposition') == None:
+                return Response({'api_status':True,'message':'No Meta allocated to this school','school_token':get_school_token()})
 
             if get_meta_response.status_code != 200:
                 return Response({'api_status':False,'message':'Unable to load exam data','error':'Status not equal to 200'})
