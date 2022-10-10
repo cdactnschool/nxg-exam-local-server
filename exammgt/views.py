@@ -28,7 +28,7 @@ from django.contrib.auth.models import User,Group
 from django.urls import reverse
 
 
-from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT
+from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD
 
 import hashlib
 import requests
@@ -1354,7 +1354,7 @@ class LoadEvent(APIView):
         except Exception as e:
             print(f'Exception raised while loading event data : {e}')
 
-            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_event','datetime':str(datetime.datetime.now())},default=str))
+            api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'Load_event','exception':str(e),'datetime':str(datetime.datetime.now())},default=str))
 
             return Response({'api_status':False,'message':'unable to fetch events','exception':f'Exception raised while loading event data : {e}','school_token':get_school_token()})
 
@@ -1389,7 +1389,7 @@ class LoadReg(APIView):
             else:
                 
                 # Allow only HM to update credentials 
-                if request.user.profile.usertype != 'hm':
+                if request.user.profile.usertype not in ['hm','superadmin_user']:
                     return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
 
                 payload = json.dumps({
@@ -1566,6 +1566,7 @@ class LoadReg(APIView):
                 Group.objects.create(name='teacher')
                 Group.objects.create(name='hm')
                 Group.objects.create(name='department')
+                Group.objects.create(name='superadmin_user')
                 print('^^^Created Groups^^^^')
             except Exception as e:
                 print('Exception in creating groups :',e)
@@ -1584,6 +1585,43 @@ class LoadReg(APIView):
                 User.objects.all().delete()
             except Exception as  e:
                 print('Exception in deleting old user\'s entry')
+
+            # Creation of superuser
+            print('--------=============-------------')
+            print('create superuser')
+            suser = User.objects.create_superuser(username=SUPER_USERNAME,password=SUPER_PASSWORD)
+            suser.save()
+
+            profile_instance = Profile.objects.create(user=suser)
+
+            auth_fields = AUTH_FIELDS
+
+            cn = connection()
+
+            if cn == None:
+                data = {}
+                data['api_status'] = False
+                data['message'] = 'School server Not reachable'
+                return Response(data)
+            
+
+            mycursor = cn.cursor()
+
+            query = f"SELECT {auth_fields['school']['school_id']}, {auth_fields['school']['district_id']}, {auth_fields['school']['block_id']}, {auth_fields['school']['udise_code']} FROM {auth_fields['school']['auth_table']} LIMIT 1"
+            print('Fetch school details query :',query)
+            mycursor.execute(query)
+            school_detail_response = mycursor.fetchall()
+    
+            profile_instance.priority       = AUTH_FIELDS['superadmin_user']['superadmin_user_priority']
+            profile_instance.name_text      = SUPER_USERNAME
+            profile_instance.usertype       = 'superadmin_user'
+            profile_instance.udise_code     = school_detail_response[0][3]
+            profile_instance.district_id    = school_detail_response[0][1]
+            profile_instance.block_id       = school_detail_response[0][2]
+            profile_instance.school_id      = school_detail_response[0][0]
+
+            profile_instance.save()
+
 
             # Logging the school_id, action and datetime to the api_log.info file.
             if renewal_status:
@@ -2737,7 +2775,7 @@ class SendResponse(APIView):
     def post(self,request,*args,**kwargs):
         try:
 
-            if request.user.profile.usertype != 'hm':
+            if request.user.profile.usertype not in ['hm','superadmin_user']:
                 return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
         
             data = JSONParser().parse(request)
@@ -2852,7 +2890,7 @@ class SendResponses(APIView):
     def post(self,request,*args,**kwargs):
 
         try:
-            if request.user.profile.usertype != 'hm':
+            if request.user.profile.usertype not in ['hm','superadmin_user']:
                 return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
 
             print('-----------------')
