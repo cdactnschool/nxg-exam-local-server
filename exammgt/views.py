@@ -11,6 +11,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate
+
 from rest_framework.parsers import JSONParser
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
@@ -70,6 +72,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         refresh = self.get_token(self.user)
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
+
+        print('data:',data)
 
         # Add extra responses here
         data['username']    = self.user.username
@@ -191,10 +195,12 @@ def create_local_user(request,data):
             my_group = Group.objects.get(name=data['user_type']) 
             my_group.user_set.add(db_user)
 
+
     x = requests.post(request.build_absolute_uri(reverse('token-obtain-pair')),
     data = {'username':data['username'],'password':data['password']})
     
     res_data = x.json()
+
 
     # Access log entry
 
@@ -279,6 +285,31 @@ class db_auth(APIView):
             user_detail = {}
 
             auth_fields = AUTH_FIELDS
+
+
+            # Check for superuser
+            superadmin_user_obj = authenticate(
+                username=data['username'], password=data['password'])
+
+            if superadmin_user_obj is not None and superadmin_user_obj.is_staff == True:
+                user_detail['user_type'] = 'superadmin_user'
+                user_detail['username'] = data['username']
+                user_detail['password'] = data['password']
+                user_detail['priority'] = auth_fields['superadmin_user']['superadmin_user_priority']
+
+                query = f"SELECT {auth_fields['school']['school_id']}, {auth_fields['school']['district_id']}, {auth_fields['school']['block_id']}, {auth_fields['school']['udise_code']} FROM {auth_fields['school']['auth_table']} LIMIT 1"
+
+                mycursor.execute(query)
+                school_detail_response = mycursor.fetchall()
+
+                user_detail['udise_code'] = school_detail_response[0][3]
+                user_detail['district_id'] = school_detail_response[0][1]
+                user_detail['block_id'] = school_detail_response[0][2]
+                user_detail['school_id'] = school_detail_response[0][0]
+                token_response = create_local_user(request, user_detail)
+                return Response(token_response)
+
+
 
             # Teacher /HM
             if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
@@ -1621,6 +1652,9 @@ class LoadReg(APIView):
             profile_instance.school_id      = school_detail_response[0][0]
 
             profile_instance.save()
+
+            my_group = Group.objects.get(name='superadmin_user') 
+            my_group.user_set.add(suser)
 
 
             # Logging the school_id, action and datetime to the api_log.info file.

@@ -78,7 +78,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         
         # For teacher / HM
         
-        if user_detail.profile.usertype in ['teacher','hm']:
+        if user_detail.profile.usertype in ['teacher','hm','superadmin_user']:
             return None
         
         #return str(user_detail.profile.name_text)+str(obj.event_completion_status)
@@ -146,7 +146,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
 
         user_detail = self.context.get("user")
 
-        if user_detail.profile.usertype in ['teacher','hm']:
+        if user_detail.profile.usertype in ['teacher','hm','superadmin_user']:
             return None
         
 
