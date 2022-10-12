@@ -234,16 +234,6 @@ LOGGING = {
             'filename': os.path.join('/opt/tnschools/examlogs', 'api_error.log'),
             # 'formatter': 'verbose'
         },
-        'student_start': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'student_start.log')
-        },
-        'student_end': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'student_end.log')
-        },
         'student_log': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
@@ -279,16 +269,6 @@ LOGGING = {
         'api_error': {
             'handlers': ['api_error'],
             'level': 'ERROR',
-            'propagate': True,
-        },
-        'student_start_log': {
-            'handlers': ['student_start'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'student_end_log': {
-            'handlers': ['student_end'],
-            'level': 'INFO',
             'propagate': True,
         },
         'student_log': {

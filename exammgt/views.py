@@ -52,8 +52,6 @@ errorlog    = logging.getLogger('errorlog')
 infolog     = logging.getLogger('infolog')
 api_log      = logging.getLogger('api_log')
 api_errorlog = logging.getLogger('api_error')
-student_start_log = logging.getLogger('student_start_log')
-student_end_log = logging.getLogger('student_end_log')
 student_log = logging.getLogger('student_log')
 
 import sqlite3
@@ -2055,13 +2053,13 @@ class SchoolDetails(APIView):
                 'district_name':school_detail_response[0][5],
                 'block_id':school_detail_response[0][6],
                 'block_name':school_detail_response[0][7],
-                'api_status':True
-                
+                'api_status':True,
+                'current_date_time':str(datetime.datetime.now())
             })
 
         except Exception as e:
             print('No school details :',e)
-            return Response({'api_status':False,'message':'No school details'})
+            return Response({'api_status':False,'message':'No school details','current_date_time':str(datetime.datetime.now())})
 
 class VersionNumber(APIView):
     
