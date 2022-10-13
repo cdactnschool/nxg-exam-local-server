@@ -30,7 +30,7 @@ from django.contrib.auth.models import User,Group
 from django.urls import reverse
 
 
-from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD
+from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD, BASE_DIR
 
 import hashlib
 import requests
@@ -2073,9 +2073,15 @@ class VersionNumber(APIView):
             version_file_path = os.path.join(BASE_DIR,'version.txt')
             with open(version_file_path) as f:
                 # version_value = f.readlines()
-                version_value = [line.strip() for line in f.readlines()]
+                version_value = [line.strip() for line in f.readlines()][0]
 
-            return Response({'api_status':True,'version':version_value})
+            try:
+                school_hostname = os.uname()[1]
+            except Exception as e:
+                print('Exception caused while geting hostname :',e)
+
+
+            return Response({'api_status':True,'version':version_value, 'hostname' : school_hostname})
         except Exception as e:
             return Response({'api_status':False,'message':'Error in fetching version number','exception':str(e)})
 
