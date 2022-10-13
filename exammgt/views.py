@@ -2078,10 +2078,33 @@ class VersionNumber(APIView):
             try:
                 school_hostname = os.uname()[1]
             except Exception as e:
+                school_hostname = None
                 print('Exception caused while geting hostname :',e)
+            
+            try:
+                cn = connection()
+
+                if cn == None:
+                    data = {}
+                    data['api_status'] = False
+                    data['message'] = 'School server Not reachable'
+                    return Response(data)
+                
+            
+                mycursor = cn.cursor()
+                query = f"SELECT udise_code FROM {DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+                mycursor.execute(query)
+                school_detail_response = mycursor.fetchall()
+                #print('school details :',school_detail_response[0])
+                udise_code = school_detail_response[0][0]
+
+            except Exception as e:
+                udise_code = None
+                print('Exception caused while geting udise_code :',e)
 
 
-            return Response({'api_status':True,'version':version_value, 'hostname' : school_hostname})
+
+            return Response({'api_status':True,'version':version_value, 'hostname' : school_hostname, 'udise_code':udise_code})
         except Exception as e:
             return Response({'api_status':False,'message':'Error in fetching version number','exception':str(e)})
 
