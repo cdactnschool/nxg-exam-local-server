@@ -323,7 +323,10 @@ class QpSetsSerializer(serializers.ModelSerializer):
 
 class QuestionsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return Question.objects.create(**validated_data)
+        print('question data :',validated_data.get('qid'))
+        question_object,created = Question.objects.get_or_create(**validated_data)
+        print('question data created ',created)
+        return  question_object
     
     username = serializers.SerializerMethodField('getusername')
 
@@ -338,7 +341,14 @@ class QuestionsSerializer(serializers.ModelSerializer):
 
 class ChoicesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        return Choice.objects.create(**validated_data)
+        # return Choice.objects.create(**validated_data)
+
+        print('choices data :',validated_data)
+
+        choice_object,created =  Choice.objects.get_or_create(**validated_data)
+        print('Choice data created ',created)
+        
+        return choice_object
     
     username = serializers.SerializerMethodField('getusername')
 

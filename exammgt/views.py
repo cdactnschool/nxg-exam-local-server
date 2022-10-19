@@ -476,7 +476,8 @@ class CandidateResponse(APIView):
         try:
             print(request.user.username)
             print(filter_fields)
-            object_edit = get_object_or_404(ExamResponse,**filter_fields)
+            # object_edit = get_object_or_404(ExamResponse,**filter_fields)
+            object_edit = ExamResponse.objects.get(**filter_fields)
             print('--------------',object_edit)
             object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
             object_edit.question_result = data['correct_choice']
@@ -1064,7 +1065,7 @@ class GenerateQuestionPaper(APIView):
             
                 qid_list = eval(qp_set_data[0]['qid_list'])
 
-                print('---------start----qp_base---------')
+                print('---------start----qp_base---------',qid_list)
 
                 qp_base64_list = []
                 qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
@@ -1072,6 +1073,9 @@ class GenerateQuestionPaper(APIView):
                     qp_base64_list.append(model_to_dict(qp_data))
 
                 print('-------qp_base--------')
+
+                for t in qp_base64_list:
+                    print('_+_+_+_+_',t['qid'])
 
                 choice_base64_list = []
                 for qid in qid_list:
@@ -1085,15 +1089,18 @@ class GenerateQuestionPaper(APIView):
                         tmp_dict_data = model_to_dict(ch_data)
                         # del tmp_dict_data['qid']
                         choice_base64_list_object.append(tmp_dict_data)
-
                     choice_base64_list.append(choice_base64_list_object)
 
+                print('choice appended list',choice_base64_list)
                 print('-----------choice----------')
 
                 questions_data_list =[]
                 for qp_img in qp_base64_list:
                     for ch_img in choice_base64_list:
                         tmp_ch_dict = {}
+                        print(qp_img['qid'],'****',ch_img)
+                        if len(ch_img) == 0:
+                            continue
                         if qp_img['qid'] == ch_img[0]['qid']:
                             tmp_ch_dict['q_choices'] = ch_img
                             qp_img.update(tmp_ch_dict)
@@ -1729,6 +1736,12 @@ def load_question_choice_data(qpdownload_list):
             if serialized_questions.is_valid():
                 serialized_questions.save()
                 for ch_image_data in img_data['q_choices']:
+                    
+                    if Choice.objects.filter(cid = ch_image_data['cid']).exists():
+                        print(f"Choice ID {ch_image_data['cid']} already exists")
+                        continue
+
+
                     choice['qid'] = img_data['qid']
                     choice['cid'] = ch_image_data['cid']
                     choice['cimage'] = ch_image_data['cimage']
@@ -1974,14 +1987,14 @@ class MetaData(APIView):
                 if file.startswith('qpdownload'):
                     # print('File :',file)
                     print('full path :',os.path.join(json_file_path,file))
-                    with open(os.path.join(json_file_path,file), 'r') as f:
+                    with open(os.path.join(json_file_path,file), 'r+', encoding="utf-8") as f:
                         qpdownload_list = json.load(f)
 
                     #print(qpdownload_list)
                     try:
                         load_question_choice_data(qpdownload_list)
-                    except:
-                        return Response({'api_status':False,'message':'Error reading json meta data...!'})
+                    except Exception as e:
+                        return Response({'api_status':False,'message':'Error reading json meta data...!','exception':str(e)})
 
 
             ack_url = f"{CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
@@ -2404,7 +2417,7 @@ class MetaUpload(APIView):
                 if file.startswith('qpdownload'):
                     # print('File :',file)
                     print('full path :',os.path.join(json_file_path,file))
-                    with open(os.path.join(json_file_path,file), 'r') as f:
+                    with open(os.path.join(json_file_path,file), 'r+', encoding="utf-8") as f:
                         qpdownload_list = json.load(f)
 
                     #print(qpdownload_list)

@@ -128,6 +128,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR,'db.sqlite3'),
+        'OPTIONS': {
+            # ...
+            'timeout': 30,
+            # ...
+        }
     }
 }
 
@@ -278,3 +283,23 @@ LOGGING = {
         },
     },
 }
+
+# # security.W004
+# SECURE_HSTS_SECONDS = 31536000
+
+# # security.W005
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# # security.W016   
+# CSRF_COOKIE_SECURE = True
+
+# # security.W008
+# SECURE_SSL_REDIRECT = False
+
+# # security.W012 
+# SESSION_COOKIE_SECURE = True
+
+# # security.W021
+# SECURE_HSTS_PRELOAD = True
+# # Extra security
+# SECURE_CONTENT_TYPE_NOSNIFF = True

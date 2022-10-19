@@ -4,7 +4,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>CDAC Online Examination</title>
+  <title>Online Examination</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="shortcut icon" type="image/png" sizes="16x16" href="exam.png">
@@ -105,7 +105,8 @@
     @font-face {
       font-family: ubuntu-regular;
       src: url(static/Ubuntu-Regular.eot);
-      src: url(static/Ubuntu-Regular.woff2) format("woff2"), url(static/Ubuntu-Regular.woff) format("woff"), url(static/Ubuntu-Regular.ttf) format("truetype")
+      src: url(static/Ubuntu-Regular.woff2) format("woff2"), url(static/Ubuntu-Regular.woff) format("woff"),
+      url(static/Ubuntu-Regular.ttf) format("truetype")
     }
 
     body {
@@ -129,18 +130,18 @@
     }
 
     @charset "UTF-8"
+
   </style>
   <link rel="stylesheet" href="{% static 'styles.css' %}" media="print" onload="this.media='all'"><noscript>
-    <link rel="stylesheet" href="{% static 'styles.css' %}">
-  </noscript>
+    <link rel="stylesheet" href="{% static 'styles.css' %}"></noscript>
 </head>
 
 <body>
   <app-root></app-root>
-  <script src="{% static 'runtime.js' %}" defer></script>
-  <script src="{% static 'polyfills.js' %}" defer></script>
+  <script src="{% static 'runtime.js' %}" type="module"></script>
+  <script src="{% static 'polyfills.js' %}" type="module"></script>
   <script src="{% static 'scripts.js' %}" defer></script>
-  <script src="{% static 'main.js' %}" defer></script>
+  <script src="{% static 'main.js' %}" type="module"></script>
 
 </body>
 
