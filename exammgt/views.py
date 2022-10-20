@@ -2300,11 +2300,13 @@ class MetaUpload(APIView):
 
             json_file_path = meta_path
 
+            meta_data = None
+
             for file in os.listdir(json_file_path):
                     if file.startswith('meta'):
                         # print('File :',file)
                         print('full path :',os.path.join(json_file_path,file))
-                        with open(os.path.join(json_file_path,file), 'r') as f:
+                        with open(os.path.join(json_file_path,file), 'r+', encoding="utf-8") as f:
                             meta_data = json.load(f)
             print(meta_data)
 
