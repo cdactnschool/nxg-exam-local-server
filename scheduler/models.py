@@ -66,6 +66,8 @@ class participants(models.Model):
     participant_category            = models.CharField(max_length=20)
     participant_id                  = models.CharField(max_length=250)
     event_participation_status      = models.IntegerField()
+    event_allocationid              = models.CharField(max_length=250, blank=True, null=True)
+
 
     created_on                      = models.DateTimeField(auto_now=True ,blank =False)
 
