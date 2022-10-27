@@ -1080,10 +1080,11 @@ class GenerateQuestionPaper(APIView):
                 choice_base64_list = []
                 for qid in qid_list:
                     filter = {
-                        "qid": qid
+                        "qid": int(qid)
                     }
 
                     choice_base64_list_object_edit = Choice.objects.filter(**filter)
+                    print('=-=-=-=', choice_base64_list_object_edit)
                     choice_base64_list_object = []
                     for ch_data in choice_base64_list_object_edit:
                         tmp_dict_data = model_to_dict(ch_data)
@@ -1101,7 +1102,7 @@ class GenerateQuestionPaper(APIView):
                         print(qp_img['qid'],'****',ch_img)
                         if len(ch_img) == 0:
                             continue
-                        if qp_img['qid'] == ch_img[0]['qid']:
+                        if qp_img['qid'] == str(ch_img[0]['qid']):
                             tmp_ch_dict['q_choices'] = ch_img
                             qp_img.update(tmp_ch_dict)
                 
@@ -1143,6 +1144,7 @@ class GenerateQuestionPaper(APIView):
 
                 return Response(configure_qp_data)
         except Exception as e:
+            print('1147=-=-', e)
             errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now())},default=str))
 
             return Response({'api_status':False,'message':'Unable to fetch question paper','exception':str(e)})

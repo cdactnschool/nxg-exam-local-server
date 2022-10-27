@@ -69,8 +69,10 @@ class ExamMeta(models.Model):
         return "{0}-{1}-{2}-{3}".format(self.event_id, self.subject, self.created_on,self.sync_done)
 
 class QpSet(models.Model):
+    pid                                 = models.BigAutoField(primary_key=True, default=None)
     event_id                            = models.BigIntegerField()
-    qp_set_id                           = models.IntegerField(primary_key=True)
+    # qp_set_id                           = models.IntegerField(primary_key=True)
+    qp_set_id                           = models.TextField(null=True,blank=True)
     qid_list                            = models.TextField()
     created_on                          = models.DateTimeField(auto_now = True)
 
@@ -80,8 +82,9 @@ class QpSet(models.Model):
 
 
 class Question(models.Model):
-    qid                                 = models.BigIntegerField(primary_key=True)
-    qimage                              = models.TextField()
+    pid                                 = models.BigAutoField(primary_key=True, default=None)
+    qid                                 = models.TextField(null=True,blank=True)
+    qimage                              = models.TextField(null=True,blank=True)
     no_of_choices                       = models.IntegerField()
     correct_choice                      = models.IntegerField()
     created_on                          = models.DateTimeField(auto_now = True)
@@ -106,7 +109,7 @@ class ExamResponse(models.Model):
     '''
     event_id            = models.BigIntegerField()
     student_username    = models.IntegerField()
-    qp_set_id           = models.IntegerField()
+    qp_set_id           = models.TextField()
     question_id         = models.IntegerField()
     selected_choice_id  = models.IntegerField(null=True, blank=True)
     question_result     = models.IntegerField(null=True,  blank=True)
