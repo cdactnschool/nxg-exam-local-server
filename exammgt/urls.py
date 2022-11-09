@@ -7,7 +7,8 @@ from .views import ( MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail,
                      UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary,
                      ConsSummary, MetaUpload, ResetDB, MasterCleaner, 
                      ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse,
-                     SendResponses, VersionNumber,LogoutView, GenSendResponses
+                     SendResponses, VersionNumber,LogoutView, GenSendResponses,
+                     AutoUpdateStatus
                      )
 
                      
@@ -31,6 +32,8 @@ urlpatterns = [
     path('token/verify',                    TokenVerifyView.as_view(),              name='token_verify'),
     path('logout',                          LogoutView.as_view(),                   name='logout'),
     path('get-user-detail',                 GetUserDetail.as_view(),                name='GetUserDetail'),
+
+    path('auto-update-status',              AutoUpdateStatus.as_view(),             name='auto-update-status'),
 
     # Initial Registeration Block
 

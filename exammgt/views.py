@@ -3264,3 +3264,28 @@ class GenSendResponses(APIView):
             
 
             return Response({'api_status':False,'message':'Error in generating JSON and sending response files','exception':str(e)})
+
+
+class AutoUpdateStatus(APIView):
+    '''
+    API class for triggering auto update of fetch events and send responses
+    '''
+
+    def get(self, request, *args, **kwargs):
+        try:
+            if request.user.profile.usertype in ['student']:
+                return Response ({'api_status':False,'message':'Student not authorized for auto update'})
+
+            misc_obj = MiscInfo.objects.all().first()
+
+            print('Event sync time',misc_obj.event_dt,type(misc_obj.event_dt))
+            print('Response sync time',misc_obj.resp_dt,type(misc_obj.resp_dt))
+
+            return Response({
+                'api_status':True,
+                'event':misc_obj.event_dt.date() != datetime.datetime.now().date() if misc_obj.event_dt else True,
+                'response':misc_obj.resp_dt.date() != datetime.datetime.now().date() if misc_obj.resp_dt else True})
+
+        except Exception as e:
+            return Response({'api_status':False,'exception':str(e)})    
+
