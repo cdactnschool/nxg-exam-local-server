@@ -7,7 +7,7 @@ from .views import ( MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail,
                      UpdateRemtime, ExamSubmit, summary,SummaryAll, SchoolExamSummary,
                      ConsSummary, MetaUpload, ResetDB, MasterCleaner, 
                      ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse,
-                     SendResponses, VersionNumber,LogoutView 
+                     SendResponses, VersionNumber,LogoutView, GenSendResponses
                      )
 
                      
@@ -59,6 +59,8 @@ urlpatterns = [
     path('gen-json',                        GenerateJSON.as_view(),                 name='gen-json'),
     path('send-response',                   SendResponse.as_view(),                 name='send-response'),
     path('send-responses',                  SendResponses.as_view(),                 name='send-response'),
+
+    path('gen-send-responses',              GenSendResponses.as_view(),             name='gen-send-responses'), 
 
     # Misc block
 
