@@ -952,6 +952,18 @@ class GenerateQuestionPaper(APIView):
 
             print('---------------',request_data)
 
+            try:
+                participant_category = participants.objects.get(schedule_id = request_data['id'].participant_category)
+            except:
+                participant_category = None
+            
+            if participant_category != 'STUDENT':
+                qpset_list = participants.objects.get(schedule_id = request_data['id']).event_allocationid
+            
+            else :
+                qpset_list = None
+
+            print(f'QP set list ---------',qpset_list)
         
             event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
 
@@ -974,7 +986,8 @@ class GenerateQuestionPaper(APIView):
                 event_attendance_obj = EventAttendance.objects.create(
                     event_id = request_data['event_id'],
                     student_username =request.user.username,
-                    qp_set = random.choice(eval(question_meta_object.qp_set_list)),
+                    # qp_set = random.choice(eval(question_meta_object.qp_set_list)),
+                    qp_set = random.choice(eval(qpset_list)),
                     remaining_time = int(question_meta_object.duration_mins) * 60,  # return duration in seconds
                     start_time = datetime.datetime.now()
                 )
