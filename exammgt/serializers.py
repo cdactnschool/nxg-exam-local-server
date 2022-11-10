@@ -216,6 +216,10 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         '''
         Fetch the exam duration from the ExamMeta table
         '''
+        user_detail = self.context.get("user")
+        
+        if user_detail.profile.usertype != 'student':
+            return 'NA'
 
         try:
             attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)

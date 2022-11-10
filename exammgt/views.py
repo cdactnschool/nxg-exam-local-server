@@ -1823,17 +1823,22 @@ class MetaData(APIView):
                 except:
                     participant_category = None
 
-                participant_id = None
-
-                if participant_category == 'DISTRICT':
-                    participant_id = request.user.profile.district_id
-                elif participant_category == 'BLOCK':
-                    participant_id = request.user.profile.block_id
-                elif participant_category == 'SCHOOL':
-                    participant_id = request.user.profile.school_id
-                
-                else:
+                if participant_category == 'STUDENT':
                     participant_id = None
+                else:
+                    participant_id = participants.objects.get(schedule_id = request_data['event_id']).participant_id
+
+                # participant_id = None
+
+                # if participant_category == 'DISTRICT':
+                #     participant_id = request.user.profile.district_id
+                # elif participant_category == 'BLOCK':
+                #     participant_id = request.user.profile.block_id
+                # elif participant_category == 'SCHOOL':
+                #     participant_id = request.user.profile.school_id
+                
+                # else:
+                #     participant_id = None
                     
                 
 
