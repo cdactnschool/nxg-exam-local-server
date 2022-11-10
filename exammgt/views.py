@@ -1795,8 +1795,8 @@ class MetaData(APIView):
     '''
 
 
-    # if AUTH_ENABLE:
-    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    if AUTH_ENABLE:
+        permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
         try :
@@ -2095,7 +2095,7 @@ class MetaData(APIView):
                 api_log.info(json.dumps({'school_id':school_id_response[0][0],'action':'Load_meta_data','datetime':str(datetime.datetime.now())},default=str))
 
 
-                return Response({'api_status':True,'message':'Meta data loaded successfully'})
+                return Response({'api_status':True,'message':'Question paper loaded successfully'})
          
         except Exception as e:
             print(f'Exception raised while creating a meta data object throught API : {e}')
@@ -2278,10 +2278,11 @@ class ConsSummary(APIView):
 
             print('Total number of students',len(students_emis_username))
 
-            return Response({'api_status':True,'data':consolidated_summary})
+            # return Response({'api_status':True,'data':consolidated_summary})
+            return Response({'api_status':True,'data':sorted(consolidated_summary, key = lambda x: x['name'])})
         except Exception as e:
             print('Exception caused while fetching consolidated summary :',e)
-            return Response({'api_status':False,'message':'Unable to fetch consolidated summary'})
+            return Response({'api_status':False,'message':'Unable to fetch consolidated summary','exception':str(e)})
 
 
 class GetUserDetail(APIView):
@@ -2336,8 +2337,8 @@ class MetaUpload(APIView):
 
     
     '''
-    # if AUTH_ENABLE:
-    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    if AUTH_ENABLE:
+        permission_classes = (IsAuthenticated,) # Allow only if authenticated
     def post(self, request, *args,**kwargs):
         
         try:
