@@ -62,6 +62,7 @@ class ExamMeta(models.Model):
     end_alert_time                      = models.IntegerField()
     show_instruction                    = models.BooleanField(default=False)
     qp_set_list                         = models.TextField()
+    language                            = models.TextField(null=True,blank=True)
     sync_done                           = models.IntegerField(default=0)
     created_on                          = models.DateTimeField(auto_now = True)
 
@@ -87,6 +88,9 @@ class Question(models.Model):
     qimage                              = models.TextField(null=True,blank=True)
     no_of_choices                       = models.IntegerField()
     correct_choice                      = models.IntegerField()
+    language                            = models.TextField(null=True,blank=True)
+    hint                                = models.TextField(null=True,blank=True)
+
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
@@ -97,6 +101,9 @@ class Choice(models.Model):
     qid         = models.BigIntegerField()
     cid         = models.IntegerField(primary_key=True)
     cimage      = models.TextField()
+    language    = models.TextField(null=True,blank=True)
+    hint        = models.TextField(null=True,blank=True)
+
     created_on  = models.DateTimeField(auto_now = True)
 
     def __str__(self):
