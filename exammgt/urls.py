@@ -8,7 +8,7 @@ from .views import ( MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail,
                      ConsSummary, MetaUpload, ResetDB, MasterCleaner, 
                      ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse,
                      SendResponses, VersionNumber,LogoutView, GenSendResponses,
-                     AutoUpdateStatus
+                     AutoUpdateStatus, MetaAuto
                      )
 
                      
@@ -73,4 +73,8 @@ urlpatterns = [
     path('to-complete',                     ToComplete.as_view(),                   name='to-complete'),
     path('exam-complete',                   ExamComplete.as_view(),                 name='exam-complete'),
     path('disp-misc',                       DispMisc.as_view(),                     name='disp-misc'),
+    
+    
+    
+    path('meta-auto',                       MetaAuto.as_view(),                     name='meta-auto'),
     ]

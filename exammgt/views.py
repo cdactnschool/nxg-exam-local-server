@@ -29,6 +29,7 @@ import json
 from django.contrib.auth.models import User,Group
 from django.urls import reverse
 
+from django.contrib.sites.shortcuts import get_current_site
 
 from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD, BASE_DIR
 
@@ -3364,3 +3365,63 @@ class AutoUpdateStatus(APIView):
         except Exception as e:
             return Response({'api_status':False,'exception':str(e)})    
 
+
+class MetaAuto(APIView):
+    '''
+    API class to trigger auto qp download
+    '''
+
+    def post(self, request,*args, **kwargs):
+        try:
+
+            print('token',request.auth)
+
+
+            # print(requests.post(endpoint, data=data, headers=headers).json())
+
+            # scheduleList = scheduling.objects.all()
+
+            meta_event_ids = list(ExamMeta.objects.all().values_list('event_id',flat=True))
+
+            print('meta_event_ids',meta_event_ids)
+
+            sch_list = scheduling.objects.all().exclude(schedule_id__in=meta_event_ids)
+
+            # print('QP not downloaded for ',sch_list)
+            
+            headers = {
+                "Authorization": f"Bearer {request.auth}",
+                'Content-Type': 'application/json'}
+
+            for sch in sch_list:
+                
+                try:
+                    participant_category = participants.objects.get(schedule_id = sch.schedule_id).participant_category
+                except:
+                    participant_category = None
+
+                if participant_category == 'STUDENT':
+                    participant_id = None
+                else:
+                    participant_id = participants.objects.get(schedule_id = sch.schedule_id).participant_id
+                
+                print('-------------')
+                print('URL name',request.resolver_match.view_name)
+
+                # req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload"
+                req_url = f'http://{get_current_site(request).domain}/exammgt/meta_data'
+                payload = json.dumps({
+                    'event_id':sch.schedule_id
+                },default=str)
+
+                print('Request to the central server to download qp for ',str(sch.schedule_id),str(payload))
+                try:
+                    get_meta_response = requests.request("POST", req_url,headers = headers, data=payload)
+                    print('auto meta response ',get_meta_response.text,sch.schedule_id)
+                except Exception as e:
+                    print('Exception in fetching the qp for eventid ',sch.schedule_id,str(e))
+
+
+            return Response({'api_status':True})
+        except Exception as e:
+            return Response({'api_status':False,'message':'unable to trigger auto qp download','exception':str(e)})
