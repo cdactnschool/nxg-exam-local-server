@@ -89,3 +89,14 @@ AUTH_FIELDS = {
 
 # Days for cleaning
 RESIDUAL_DELETE_DAYS = 10
+
+
+# Language Medium
+MEDIUM = {
+    19:"English",
+    18:"Urdu",
+    17:"Telugu",
+    16:"Tamil",
+    8:"Malayalam",
+    5:"Kannada"
+}

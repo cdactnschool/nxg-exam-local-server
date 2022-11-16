@@ -312,18 +312,22 @@ class db_auth(APIView):
 
 
             # Teacher /HM
-            if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
-                possible_type = 'teacher_hm'
-                #print('Possible user type - ',possible_type)
-                query = f"SELECT {auth_fields['teacher_hm']['username_field']}, {auth_fields['teacher_hm']['hash_field']} FROM {auth_fields['teacher_hm']['auth_table']} WHERE {auth_fields['teacher_hm']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"     
+            # if str(data['username']).isnumeric() and (len(str(data['username'])) == auth_fields['teacher_hm']['username_len']):
 
-                        
-                #print('###########',query)
-                mycursor.execute(query)
-                auth_detail_response = mycursor.fetchall()
-                
-                if len(auth_detail_response) == 0:
-                    return Response({'api_status':False,'message':'Incorrect username'})
+            possible_type = 'teacher_hm'
+            #print('Possible user type - ',possible_type)
+            query = f"SELECT {auth_fields['teacher_hm']['username_field']}, {auth_fields['teacher_hm']['hash_field']} FROM {auth_fields['teacher_hm']['auth_table']} WHERE {auth_fields['teacher_hm']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"     
+
+                    
+            #print('###########',query)
+            mycursor.execute(query)
+            auth_detail_response = mycursor.fetchall()
+            
+            # if len(auth_detail_response) == 0:
+            #     return Response({'api_status':False,'message':'Incorrect username'})
+            print('Records matching the username @ teacher_hm',auth_detail_response, len(auth_detail_response))
+
+            if len(auth_detail_response) != 0:
                 #print(auth_detail_response)
                 print('Records matching the username @ teacher_hm',auth_detail_response)
 
@@ -383,68 +387,69 @@ class db_auth(APIView):
                         token_response = create_local_user(request,user_detail)
                         return Response(token_response)
 
-                else:
-                    return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
+                # else:
+                #     return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
 
             # student
 
 
-            elif (str(data['username']).isnumeric()) and (len(str(data['username'])) == auth_fields['student']['username_len']):
-                possible_type = 'student'
+            # elif (str(data['username']).isnumeric()) and (len(str(data['username'])) == auth_fields['student']['username_len']):
+            # elif (str(data['username']).isnumeric()):
+            possible_type = 'student'
 
-                query = f"SELECT {auth_fields['student']['username_field']},{auth_fields['student']['hash_field']},{auth_fields['student']['school_field_foreign']} FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"
+            query = f"SELECT {auth_fields['student']['username_field']},{auth_fields['student']['hash_field']},{auth_fields['student']['school_field_foreign']} FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"
 
-                print(query)
+            print(query)
+            mycursor.execute(query)
+            auth_detail_response = mycursor.fetchall()
+            
+            print('Records matching the username @ student',auth_detail_response)
+
+
+            if len(auth_detail_response) == 0:
+                return Response({'api_status':False,'message':'No data found'})
+            
+            user_detail['emis_user_id'] = auth_detail_response[0][2]
+            
+            #print('Records matching the username',auth_detail_response)
+
+            if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
+                user_detail['user_type'] = 'student'
+
+                # Fetch school id
+
+                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
+                #print('school id fetch query',query)
+
                 mycursor.execute(query)
-                auth_detail_response = mycursor.fetchall()
-                
-                print('Records matching the username @ student',auth_detail_response)
+                school_id_fetch = mycursor.fetchall()
+
+                if len(school_id_fetch) == 0:
+                    return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
+
+                #print('----------',school_id_fetch[0][0])
+                user_detail['school_id'] = school_id_fetch[0][0]
+                user_detail['name_text'] = school_id_fetch[0][1]
+                user_detail['student_class'] = school_id_fetch[0][2]
+                user_detail['section'] = school_id_fetch[0][3]
 
 
-                if len(auth_detail_response) == 0:
-                    return Response({'api_status':False,'message':'No data found'})
-                
-                user_detail['emis_user_id'] = auth_detail_response[0][2]
-                
-                #print('Records matching the username',auth_detail_response)
+                # Fetch school, district, block details
+                user_detail['school_id'], user_detail['district_id'], user_detail['block_id'], user_detail['udise_code'] = fetch_school_details(mycursor=mycursor,school_id=user_detail['school_id'])
 
-                if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
-                    user_detail['user_type'] = 'student'
+                user_detail['username'] = data['username']
+                user_detail['password'] = data['password']
+                user_detail['priority'] = auth_fields['student']['student_priority']
 
-                    # Fetch school id
-
-                    query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
-                    #print('school id fetch query',query)
-
-                    mycursor.execute(query)
-                    school_id_fetch = mycursor.fetchall()
-
-                    if len(school_id_fetch) == 0:
-                        return Response({'api_status':False,'message':'User Authenticated but no details in Master table'})
-
-                    #print('----------',school_id_fetch[0][0])
-                    user_detail['school_id'] = school_id_fetch[0][0]
-                    user_detail['name_text'] = school_id_fetch[0][1]
-                    user_detail['student_class'] = school_id_fetch[0][2]
-                    user_detail['section'] = school_id_fetch[0][3]
-
-
-                    # Fetch school, district, block details
-                    user_detail['school_id'], user_detail['district_id'], user_detail['block_id'], user_detail['udise_code'] = fetch_school_details(mycursor=mycursor,school_id=user_detail['school_id'])
-
-                    user_detail['username'] = data['username']
-                    user_detail['password'] = data['password']
-                    user_detail['priority'] = auth_fields['student']['student_priority']
-
-                    print('@@@@@@@@@@@@@@@@',user_detail)
-                    token_response = create_local_user(request,user_detail)
-                    return Response(token_response)
-                else:
-                    return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
+                print('@@@@@@@@@@@@@@@@',user_detail)
+                token_response = create_local_user(request,user_detail)
+                return Response(token_response)
+                # else:
+                #     return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
             
             # No authentication for department user in local
-            else:
-                return Response({'api_status':False,'message':'Incorrect Username/password'})
+            # else:
+            return Response({'api_status':False,'message':'Incorrect Username/password'})
         
         except Exception as e:
             return Response({'api_status':False,'message':'Error in authenticating','exception':str(e)})
@@ -665,9 +670,6 @@ class GetMyEvents(APIView):
                 # Addition of section
                 events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
 
-                # Filter further for student specific exam
-                
-                
                 # Get emis_user_id
                 cn = connection()
 
@@ -686,6 +688,25 @@ class GetMyEvents(APIView):
                 emis_user_id = emis_user_id_response[0][0]
 
                 print('_+_+_+_+_+_+',emis_user_id)
+
+                try:
+                    query = f"SELECT education_medium_id FROM students_child_detail WHERE id in (select emis_user_id FROM emisuser_student WHERE emis_username = {request.user.username});"
+
+                    print('Mother tounge query',query)
+                    mycursor.execute(query)
+                    student_master_response = mycursor.fetchall()
+                    student_master_lang = student_master_response[0][0]
+
+                    print('Student master language',student_master_lang)
+                
+                except Exception as e:
+                    return Response({'api_status':False,'message':f"Error in fetching student's mother tounge",'exception':str(e)})
+
+                mycursor.close()
+
+                # Filter for student language
+
+                events_queryset = events_queryset.filter(class_medium = student_master_lang)
 
                 scheduling_list_ids = list(events_queryset.values_list('schedule_id',flat = True))
                 # scheduling_list_ids = [1,2,3,4,5,6,7,8,9]

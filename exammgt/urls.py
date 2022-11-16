@@ -34,6 +34,7 @@ urlpatterns = [
     path('get-user-detail',                 GetUserDetail.as_view(),                name='GetUserDetail'),
 
     path('auto-update-status',              AutoUpdateStatus.as_view(),             name='auto-update-status'),
+    path('meta-auto',                       MetaAuto.as_view(),                     name='meta-auto'),
 
     # Initial Registeration Block
 
@@ -76,5 +77,4 @@ urlpatterns = [
     
     
     
-    path('meta-auto',                       MetaAuto.as_view(),                     name='meta-auto'),
     ]

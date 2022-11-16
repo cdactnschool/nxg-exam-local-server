@@ -4,7 +4,7 @@ from scheduler.models import scheduling, event, participants
 from . import views
 import math
 
-from tnschoollocalserver.tn_variables import AUTH_FIELDS
+from tnschoollocalserver.tn_variables import AUTH_FIELDS, MEDIUM
 
 
 import datetime
@@ -55,6 +55,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
     json_count              = serializers.SerializerMethodField('get_json_count')
     user_type               = serializers.SerializerMethodField('get_user_type')
     json_available          = serializers.SerializerMethodField('get_json_available')
+    lang_desc               = serializers.SerializerMethodField('get_lang_desc')
 
     def create(self, validated_data):
         return scheduling.objects.create(**validated_data)
@@ -263,6 +264,16 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
 
     def get_user_type(self,obj):
         return self.context.get('user').profile.usertype
+    
+    def get_lang_desc(self,obj):
+        '''
+        Return description of language
+        '''
+        try:
+            # print(f'{obj.schedule_id} class_medium {MEDIUM[obj.class_medium]}')
+            return MEDIUM[obj.class_medium]
+        except:
+            return None
 
 
 class ExamEventSerializer(serializers.ModelSerializer):
