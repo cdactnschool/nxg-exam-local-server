@@ -690,14 +690,16 @@ class GetMyEvents(APIView):
                 print('_+_+_+_+_+_+',emis_user_id)
 
                 try:
-                    query = f"SELECT education_medium_id FROM students_child_detail WHERE id in (select emis_user_id FROM emisuser_student WHERE emis_username = {request.user.username});"
+                    query = f"SELECT education_medium_id, group_code_id FROM students_child_detail WHERE id in (select emis_user_id FROM emisuser_student WHERE emis_username = {request.user.username});"
 
-                    print('Mother tounge query',query)
+                    # print('Mother tounge query',query)
                     mycursor.execute(query)
                     student_master_response = mycursor.fetchall()
                     student_master_lang = student_master_response[0][0]
+                    student_master_group = int(student_master_response[0][1])
 
                     print('Student master language',student_master_lang)
+                    print('Student master group',student_master_group,type(student_master_response[0][1]))
                 
                 except Exception as e:
                     return Response({'api_status':False,'message':f"Error in fetching student's mother tounge",'exception':str(e)})
@@ -707,6 +709,14 @@ class GetMyEvents(APIView):
                 # Filter for student language
 
                 events_queryset = events_queryset.filter(class_medium = student_master_lang)
+
+                # Filter for stream for higher secondary
+
+                events_queryset = events_queryset.filter(
+                    Q(class_group=None) | Q(class_group__startswith=f"{student_master_group}-")
+                    )
+
+                # print('stream query set',events_queryset.query)
 
                 scheduling_list_ids = list(events_queryset.values_list('schedule_id',flat = True))
                 # scheduling_list_ids = [1,2,3,4,5,6,7,8,9]
@@ -2186,6 +2196,15 @@ class VersionNumber(APIView):
             with open(version_file_path) as f:
                 # version_value = f.readlines()
                 version_value = [line.strip() for line in f.readlines()][0]
+            
+            help_link = None
+            try:
+                req_url = f"{CENTRAL_SERVER_IP}/scheduler/help-link"
+                help_link_response = requests.request("POST", req_url, verify=CERT_FILE)
+
+                help_link = help_link_response.json()['data']
+            except:
+                pass
 
             try:
                 school_hostname = os.uname()[1]
@@ -2216,9 +2235,9 @@ class VersionNumber(APIView):
 
 
 
-            return Response({'api_status':True,'version':version_value, 'hostname' : school_hostname, 'udise_code':udise_code})
+            return Response({'api_status':True,'version':version_value, 'hostname' : school_hostname, 'udise_code':udise_code,'help_link':help_link})
         except Exception as e:
-            return Response({'api_status':False,'message':'Error in fetching version number','exception':str(e)})
+            return Response({'api_status':False,'message':'Error in fetching version number and ','exception':str(e)})
 
 
 
