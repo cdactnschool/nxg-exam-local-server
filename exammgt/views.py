@@ -985,15 +985,46 @@ class GenerateQuestionPaper(APIView):
             print('---------------',request_data)
 
             try:
-                participant_category = participants.objects.get(schedule_id = request_data['id'].participant_category)
+                participant_category = participants.objects.filter(schedule_id = request_data['id']).first().participant_category
             except:
                 participant_category = None
             
-            if participant_category != 'STUDENT':
-                qpset_list = participants.objects.get(schedule_id = request_data['id']).event_allocationid
-            
-            else :
+            print('Participant_category type :',participant_category)
+
+            try:
+                if participant_category != 'STUDENT':
+                    qpset_list = participants.objects.filter(schedule_id = request_data['id']).first().event_allocationid
+                
+                else :
+                    
+                    # Fetching question paper for student type
+                    cn = connection()
+
+                    if cn == None:
+                        data = {}
+                        data['api_status'] = False
+                        data['message'] = 'School server Not reachable'
+                        return Response(data)
+                    
+                    mycursor = cn.cursor()
+
+                    query = f"SELECT emis_user_id FROM emisuser_student WHERE emis_username = {request.user.username} "
+
+                    mycursor.execute(query)
+                    emis_user_id_response = mycursor.fetchall()
+                    emis_user_id = emis_user_id_response[0][0]
+
+                    cn.close()
+
+                    print('QPset query inputs',request_data['id'],emis_user_id)
+                    qpset_list = participants.objects.filter(schedule_id = request_data['id'],participant_id = emis_user_id).first().event_allocationid
+
+
+
+            except Exception as e:
                 qpset_list = None
+                print('Error in fetching participant id :',str(e))
+                errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Fetch emis_username for Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now()),'exception':str(s)},default=str))
 
             print(f'QP set list ---------',qpset_list)
         
@@ -2276,6 +2307,9 @@ class ConsSummary(APIView):
             students_query = f" SELECT l.{AUTH_FIELDS['student']['username_field']}, r.{AUTH_FIELDS['student']['name_field_master']}, r.{AUTH_FIELDS['student']['student_class']}, r.{AUTH_FIELDS['student']['section_field_master']} FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {scheduling_obj.class_std}"
             if scheduling_obj.class_section != None:
                 students_query = f"{students_query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{scheduling_obj.class_section}'"
+            
+            if scheduling_obj.class_group != None:
+                students_query = f"{students_query} AND r.group_code_id = {scheduling_obj.class_group.split('-')[0]}"
 
             # # Raw query (working)
             # students_query = f" SELECT l.emis_username, r.name, r.class_studying_id, r.class_section FROM emisuser_student l LEFT JOIN students_child_detail r ON l.emis_user_id = r.id WHERE r.class_studying_id = {scheduling_obj.class_std}"
@@ -3435,15 +3469,15 @@ class MetaAuto(APIView):
 
             for sch in sch_list:
                 
-                try:
-                    participant_category = participants.objects.get(schedule_id = sch.schedule_id).participant_category
-                except:
-                    participant_category = None
+                # try:
+                #     participant_category = participants.objects.get(schedule_id = sch.schedule_id).participant_category
+                # except:
+                #     participant_category = None
 
-                if participant_category == 'STUDENT':
-                    participant_id = None
-                else:
-                    participant_id = participants.objects.get(schedule_id = sch.schedule_id).participant_id
+                # if participant_category == 'STUDENT':
+                #     participant_id = None
+                # else:
+                #     participant_id = participants.objects.get(schedule_id = sch.schedule_id).participant_id
                 
                 print('-------------')
                 print('URL name',request.resolver_match.view_name)

@@ -198,6 +198,9 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
             query = f" SELECT COUNT(l.{AUTH_FIELDS['student']['username_field']}) FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {obj.class_std}"
             if obj.class_section != None:
                 query = f"{query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{obj.class_section}'"
+            
+            if obj.class_group != None:
+                query = f"{query} AND r.group_code_id = {obj.class_group.split('-')[0]}"
 
 
             # query = f"SELECT COUNT(*) FROM emisuser_student WHERE class_studying_id = {obj.class_std}"
