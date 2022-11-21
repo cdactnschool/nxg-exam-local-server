@@ -7,6 +7,9 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 
 BASE_DIR = settings.BASE_DIR
 
+import requests
+from requests.adapters import HTTPAdapter
+central_server_adapter = HTTPAdapter(max_retries=3)
 
 # Enable authentication for the api calls
 AUTH_ENABLE = True # Enable is_authentication in views.py file

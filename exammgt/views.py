@@ -31,10 +31,11 @@ from django.urls import reverse
 
 from django.contrib.sites.shortcuts import get_current_site
 
-from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD, BASE_DIR
+from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD, BASE_DIR, central_server_adapter
 
 import hashlib
 import requests
+from requests.exceptions import ConnectionError
 
 import pandas as pd
 import sqlite3
@@ -146,7 +147,7 @@ def create_local_user(request,data):
     '''
     print('````````````````',data)
     if User.objects.filter(username=data['username']).exists():
-        pass
+        print('UserExists')
         # db_user = User.objects.get(username=data['username'])
         # if not db_user.check_password(data['password']):
         #     db_user.set_password(data['password'])
@@ -195,12 +196,18 @@ def create_local_user(request,data):
             my_group = Group.objects.get(name=data['user_type']) 
             my_group.user_set.add(db_user)
 
-
-    x = requests.post(request.build_absolute_uri(reverse('token-obtain-pair')),
-    data = {'username':data['username'],'password':data['password']})
+    print('Obtaining user pair')
+    try:
+        print('Token URL',request.build_absolute_uri(reverse('token-obtain-pair')))
+        x = requests.post(request.build_absolute_uri(reverse('token-obtain-pair')),data = {'username':data['username'],'password':data['password']})
+        x.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(e.response.text)
     
+    print("========")
+    print('x value',x)
     res_data = x.json()
-
+    
 
     # Access log entry
 
@@ -285,6 +292,33 @@ class db_auth(APIView):
             user_detail = {}
 
             auth_fields = AUTH_FIELDS
+
+            Group_count = Group.objects.all().count()
+            print('Group count',Group_count)
+
+            query = f"SELECT COUNT(*) FROM emisuser_teacher"
+            try:
+                mycursor.execute(query)
+                teacher_count_response = mycursor.fetchone()
+                teacher_count = teacher_count_response[0]
+            except:
+                teacher_count = 0
+            print('teacherCount',teacher_count,type(teacher_count))
+
+            if Group_count < 5 or teacher_count == 0:
+                print('Deleting the tables for registeration')
+                query = f"DELETE FROM students_school_child_count;"
+                mycursor.execute(query)
+                cn.commit()
+                
+                print('Deleting the miscinfo table')
+                query = f"DELETE FROM exammgt_miscinfo;"
+                mycursor.execute(query)
+                cn.commit()
+                return Response({'api_status':False,'message':'Refresh the page to Re-Register'})
+
+            # Check if credentials are loaded or not
+
 
 
             # Check for superuser
@@ -1296,7 +1330,15 @@ class LoadEvent(APIView):
 
 
             #get_events_response = requests.request("POST", req_url, data=payload)
-            get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
+            # get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
+
+            session = requests.Session()
+            session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+            try:
+                get_events_response = session.post(req_url,data = payload,verify=CERT_FILE,stream=True)
+            
+            except ConnectionError as ce:
+                print('Request error',ce)
 
             # print('get_event____',get_events_response)
 
@@ -1455,7 +1497,16 @@ class LoadEvent(APIView):
 
             print('@@@@@ ack_payload',ack_payload)
 
-            requests.request("POST", ack_url, data=ack_payload,verify=CERT_FILE)
+            # requests.request("POST", ack_url, data=ack_payload,verify=CERT_FILE)
+            
+            session = requests.Session()
+            session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
+            try:
+                get_events_response = session.post(ack_url,data = ack_payload,verify=CERT_FILE)
+            
+            except ConnectionError as ce:
+                print('Request error',ce)
 
             # Deleting the residual files
 
@@ -1520,7 +1571,17 @@ class LoadReg(APIView):
                 },default=str)
                 
             # get_events_response = requests.request("POST", reqUrl, data=payload)
-            get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
+
+            session = requests.Session()
+            session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
+            try:
+                get_events_response = session.post(req_url,data = payload,verify=CERT_FILE,stream=True)
+            
+            except ConnectionError as ce:
+                print('Request error',ce)
+
+            # get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
             if get_events_response.headers.get('content-type') == 'application/json':
                 return Response(get_events_response.json())
@@ -1665,18 +1726,7 @@ class LoadReg(APIView):
 
             print('-----print---token-----',get_school_token(),'-------------')
 
-            # send ack to central server
-
-            ack_url = f"{CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
-
-            ack_payload = json.dumps({
-                "school_id" : school_id_response[0][0],
-                "request_type":request_type,
-                "zip_hash":res_md5sum,
-                "school_token":get_school_token()
-            },default=str)
-
-            requests.request("POST", ack_url, data=ack_payload,verify=CERT_FILE)
+            
 
             # Delete residual files
             shutil.rmtree(load_reg_base,ignore_errors=False,onerror=None)
@@ -1746,6 +1796,26 @@ class LoadReg(APIView):
             my_group = Group.objects.get(name='superadmin_user') 
             my_group.user_set.add(suser)
 
+            # send ack to central server
+
+            ack_url = f"{CENTRAL_SERVER_IP}/exammgt/acknowledgement-update"
+
+            ack_payload = json.dumps({
+                "school_id" : school_id_response[0][0],
+                "request_type":request_type,
+                "zip_hash":res_md5sum,
+                "school_token":get_school_token()
+            },default=str)
+
+            session = requests.Session()
+            session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
+            try:
+                load_reg_ack = session.post(ack_url,data = ack_payload,verify=CERT_FILE)
+            
+            except Exception as e:
+                print('Error in sending ack',str(e))
+                api_errorlog.error(json.dumps({'school_id':school_id_response[0][0],'action':'registration_ack','datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
 
             # Logging the school_id, action and datetime to the api_log.info file.
             if renewal_status:
@@ -1783,8 +1853,12 @@ class InitialReg(APIView):
 
             payload = json.dumps({"udise_code": data['udise_code']},default=str)
             
+            session = requests.Session()
+            session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
             try:
-                get_udise_response = requests.request("POST",req_url,data = payload,verify=CERT_FILE)
+                get_udise_response = session.post(req_url,data = payload,verify=CERT_FILE)
+            
                 if get_udise_response.status_code != 200:
                     return Response({'api_status':False,'message':'Central server not reachable'})
             except Exception as e:
@@ -1929,7 +2003,16 @@ class MetaData(APIView):
 
                 print('Request to the central server to download',str(payload))
 
-                get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
+                # get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
+
+                session = requests.Session()
+                session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
+                try:
+                    get_meta_response = session.post(req_url,data = payload,verify=CERT_FILE,stream=True)
+                
+                except ConnectionError as ce:
+                    print('Request error',ce)
 
                 # get_meta_response_json = get_meta_response.json()
 
@@ -2128,7 +2211,15 @@ class MetaData(APIView):
                     "event_id_list":[request_data['event_id']]
                 },default=str)
 
-                requests.request("POST", ack_url, data=ack_payload, verify=CERT_FILE) 
+                # requests.request("POST", ack_url, data=ack_payload, verify=CERT_FILE) 
+                session = requests.Session()
+                session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
+                try:
+                    get_events_response = session.post(ack_url,data = ack_payload,verify=CERT_FILE)
+                
+                except ConnectionError as ce:
+                    print('Request error',ce)
         
                 os.system('rm -rf ' + json_file_path)
 
@@ -2229,9 +2320,13 @@ class VersionNumber(APIView):
                 version_value = [line.strip() for line in f.readlines()][0]
             
             help_link = None
+
+            session = requests.Session()
+            session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
             try:
                 req_url = f"{CENTRAL_SERVER_IP}/scheduler/help-link"
-                help_link_response = requests.request("POST", req_url, verify=CERT_FILE)
+                help_link_response = session.post(req_url,verify=CERT_FILE)
 
                 help_link = help_link_response.json()['data']
             except:
@@ -3489,8 +3584,13 @@ class MetaAuto(APIView):
                 },default=str)
 
                 print('Request to the central server to download qp for ',str(sch.schedule_id),str(payload))
+
+                session = requests.Session()
+                session.mount(CENTRAL_SERVER_IP, central_server_adapter)
+
                 try:
-                    get_meta_response = requests.request("POST", req_url,headers = headers, data=payload)
+                    get_meta_response = session.post(req_url,headers=headers,data = payload)
+
                     print('auto meta response ',get_meta_response.text,sch.schedule_id)
                 except Exception as e:
                     print('Exception in fetching the qp for eventid ',sch.schedule_id,str(e))
