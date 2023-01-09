@@ -1969,7 +1969,7 @@ class MetaData(APIView):
                 scheduling_queryset = scheduling.objects.get(schedule_id=request_data['event_id'])
 
                 try:
-                    participant_category = participants.objects.get(schedule_id = request_data['event_id']).participant_category
+                    participant_category = participants.objects.filter(schedule_id = request_data['event_id'])[0].participant_category
                 except:
                     participant_category = None
 
