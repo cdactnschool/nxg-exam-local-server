@@ -3428,7 +3428,7 @@ class GenSendResponses(APIView):
                         misc_obj = MiscInfo.objects.all().first()
                         misc_obj.resp_dt = datetime.datetime.now()
                         misc_obj.save()
-                    return Response ({'api_status':False,'message':'No response file available to send'})
+                    return Response ({'api_status':True,'message':'No response file available to send'})
                 
                 compress_dir = os.path.join(MEDIA_ROOT,'cons_zip')
                 os.makedirs(compress_dir, exist_ok=True)
@@ -3517,19 +3517,24 @@ class AutoUpdateStatus(APIView):
     '''
 
     def get(self, request, *args, **kwargs):
+        
+        AUTO_RESPONSE_TIME = 4 # Hours
+        
         try:
             if request.user.profile.usertype in ['student']:
                 return Response ({'api_status':False,'message':'Student not authorized for auto update'})
 
             misc_obj = MiscInfo.objects.all().first()
-
             print('Event sync time',misc_obj.event_dt,type(misc_obj.event_dt))
             print('Response sync time',misc_obj.resp_dt,type(misc_obj.resp_dt))
 
             return Response({
                 'api_status':True,
                 'event':misc_obj.event_dt.date() != datetime.datetime.now().date() if misc_obj.event_dt else True,
-                'response':misc_obj.resp_dt.date() != datetime.datetime.now().date() if misc_obj.resp_dt else True})
+                # 'response':misc_obj.resp_dt.date() != datetime.datetime.now().date() if misc_obj.resp_dt else True
+                'response':( datetime.datetime.now() - misc_obj.resp_dt ).total_seconds() // 3600 >= AUTO_RESPONSE_TIME if misc_obj.resp_dt else True
+                
+                })
 
         except Exception as e:
             return Response({'api_status':False,'exception':str(e)})    
