@@ -305,6 +305,7 @@ class db_auth(APIView):
                 teacher_count = 0
             print('teacherCount',teacher_count,type(teacher_count))
 
+            '''
             if Group_count < 5 or teacher_count == 0:
                 print('Deleting the tables for registeration')
                 query = f"DELETE FROM students_school_child_count;"
@@ -316,6 +317,7 @@ class db_auth(APIView):
                 mycursor.execute(query)
                 cn.commit()
                 return Response({'api_status':False,'message':'Refresh the page to Re-Register'})
+            '''
 
             # Check if credentials are loaded or not
 

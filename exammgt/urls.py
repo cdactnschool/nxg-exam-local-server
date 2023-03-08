@@ -68,7 +68,7 @@ urlpatterns = [
 
     # Misc block
 
-    path('de-register',                     ResetDB.as_view(),                      name='reset-db'),
+    # path('de-register',                     ResetDB.as_view(),                      name='reset-db'),
     path('event-cleaner',                   MasterCleaner.as_view(),                name='event-cleaner'),
     path('list-cleaner',                    ListCleanerID.as_view(),                name='list-cleaner'),
     path('to-complete',                     ToComplete.as_view(),                   name='to-complete'),
