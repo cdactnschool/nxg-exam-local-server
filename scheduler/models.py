@@ -63,7 +63,7 @@ class event(models.Model):
 class participants(models.Model):
     id                              = models.BigIntegerField(primary_key = True)
     # participant_pk                  = models.IntegerField(blank = True, null = True)
-    schedule_id                     = models.IntegerField()
+    schedule_id                     = models.BigIntegerField()
     participant_category            = models.CharField(max_length=20)
     participant_catid               = models.IntegerField(blank = True, null = True)
     participant_id                  = models.CharField(max_length=250)

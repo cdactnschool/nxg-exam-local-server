@@ -44,6 +44,7 @@ class ExamMeta(models.Model):
 
     '''
     event_id                            = models.BigIntegerField(primary_key=True)
+    participant_pk                      = models.BigIntegerField(null=True,blank=True)
     event_title                         = models.CharField(max_length=1024,null=True,blank=True)
     class_subject                       = models.CharField(max_length=200,null=True,blank=True)
     class_std                           = models.CharField(max_length=1024,null=True,blank=True)
@@ -115,6 +116,7 @@ class ExamResponse(models.Model):
     Model to record the response of each candidate
     '''
     event_id            = models.BigIntegerField()
+    participant_pk      = models.BigIntegerField(null=True,blank=True)
     student_username    = models.IntegerField()
     qp_set_id           = models.TextField()
     question_id         = models.IntegerField()
@@ -131,6 +133,7 @@ class EventAttendance(models.Model):
     Model to record the exam instance of each candidate
     '''
     event_id            = models.BigIntegerField()
+    participant_pk      = models.BigIntegerField(null=True,blank=True)
     student_username    = models.IntegerField()
     qp_set              = models.CharField(max_length=30,null=True,blank=True)
     start_time          = models.DateTimeField(null=True,blank=True)
