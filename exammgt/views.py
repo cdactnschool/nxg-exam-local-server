@@ -28,10 +28,10 @@ import os
 import json
 from django.contrib.auth.models import User,Group
 from django.urls import reverse
-
+import math
 from django.contrib.sites.shortcuts import get_current_site
 
-from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD, BASE_DIR, central_server_adapter
+from tnschoollocalserver.tn_variables import AUTH_ENABLE, AUTH_FIELDS, CENTRAL_SERVER_IP, CERT_FILE, DB_STUDENTS_SCHOOL_CHILD_COUNT, RESIDUAL_DELETE_DAYS, DATABASES, MEDIA_ROOT, SUPER_USERNAME, SUPER_PASSWORD, BASE_DIR, central_server_adapter, MEDIUM
 
 import hashlib
 import requests
@@ -48,6 +48,7 @@ import time
 import subprocess
 
 from django.db import transaction
+from django.db import connection as dbconnect
 
 logger      = logging.getLogger('monitoringdebug')
 accesslog   = logging.getLogger('accesslog')
@@ -343,6 +344,12 @@ class db_auth(APIView):
                 user_detail['block_id'] = school_detail_response[0][2]
                 user_detail['school_id'] = school_detail_response[0][0]
                 token_response = create_local_user(request, user_detail)
+                try:
+                    print('Starting to close')
+                    cn.close()
+                    print('Closing Authentication Connection')
+                except:
+                    pass
                 return Response(token_response)
 
 
@@ -482,6 +489,12 @@ class db_auth(APIView):
                 return Response(token_response)
                 # else:
                 #     return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
+            
+            try:
+                cn.close()
+                print('Closing Authentication Connection')
+            except:
+                pass
             
             # No authentication for department user in local
             # else:
@@ -774,11 +787,247 @@ class GetMyEvents(APIView):
                 events_queryset = events_queryset.filter(schedule_id__in = participants_list_ids)
 
 
+            sch_id_list = list(events_queryset.values_list('schedule_id',flat=True))
+            
+            event_data = []
+            with dbconnect.cursor() as c:
+                get_events_query = f'''SELECT 
+                          sch.schedule_id, 
+                          sch.event_title, 
+                          sch.class_std, 
+                          sch.class_section, 
+                          sch.class_group, 
+                          sch.class_subject, 
+                          sch.class_medium, 
+                          sch.event_startdate, 
+                          sch.event_enddate, 
+                          sch.event_starttime, 
+                          sch.event_endtime, 
+                          sch.exam_category,
+                          sch.is_1_n,
+                          par.section,
+                          par.allocation_status,
+                          par.generation_status
+                          FROM scheduler_scheduling sch
+                          LEFT JOIN scheduler_participants par WHERE par.schedule_id = sch.schedule_id
+                          AND sch.schedule_id IN {tuple(sch_id_list)}
+                          '''
+                
+                if request.user.profile.usertype == 'student':
+                    get_events_query = f'{get_events_query} AND ((sch.is_1_n = 0) OR (sch.is_1_n = 1 AND par.section = {request.user.profile.section}))'
+                
+                print('query set',get_events_query)
+                
+                c.execute(get_events_query)
+                
+                columns = [col[0] for col in c.description]
+                
+                print('Starting the loop')
+                
+                for schedule in c.fetchall():
+                    single_event = {columns[i]: schedule[i] for i in range(len(columns))}
+                    
+                    #  Get class section for 1:n allocation
+                    if single_event['is_1_n'] == 1:
+                        single_event['class_section'] = single_event['section']
+                    
+                    
+                    #  Get exam_status
+                    '''
+                    Return if Exam is started/not completed/Completed
+
+                    0 -> Exam not Started
+                    1 -> Exam not Completed
+                    2 -> Exam Completed
+
+                    '''
+                    
+                    try:
+                    
+                        if request.user.profile.usertype in ['teacher','hm','superadmin_user','school']:
+                            single_event['exam_status'] = None
+                        else:
+                            attendance_obj = EventAttendance.objects.filter(event_id=single_event['schedule_id'],student_username=str(request.user.username))
+                            
+                            
+                            if len(attendance_obj) == 0:
+                                single_event['exam_status'] = 0
+                            else:
+                                if attendance_obj.end_time == None:
+                                    single_event['exam_status'] = 1
+                                
+                                elif attendance_obj.end_time != None:
+                                    single_event['exam_status'] = 2
+                                else:
+                                    single_event['exam_status'] = None
+                        
+                    except Exception as e:
+                        print('Exception in fetching exam_status ',e)
+                        single_event['exam_status'] = None
+                    
+                    # event_status
+                    '''
+                    Return if Event is live/old/upcoming
+
+                    0 -> Live
+                    1 -> Upcoming
+                    2 -> Old
+
+                    '''
+                    try:
+                        if datetime.datetime.strptime(single_event['event_startdate'], "%Y-%m-%d").date() <= datetime.datetime.now().date() <= datetime.datetime.strptime(single_event['event_enddate'], "%Y-%m-%d").date():
+                            single_event['event_status'] = 0
+                        elif datetime.datetime.strptime(single_event['event_startdate'], "%Y-%m-%d").date() > datetime.datetime.now().date():
+                            single_event['event_status'] = 1
+                        elif datetime.datetime.strptime(single_event['event_enddate'], "%Y-%m-%d").date() < datetime.datetime.now().date():
+                            single_event['event_status'] = 2
+                        else :
+                            single_event['event_status'] = None
+                        
+                        
+                        # event_completion_status Return count of candidates who have completed the exam
+                        
+                        if request.user.profile.usertype == 'student':
+                            single_event['event_completion_status'] = None
+                        else:
+                            single_event['event_completion_status'] = EventAttendance.objects.filter(event_id=single_event['schedule_id']).exclude(end_time=None).count()
+                        
+                    
+                    except Exception as e:
+                        print('Exception in getting event_status',e)
+                        single_event['event_completion_status'] = None
+                    
+                    #  exam_correct
+                    '''
+                    Return the total number of correct answers of the candidate
+
+                    Return marks from the attendance_object
+                    Return '-' if Exam is not submitted
+                    Return 'A' if not attempted
+
+                    '''
+                    try:
+                        if request.user.profile.usertype in ['teacher','hm','superadmin_user']:
+                            single_event['exam_correct'] = None
+                        
+                        else:
+                            
+                            meta_status_query = ExamMeta.objects.filter(event_id = single_event['schedule_id'])
+                            if len(meta_status_query) == 0:
+                                single_event['exam_correct'] = '-'
+                            else:
+                                meta_status_object = meta_status_query[0]
+                                attendance_obj_qs = EventAttendance.objects.filter(event_id=single_event['schedule_id'],student_username=request.user.username)
+                                
+                                if len(attendance_obj_qs) != 0:
+                                    single_event['exam_correct'] =f"A/{meta_status_object.no_of_questions}"
+                                
+                                elif attendance_obj.end_time == None:
+                                    single_event['exam_correct'] =  f"-/{meta_status_object.no_of_questions}"
+
+                                single_event['exam_correct'] =  f"{attendance_obj.correct_answers}/{meta_status_object.no_of_questions}"
+
+                    except Exception as e:
+                        print('Exception in getting exam_correct ',e)
+                        single_event['exam_correct'] = None
+                    
+                    # meta_status
+                    '''
+                    Check if meta data is set for the event
+
+                    0 -> Meta data not set
+                    1 -> Meta data set
+
+                    '''
+                    try:
+                        if ExamMeta.objects.filter(event_id = single_event['schedule_id']).count() == 0:
+                            single_event['meta_status'] = 0
+                        else:
+                            single_event['meta_status'] = 1
+                            
+                    except Exception as e:
+                        print('Exception in getting meta_status ',e)
+                        single_event['meta_status'] = 0
+                    
+                    
+                    #  total_candidates
+                    
+                    try:
+                        if request.user.profile.usertype == 'student':
+                            single_event['total_candidates'] = None
+                        cn = connection()
+                        mycursor = cn.cursor()
+
+                        query = f" SELECT COUNT(l.{AUTH_FIELDS['student']['username_field']}) FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {single_event['class_std']}"
+                        if single_event['class_section'] != None:
+                            query = f"{query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{single_event['class_section']}'"
+                        
+                        if single_event['class_group'] != None:
+                            query = f"{query} AND r.group_code_id = {single_event['class_group'].split('-')[0]}"
+
+                        mycursor.execute(query)
+                        student_count_result = mycursor.fetchall()
+                        single_event['total_candidates'] = student_count_result[0][0]
+                        
+                        print('Total candidates',student_count_result[0][0])
+                        
+                    except Exception as e:
+                        print('Exception in getting total_candidates',e)
+                        single_event['total_candidates'] = None
+                        
+                    
+                    #  duration_mins
+                    '''
+                    Fetch the exam duration from the ExamMeta table
+                    '''
+                    
+                    try:
+                        if request.user.profile.usertype != 'student':
+                            single_event['duration_mins'] = 'NA'
+                        else:
+                            attendance_obj = EventAttendance.objects.filter(event_id=single_event['schedule_id'],student_username=request.user.username)
+                            
+                            if len(attendance_obj) == 0:
+                                meta_duration_query = ExamMeta.objects.filter(event_id = single_event['schedule_id'])
+                                if len(meta_duration_query) == 0:
+                                    single_event['duration_mins'] = '-'
+                                else:
+                                    meta_duration_entry = meta_duration_query[0]
+                                    single_event['duration_mins']  = meta_duration_entry.duration_mins
+                            else:
+                                single_event['duration_mins']  = math.ceil(attendance_obj.remaining_time/60) # Return remaining time in minutes
+                            
+                    except Exception as e:
+                        print('Exception in getting duration_mins',e)
+                        single_event['duration_mins'] = '-'
+                        
+                        
+                    #  user_type
+                    try:
+                        single_event['user_type'] = request.user.profile.usertype
+                    except Exception as e:
+                        print('Exception in getting user_type',e)
+                        single_event['user_type'] = None
+                        
+                        
+                    #  lang_desc
+                    
+                    try:
+                        single_event['lang_desc'] = MEDIUM[single_event['class_medium']]
+                    except Exception as e:
+                        print('Exception in getting lang_desc',e)
+                        single_event['lang_desc'] = 0
+                    
+                    
+                    event_data.append(single_event)
+                    print(single_event)
+            
             events_serialized = ExamEventsScheduleSerializer(events_queryset,many=True,context={'user':request.user})
 
             events_serialized_data = {
                 'api_status':True,
-                'data':events_serialized.data
+                'data':event_data
+                # 'data':events_serialized.data
             }
 
             return Response(events_serialized_data)
@@ -1592,6 +1841,9 @@ class LoadReg(APIView):
             res_md5sum = get_events_response.headers.get('md5sum')
             request_type = get_events_response.headers.get('process_str')
             school_token = get_events_response.headers.get('school_token')
+            school_id = get_events_response.headers.get('school_id')
+            
+            print('Fetched Credential_s school id',school_id)
 
             print(res_fname, res_md5sum)
 
@@ -2378,6 +2630,8 @@ class ConsSummary(APIView):
 
     event_id <- schedule_id or event_id
 
+    participant_pk <- primary key of participant table
+    
     '''
 
     def post(self,request,*args, **kwargs):
@@ -2407,7 +2661,14 @@ class ConsSummary(APIView):
             
             if scheduling_obj.class_group != None:
                 students_query = f"{students_query} AND r.group_code_id = {scheduling_obj.class_group.split('-')[0]}"
-
+            
+            if 'participant_pk' in request.data:
+                par_qs = participants.objects.filter(id = request_data['participant_pk'])
+                if len(par_qs) != 0:
+                    par_obj = par_qs[0]
+                    if par_obj.section != None:
+                        students_query = f"{students_query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{par_obj.section}'"
+            print('Student list query',students_query)
             # # Raw query (working)
             # students_query = f" SELECT l.emis_username, r.name, r.class_studying_id, r.class_section FROM emisuser_student l LEFT JOIN students_child_detail r ON l.emis_user_id = r.id WHERE r.class_studying_id = {scheduling_obj.class_std}"
             # if scheduling_obj.class_section != None:

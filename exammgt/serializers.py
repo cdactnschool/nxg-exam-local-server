@@ -62,7 +62,8 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = scheduling
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ['schedule_id','event_title','class_std','class_section','class_group','class_subject','class_medium','event_startdate','event_enddate','event_starttime','event_endtime','exam_category','exam_status','event_status','event_completion_status','exam_correct','meta_status','total_candidates','duration_mins','json_count','user_type','json_available','lang_desc','is_1_n']
     
     def get_exam_status(self,obj):
 

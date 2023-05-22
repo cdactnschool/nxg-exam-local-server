@@ -62,12 +62,20 @@ class event(models.Model):
 
 class participants(models.Model):
     id                              = models.BigIntegerField(primary_key = True)
+    # participant_pk                  = models.IntegerField(blank = True, null = True)
     schedule_id                     = models.IntegerField()
     participant_category            = models.CharField(max_length=20)
+    participant_catid               = models.IntegerField(blank = True, null = True)
     participant_id                  = models.CharField(max_length=250)
     event_participation_status      = models.IntegerField()
     event_allocationid              = models.TextField(blank=True, null=True)
-
+    allocated_by                    = models.CharField(max_length=250, blank=True, null=True)
+    section                         = models.CharField(max_length=250, blank=True, null=True)
+    allocation_status               = models.IntegerField(default = 0, blank = True, null = True)
+    generation_status               = models.IntegerField(blank = True, null = True)
+    flag1                           = models.IntegerField(blank = True, null = True)
+    flag2                           = models.CharField(max_length=250, blank=True, null=True)
+    allocator_id                   = models.CharField(max_length=250,blank = True, null = True)
 
     created_on                      = models.DateTimeField(auto_now=True ,blank =False)
 
@@ -78,7 +86,7 @@ class participants(models.Model):
 class scheduling(models.Model):
     schedule_id             = models.BigIntegerField(primary_key=True)
     event_title             = models.CharField(max_length=200)
-    class_std               = models.CharField(max_length=200)
+    class_std               = models.IntegerField(blank = True, null = True) #models.CharField(max_length=200)
     class_section           = models.CharField(max_length=10,blank=True, null=True)
     class_group             = models.CharField(max_length=200,blank=True, null=True)
     class_subject           = models.CharField(max_length=200)
@@ -88,12 +96,19 @@ class scheduling(models.Model):
     event_updatedatetime    = models.DateTimeField(auto_now=True)
     event_author_id         = models.CharField(max_length=20, blank=True, null=True)
     event_location          = models.CharField(max_length=20,choices=LocationChoices.choices,default=LocationChoices.ONLINE)
+    event_location_id       = models.IntegerField(blank = True, null = True)
     event_tags              = models.CharField(max_length=200, blank=True, null=True)
     event_type_id           = models.CharField(max_length=20,blank=True, null=True)
     event_approval_status   = models.CharField(max_length=50,choices=ApprovalChoices.choices,default=ApprovalChoices.WAIT)
+    event_approval_status_id= models.IntegerField(blank = True, null = True)
     event_approved_by       = models.CharField(max_length=200,blank=True,null=True)
     event_approved_date     = models.DateTimeField(blank=True,null=True)
     event_remark            = models.CharField(max_length=250,blank=True, null=True)
+    
+    event_deleted_by        = models.CharField(max_length=250, blank=True, null=True)
+    event_deleted_on        = models.DateTimeField(blank=True,null=True)
+    event_deletion_reason   = models.CharField(max_length=250,blank=True, null=True)
+    
     no_of_days              = models.IntegerField(blank=True,null=True)
     event_is_allday         = models.BooleanField(default = False)
     event_starttime         = models.TimeField(blank=True, null=True)
@@ -101,9 +116,17 @@ class scheduling(models.Model):
     batch_count             = models.IntegerField(default=1)
     event_colour            = models.CharField(max_length=200, blank=True, null=True, default=generate_color)
     event_completion_status = models.CharField(max_length=20,choices=EventStatusChoices.choices,default=EventStatusChoices.INPROGRESS)
-    event_allocationid      = models.CharField(max_length=250, blank=True, null=True)
+    event_completion_id     = models.IntegerField(blank = True, null = True)
+    event_allocationid      = models.IntegerField(blank = True, null = True) #CharField(max_length=250, blank=True, null=True)
+    school_type             = models.CharField(max_length=250, blank=True, null=True)
+    school_category         = models.CharField(max_length=250, blank=True, null=True)
+    is_1_n                  = models.IntegerField(default = 0)
+    flag1                   = models.IntegerField(blank = True, null = True)
+    flag2                   = models.CharField(max_length=250, blank=True, null=True)
+    allowed_allocation_id   = models.IntegerField(blank = True, null = True)
+    exam_category           = models.IntegerField(blank = True, null = True)
     
     created_on              = models.DateTimeField(blank =False)
     
     def __str__(self):
-        return "{0}-{1}-{2}-{3}".format(self.schedule_id,self.event_title,self.class_std,self.class_subject,self.schedule_id)
+        return "{0}-{1}-{2}-{3}".format(self.schedule_id,self.event_title,self.class_std,self.class_subject)
