@@ -814,7 +814,7 @@ class GetMyEvents(APIView):
                           '''
                 
                 if request.user.profile.usertype == 'student':
-                    get_events_query = f'{get_events_query} AND ((sch.is_1_n = 0) OR (sch.is_1_n = 1 AND par.section = {request.user.profile.section}))'
+                    get_events_query = f'{get_events_query} AND ((sch.is_1_n = 0) OR (sch.is_1_n = 1 AND par.section = "{request.user.profile.section}"))'
                 
                 print('query set',get_events_query)
                 
