@@ -41,6 +41,10 @@ class ExamMeta(models.Model):
     0 -> Default
     1 -> Exam completed
     2 -> Cleanup completed
+    
+    
+    event_id <-> participant_pk (field values interchanged)
+
 
     '''
     event_id                            = models.BigIntegerField(primary_key=True)

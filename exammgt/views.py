@@ -517,6 +517,7 @@ class CandidateResponse(APIView):
     ans <- answer id
     correct_choice <- id of the correct choice
     review <- bool whether marked for review or not
+    participant_pk <- participant pk
     
     '''
     
@@ -527,7 +528,8 @@ class CandidateResponse(APIView):
             'student_username':request.user.username,
             'question_id':data['qid'],
             'qp_set_id':data['qp_set_id'],
-            'event_id':data['event_id']
+            'event_id':data['event_id'],
+            'participant_pk':data['participant_pk']
         }
         try:
             print(request.user.username)
@@ -543,7 +545,7 @@ class CandidateResponse(APIView):
             return Response({'api_status': True,'message':'updated'})
         except Exception as e:
 
-            print('Exception element :',e)
+            # print('Exception element :',e)
             try:            
                 filter_fields['selected_choice_id'] = None if data['ans'] == '' else data['ans']
                 filter_fields['question_result'] = data['correct_choice']
@@ -622,7 +624,7 @@ class summary(APIView):
     ```````````
 
     event_id <- id or schedule_id
-
+    participant_pk <- participant_pk id of the participant table
     '''
 
     if AUTH_ENABLE:
@@ -867,17 +869,20 @@ class GetMyEvents(APIView):
                             else:
                                 attendance_obj = EventAttendance.objects.filter(event_id=single_event['schedule_id'],participant_pk = single_event['participant_pk'],student_username=str(request.user.username))
                                 
+                                # print('Length of attendance object',len(attendance_obj))
                                 
                                 if len(attendance_obj) == 0:
                                     single_event['exam_status'] = 0
                                 else:
-                                    if attendance_obj.end_time == None:
+                                    print('---------length of attendance',len(attendance_obj),attendance_obj)
+                                    if attendance_obj[0].end_time == None:
                                         single_event['exam_status'] = 1
                                     
-                                    elif attendance_obj.end_time != None:
+                                    elif attendance_obj[0].end_time != None:
                                         single_event['exam_status'] = 2
                                     else:
                                         single_event['exam_status'] = None
+                            print(single_event['schedule_id'],single_event['participant_pk'],'Exam status',single_event['exam_status'])
                             
                         except Exception as e:
                             print('Exception in fetching exam_status ',e)
@@ -901,18 +906,22 @@ class GetMyEvents(APIView):
                                 single_event['event_status'] = 2
                             else :
                                 single_event['event_status'] = None
+                            print(single_event['schedule_id'],single_event['participant_pk'],'Event Timing Status',single_event['event_status'])
+                        except Exception as e:
+                            print('Excetion in getting event status',e)
+                            single_event['event_status'] = None
                             
-                            
-                            # event_completion_status Return count of candidates who have completed the exam
-                            
+                        # event_completion_status Return count of candidates who have completed the exam
+                        try :    
                             if request.user.profile.usertype == 'student':
                                 single_event['event_completion_status'] = None
                             else:
                                 single_event['event_completion_status'] = EventAttendance.objects.filter(event_id=single_event['schedule_id'],participant_pk = single_event['participant_pk']).exclude(end_time=None).count()
                             
+                            print(single_event['schedule_id'],single_event['participant_pk'],'Event Completion Status',single_event['event_completion_status'])
                         
                         except Exception as e:
-                            print('Exception in getting event_status',e)
+                            print('Exception in getting event_completion_status',e)
                             single_event['event_completion_status'] = None
                         
                         #  exam_correct
@@ -930,20 +939,26 @@ class GetMyEvents(APIView):
                             
                             else:
                                 
-                                meta_status_query = ExamMeta.objects.filter(event_id = single_event['schedule_id'],participant_pk = single_event['participant_pk'])
+                                meta_status_query = ExamMeta.objects.filter(event_id = single_event['participant_pk'],participant_pk = single_event['schedule_id'])
+                                # print('meta status query',meta_status_query)
                                 if len(meta_status_query) == 0:
+                                    print('No meta data available',single_event['participant_pk'],single_event['schedule_id'])
                                     single_event['exam_correct'] = '-'
                                 else:
                                     meta_status_object = meta_status_query[0]
                                     attendance_obj_qs = EventAttendance.objects.filter(event_id=single_event['schedule_id'],participant_pk = single_event['participant_pk'],student_username=request.user.username)
                                     
-                                    if len(attendance_obj_qs) != 0:
-                                        single_event['exam_correct'] =f"A/{meta_status_object.no_of_questions}"
                                     
-                                    elif attendance_obj.end_time == None:
-                                        single_event['exam_correct'] =  f"-/{meta_status_object.no_of_questions}"
-
-                                    single_event['exam_correct'] =  f"{attendance_obj.correct_answers}/{meta_status_object.no_of_questions}"
+                                    if len(attendance_obj_qs) == 0:
+                                        single_event['exam_correct'] =f"A/{meta_status_object.no_of_questions}"
+                                    else:
+                                        
+                                        if attendance_obj_qs[0].end_time == None:
+                                            single_event['exam_correct'] =  f"-/{meta_status_object.no_of_questions}"
+                                        else:
+                                            single_event['exam_correct'] =  f"{attendance_obj_qs[0].correct_answers}/{meta_status_object.no_of_questions}"
+                                    
+                            print(single_event['schedule_id'],single_event['participant_pk'],'Student correct count',single_event['exam_correct'])
 
                         except Exception as e:
                             print('Exception in getting exam_correct ',e)
@@ -958,10 +973,11 @@ class GetMyEvents(APIView):
 
                         '''
                         try:
-                            if ExamMeta.objects.filter(event_id = single_event['schedule_id']).count() == 0:
+                            if ExamMeta.objects.filter(event_id = single_event['participant_pk'],participant_pk = single_event['schedule_id']).count() == 0:
                                 single_event['meta_status'] = 0
                             else:
                                 single_event['meta_status'] = 1
+                            print(single_event['schedule_id'],single_event['participant_pk'],'Meta Status',single_event['meta_status'])
                                 
                         except Exception as e:
                             print('Exception in getting meta_status ',e)
@@ -987,9 +1003,11 @@ class GetMyEvents(APIView):
                             student_count_result = mycursor.fetchall()
                             single_event['total_candidates'] = student_count_result[0][0]
                             
-                            print('Total candidates',student_count_result[0][0])
+                            # print('Total candidates',student_count_result[0][0])
                             
                             cn.close()
+                            
+                            print(single_event['schedule_id'],single_event['participant_pk'],'Total candidates count',single_event['total_candidates'])
                             
                         except Exception as e:
                             print('Exception in getting total_candidates',e)
@@ -1008,14 +1026,14 @@ class GetMyEvents(APIView):
                                 attendance_obj = EventAttendance.objects.filter(event_id=single_event['schedule_id'],participant_pk = single_event['participant_pk'],student_username=request.user.username)
                                 
                                 if len(attendance_obj) == 0:
-                                    meta_duration_query = ExamMeta.objects.filter(event_id = single_event['schedule_id'],participant_pk = single_event['participant_pk'])
+                                    print('No attendance')
+                                    meta_duration_query = ExamMeta.objects.filter(event_id = single_event['participant_pk'],participant_pk = single_event['schedule_id'])
                                     if len(meta_duration_query) == 0:
                                         single_event['duration_mins'] = '-'
                                     else:
-                                        meta_duration_entry = meta_duration_query[0]
-                                        single_event['duration_mins']  = meta_duration_entry.duration_mins
+                                        single_event['duration_mins']  = meta_duration_query[0].duration_mins
                                 else:
-                                    single_event['duration_mins']  = math.ceil(attendance_obj.remaining_time/60) # Return remaining time in minutes
+                                    single_event['duration_mins']  = math.ceil(attendance_obj[0].remaining_time/60) # Return remaining time in minutes
                                 
                         except Exception as e:
                             print('Exception in getting duration_mins',e)
@@ -1040,7 +1058,7 @@ class GetMyEvents(APIView):
                         
                         
                         event_data.append(single_event)
-                        print(single_event)
+                        # print(single_event)
             
             events_serialized = ExamEventsScheduleSerializer(events_queryset,many=True,context={'user':request.user})
 
@@ -1067,13 +1085,15 @@ class UpdateRemtime(APIView):
 
     rem_time <- remaining time in seconds
     
+    participant_pk <- participant_pk value
+    
     '''
     def post(self,request,*args, **kwargs):
         try:
             data = JSONParser().parse(request)
             data['event_id'] = data['id']
 
-            attendance_object_check = EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
+            attendance_object_check = EventAttendance.objects.filter(event_id = data['event_id'] , participant_pk = data['participant_pk'],student_username = request.user.username)
 
             if attendance_object_check:
                 attendance_object_check = attendance_object_check[0]
@@ -1103,7 +1123,7 @@ class ExamSubmit(APIView):
         except Exception as e:
             return Response({'api_status':False,'message':"event_id 'id' not passed",'exception':e})
 
-        attendance_object_check = EventAttendance.objects.filter(event_id = data['event_id'] ,student_username = request.user.username)
+        attendance_object_check = EventAttendance.objects.filter(event_id = data['event_id'] , participant_pk = data['participant_pk'],student_username = request.user.username)
 
         #print('Attendance object ',len(attendance_object_check))
 
@@ -1114,13 +1134,13 @@ class ExamSubmit(APIView):
 
             attendance_object_check = attendance_object_check[0]
             attendance_object_check.end_time = datetime.datetime.now()
-            attendance_object_check.total_questions = ExamMeta.objects.filter(event_id = data['event_id'])[0].no_of_questions
+            attendance_object_check.total_questions = ExamMeta.objects.filter(event_id = data['participant_pk'],participant_pk = data['event_id'])[0].no_of_questions
             visited_questions   = 0
             answered_questions  = 0
             reviewed_questions  = 0
             correct_answers     = 0
             wrong_answers       = 0
-            for resp_obj in ExamResponse.objects.filter(event_id=data['event_id'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set):
+            for resp_obj in ExamResponse.objects.filter(event_id=data['event_id'],participant_pk = data['participant_pk'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set):
                 visited_questions += 1
                 
                 if resp_obj.selected_choice_id:
@@ -1238,11 +1258,12 @@ class SchoolExamSummary(APIView):
             print(f'Exception raised while creating a candidate question meta data object throught API : {e}')
 
 
-def get_answers(username,qid,qp_set_id,event_id):
+def get_answers(username,participant_pk,qid,qp_set_id,event_id):
     try:
-        print('&&&& Fetching answers for ',username,qid,qp_set_id,event_id)
+        # print('&&&& Fetching answers for ',username,qid,qp_set_id,event_id)
         filter_fields = {
             'student_username':username,
+            'participant_pk':participant_pk,
             'question_id':qid,
             'qp_set_id':qp_set_id,
             'event_id':event_id
@@ -1252,7 +1273,7 @@ def get_answers(username,qid,qp_set_id,event_id):
         ans = "" if obj.selected_choice_id == None else obj.selected_choice_id
         return obj.review, ans
     except Exception as e:
-        print(e)
+        # print(e)
         return "",""
 
 class GenerateQuestionPaper(APIView):
@@ -1264,7 +1285,7 @@ class GenerateQuestionPaper(APIView):
 
     {
         id : 123,
-
+        participant_pk <- participant_pk
     }
 
 
@@ -1290,15 +1311,17 @@ class GenerateQuestionPaper(APIView):
             print('---------------',request_data)
 
             try:
-                participant_category = participants.objects.filter(schedule_id = request_data['id']).first().participant_category
-            except:
+                print('request_data',request_data)
+                participant_category = participants.objects.filter(schedule_id = request_data['id'],id = request_data['participant_pk'])[0].participant_category
+            except Exception as e:
                 participant_category = None
+                print('Exception in fetching participant category',e)
             
             print('Participant_category type :',participant_category)
 
             try:
                 if participant_category != 'STUDENT':
-                    qpset_list = participants.objects.filter(schedule_id = request_data['id']).first().event_allocationid
+                    qpset_list = participants.objects.filter(schedule_id = request_data['id'],id = request_data['participant_pk'])[0].event_allocationid
                 
                 else :
                     
@@ -1322,23 +1345,27 @@ class GenerateQuestionPaper(APIView):
                     cn.close()
 
                     print('QPset query inputs',request_data['id'],emis_user_id)
-                    qpset_list = participants.objects.filter(schedule_id = request_data['id'],participant_id = emis_user_id).first().event_allocationid
+                    qpset_list = participants.objects.filter(schedule_id = request_data['id'],participant_id = emis_user_id, id = request_data['participant_pk'])[0].event_allocationid
 
 
 
             except Exception as e:
                 qpset_list = None
                 print('Error in fetching participant id :',str(e))
-                errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Fetch emis_username for Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now()),'exception':str(s)},default=str))
+                errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Fetch emis_username for Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
 
             print(f'QP set list ---------',qpset_list)
         
-            event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,student_username = request.user.username)
+            event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,participant_pk = request_data['participant_pk'],student_username = request.user.username)
 
+            
+            print('Event attendance check',event_attendance_check)
         
-            question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['event_id']})
+            question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['participant_pk'],"participant_pk" : request_data['event_id']})
 
 
+            print('Event quetion meta object',question_meta_object)
+            
             if len(question_meta_object) > 0:
                 question_meta_object = question_meta_object[0] # get the first instance
                 print('question_meta_object Content',question_meta_object)
@@ -1353,6 +1380,7 @@ class GenerateQuestionPaper(APIView):
 
                 event_attendance_obj = EventAttendance.objects.create(
                     event_id = request_data['event_id'],
+                    participant_pk = request_data['participant_pk'],
                     student_username =request.user.username,
                     # qp_set = random.choice(eval(question_meta_object.qp_set_list)),
                     qp_set = random.choice(eval(qpset_list)),
@@ -1375,7 +1403,8 @@ class GenerateQuestionPaper(APIView):
             }
 
             exam_filter = {
-                "event_id": request_data['event_id']
+                "event_id": request_data['participant_pk'],
+                "participant_pk" : request_data['event_id']
             }
             
             #Save Json File Into Schhool Local Server
@@ -1402,7 +1431,7 @@ class GenerateQuestionPaper(APIView):
                 print('----------------------------------------------------------------')
 
                 for answers in question_paper_data['ans']:
-                    answers['review'], answers['ans'] = get_answers(request.user.username,answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
+                    answers['review'], answers['ans'] = get_answers(request.user.username,request_data['participant_pk'],answers['qid'],event_attendance_obj.qp_set,request_data['event_id'])
                 question_paper_data['user'] = request.user.username
                 question_paper_data['qp_set_id'] = event_attendance_obj.qp_set
                 question_paper_data['exam_duration'] = event_attendance_obj.remaining_time # Fetch seconds
@@ -1419,6 +1448,14 @@ class GenerateQuestionPaper(APIView):
                 for exam_data in exam_meta_object_edit:
                     tmp_exam_dict = model_to_dict(exam_data)
                     try:
+                        
+                        #  switching event_id and participant_pk
+                        temp_event_id = tmp_exam_dict['participant_pk']
+                        temp_participant_pk = tmp_exam_dict['event_id']
+                        
+                        tmp_exam_dict['event_id'] = temp_event_id
+                        tmp_exam_dict['participant_pk'] = temp_participant_pk
+                        
                         del tmp_exam_dict['event_startdate']
                         del tmp_exam_dict['event_enddate']
                         del tmp_exam_dict['qp_set_list']
@@ -1496,7 +1533,7 @@ class GenerateQuestionPaper(APIView):
                 for q_id in qid_list:
                     tmp = {}
                     tmp['qid'] = q_id
-                    tmp['review'], tmp['ans'] = get_answers(request.user.username,q_id,event_attendance_obj.qp_set,request_data['event_id'])
+                    tmp['review'], tmp['ans'] = get_answers(request.user.username,request_data['participant_pk'],q_id,event_attendance_obj.qp_set,request_data['event_id'])
 
                     get_ans_api.append(tmp)
 
@@ -2224,6 +2261,7 @@ class MetaData(APIView):
                 
                 mycursor = cn.cursor()
 
+
                 query = f"SELECT {AUTH_FIELDS['school']['school_id']} FROM {AUTH_FIELDS['school']['auth_table']} LIMIT 1"
                 mycursor.execute(query)
                 school_id_response = mycursor.fetchall()
@@ -2234,7 +2272,22 @@ class MetaData(APIView):
                 # request_data = JSONParser().parse(request)
                 request_data = request.data
 
-                print('-------------------------')
+
+                participant_pk = request_data['participant_pk']
+                '''
+                if "participant_pk" in request_data:
+                    participant_pk = request_data['participant_pk']
+                else:
+                    participant_pk = None
+                '''
+
+
+                #reg_data = JSONParser().parse(request)
+
+                #print(request_data)
+
+                #print('-------------------------')
+
                 
                 if scheduling.objects.filter(schedule_id=request_data['event_id']).exists() == False:
                     return Response({'api_status':False,'message':'Event Not allocated for this school'})
@@ -2242,15 +2295,17 @@ class MetaData(APIView):
                 
                 scheduling_queryset = scheduling.objects.get(schedule_id=request_data['event_id'])
 
+
                 try:
-                    participant_category = participants.objects.filter(schedule_id = request_data['event_id'])[0].participant_category
+                    participant_category = participants.objects.filter(schedule_id = request_data['event_id'], id = participant_pk)[0].participant_category
+                    #participant_pk = participants.objects.filter(schedule_id = request_data['event_id'])[0].id
                 except:
                     participant_category = None
 
                 if participant_category == 'STUDENT':
                     participant_id = None
                 else:
-                    participant_id = participants.objects.get(schedule_id = request_data['event_id']).participant_id
+                    participant_id = participants.objects.get(schedule_id = request_data['event_id'], id = participant_pk).participant_id
 
                 # participant_id = None
 
@@ -2264,14 +2319,14 @@ class MetaData(APIView):
                 # else:
                 #     participant_id = None
                     
-                
-
+         
                 #request_data['event_id'] = 2349
                 req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload"
                 payload = json.dumps({
                     'event_id':request_data['event_id'],
                     'school_id':school_id_response[0][0],
                     'participant_id' : participant_id,
+                    'participant_pk' : participant_pk,
                     'school_token':get_school_token()
                 },default=str)
 
@@ -2359,7 +2414,10 @@ class MetaData(APIView):
                 print(meta_data)
 
                 event_meta_data = {}
-                event_meta_data['event_id'] = meta_data['event_id']
+                # event_meta_data['event_id'] = meta_data['event_id']
+                # event_meta_data['participant_pk'] = meta_data['participant_pk']
+                event_meta_data['event_id'] = meta_data['participant_pk']
+                event_meta_data['participant_pk'] = meta_data['event_id']
                 event_meta_data['subject'] = meta_data['subject']
                 event_meta_data['no_of_questions'] = meta_data['no_of_questions']
                 event_meta_data['duration_mins'] = meta_data['duration_mins']
@@ -2401,7 +2459,8 @@ class MetaData(APIView):
 
                 # Push the exam_meta_object_edit
                 exam_meta_filter  = {
-                    "event_id" : request_data['event_id']
+                    "event_id" : request_data['event_id'],
+                    "participant_pk" : participant_pk
                 
                     }
                 
@@ -2501,7 +2560,7 @@ class MetaData(APIView):
 
                 shutil.rmtree(load_meta_base,ignore_errors=False,onerror=None)
 
-                print('-----------event---meta-----data-----',event_meta_data)
+                print('-----------event---meta-----data-----final',event_meta_data)
 
                 exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
                 if len(exam_meta_object_edit) == 0:
