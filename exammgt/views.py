@@ -2869,6 +2869,10 @@ class MetaUpload(APIView):
             
             scheduling_queryset = scheduling.objects.get(schedule_id=event_id)
 
+            participant_pk = participants.objects.filter(schedule_id=event_id).values()[0].get("id")
+
+            print("participant_pk", participant_pk)
+
             file_obj = request.data['archive']
             file_name = file_obj.name
 
@@ -2915,7 +2919,8 @@ class MetaUpload(APIView):
                 return Response({'api_status':False,'message':'Incorrect Mapping File'})
 
             event_meta_data = {}
-            event_meta_data['event_id'] = meta_data['event_id']
+            event_meta_data['event_id'] =participant_pk
+            event_meta_data['participant_pk'] = meta_data['event_id']
             event_meta_data['subject'] = meta_data['subject']
             event_meta_data['no_of_questions'] = meta_data['no_of_questions']
             event_meta_data['duration_mins'] = meta_data['duration_mins']
