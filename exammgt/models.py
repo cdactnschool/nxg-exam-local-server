@@ -153,7 +153,7 @@ class EventAttendance(models.Model):
     sync_done           = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.event_id}-{self.student_username}-{self.qp_set}-{self.json_created}-{self.sync_done}"
+        return f"{self.event_id}-{self.participant_pk}-{self.student_username}-{self.qp_set}-{self.json_created}-{self.sync_done}"
 
 
 class MiscInfo(models.Model):

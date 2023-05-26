@@ -1470,7 +1470,9 @@ class GenerateQuestionPaper(APIView):
                     print('------exam_meta---------',exam_meta_data)
             
                 qpset_filter = {
-                'event_id': request_data['event_id'],
+                #'event_id': request_data['event_id'],
+                
+                'event_id': request_data['participant_pk'],
                 'qp_set_id': event_attendance_obj.qp_set
                 }
         
@@ -3671,9 +3673,181 @@ class SendResponses(APIView):
 
             return Response({'api_status':False,'message':'Error in sending response to the central server','exception':str(e)})
 
-
-
 class GenSendResponses(APIView):
+    '''
+        API query to Generete the json files of all the new students and send to the central server
+    '''
+
+    def post(self,request,*args, **kwargs):
+
+        folder_dir = os.path.join(MEDIA_ROOT,'cons_data')
+        os.makedirs(folder_dir, exist_ok=True)
+        
+        try:
+            
+            if request.user.profile.usertype in ['student']:
+                return Response ({'api_status':False,'message':'Student not authorized'})
+
+            with transaction.atomic(): # Atomic Transcation
+                sch_par_list = []
+                
+                for par_obj in participants.objects.all():
+                    
+                    details_object = []
+                    
+                    sch_obj = scheduling.objects.get(schedule_id = par_obj.schedule_id)
+                    event_attendances = EventAttendance.objects.filter(event_id = sch_obj.schedule_id, participant_pk = par_obj.id,json_created = False).exclude(end_time = None)
+                    
+                    print(f"{len(event_attendances)} records found in the scheduleid {sch_obj.schedule_id} - participant_pk {par_obj.id}")
+                    
+                    if len(event_attendances) == 0:
+                        continue
+                    
+                    sch_par_list.append([sch_obj.schedule_id, par_obj.id])
+                    
+                    file_name = os.path.join(folder_dir,f"{sch_obj.schedule_id}_{par_obj.id}_{request.user.profile.school_id}_{request.user.profile.udise_code}_{str(datetime.datetime.now().strftime('%d-%m-%Y_%H-%M-%S'))}.json")
+                    
+                    consolidated_data = {
+                        'event_id':sch_obj.schedule_id,
+                        'participant_pk' : par_obj.id,
+                        'school_id':request.user.profile.school_id,
+                        'udise_code':request.user.profile.udise_code,
+                        'details':[]
+                        }
+                    
+                    #  Loop through each attendance entry
+                    
+                    for event_attendance_obj in event_attendances:
+                        details_dict = {
+                            'student_username': event_attendance_obj.student_username,
+                            'qp_set_id': event_attendance_obj.qp_set,
+                            'start_time': str(event_attendance_obj.start_time),
+                            'end_time': str(event_attendance_obj.end_time),
+                            'total_questions':str(event_attendance_obj.total_questions),
+                            'visited_questions':str(event_attendance_obj.visited_questions),
+                            'answered_questions':str(event_attendance_obj.answered_questions),
+                            'reviewed_questions':str(event_attendance_obj.reviewed_questions),
+                            'correct_answers':str(event_attendance_obj.correct_answers),
+                            'wrong_answers':str(event_attendance_obj.wrong_answers),
+                        }
+                        
+                        obj = ExamResponse.objects.filter(event_id = sch_obj.schedule_id, participant_pk = par_obj.id, student_username = event_attendance_obj.student_username,qp_set_id = event_attendance_obj.qp_set)
+                        
+                        responses = []
+                        
+                        for obj_instance in obj:
+                            responses.append({
+                                'question_id':obj_instance.question_id,
+                                'selected_choice_id':obj_instance.selected_choice_id,
+                                'correct_choice_id':obj_instance.question_result,
+                                'marked_review':obj_instance.review,
+                                'created_on':str(obj_instance.created_on)
+                            })
+                        details_dict['responses'] = responses
+                        details_object.append(details_dict)
+                        
+                    consolidated_data['details'] = details_object
+                    
+                    print('Creating Json file :',file_name)
+                    
+                    with open(file_name, 'w') as outfile:  
+                        json.dump(consolidated_data, outfile)
+                    
+                    
+                    # Mark json_created in the attendance entry
+                    for event_attendance_obj in event_attendances:
+                        event_attendance_obj.json_created = True
+                        event_attendance_obj.save()
+                    
+                print('Schedule - Participant list :',sch_par_list)
+                
+                json_file_list = os.listdir(folder_dir)
+                
+                if len(json_file_list) == 0:
+                    if MiscInfo.objects.all().count() == 0:
+                        MiscInfo.objects.create(resp_dt = datetime.datetime.now())
+                    else :
+                        misc_obj = MiscInfo.objects.all().first()
+                        misc_obj.resp_dt = datetime.datetime.now()
+                        misc_obj.save()
+                    return Response ({'api_status':True,'message':'No response file available to send'})
+                
+                compress_dir = os.path.join(MEDIA_ROOT,'cons_zip')
+                os.makedirs(compress_dir, exist_ok=True)
+                
+                timestr = time.strftime("%Y%m%d%H%M%S")
+                
+                zip_file_name = os.path.join(compress_dir,f"{request.user.profile.school_id}_{timestr}.7z")
+                
+                with py7zr.SevenZipFile(zip_file_name, 'w') as archive:
+                    archive.writeall(folder_dir, '')
+                
+                print('zipped content :',json_file_list)
+                
+                send_response_url = f"{CENTRAL_SERVER_IP}/exammgt/load-responses"
+                
+                # Fetch school name
+                cn = connection()
+                mycursor = cn.cursor()
+                query = f"SELECT school_name FROM {DB_STUDENTS_SCHOOL_CHILD_COUNT} LIMIT 1;"
+                mycursor.execute(query)
+                school_detail_response = mycursor.fetchall()
+                
+                calmd5sum = subprocess.Popen(["md5sum", zip_file_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                zip_hash = calmd5sum.communicate()[0].decode("utf-8").split(" ")[0]
+                
+                fileobj = open(zip_file_name, 'rb')
+                
+                sent_request = requests.post(send_response_url, data={
+                    'sch_par_list':str(sch_par_list),
+                    # 'archive':  fileobj,
+                    'md5sum':zip_hash,
+                    'school_token':get_school_token(),
+                    'school_id':request.user.profile.school_id,
+                    'process_str':'RESPONSE_DATA',
+                    'ipaddress': ipfetch(request),
+                    'school_name': school_detail_response[0][0],
+                    'file_name': os.path.basename(zip_file_name)
+                    },files = {'archive': (zip_file_name, fileobj, 'application/x-7z-compressed')})
+                sent_request_response = sent_request.json()
+
+
+                if sent_request.status_code != 200:
+                    os.remove(zip_file_name)
+                    return Response({'api_status':False,'message':'Unable to send response files to Central Server','error':'Status not equal to 200','Error content':sent_request.reason,'status_code':sent_request.status_code})
+
+                os.remove(zip_file_name)
+                if sent_request_response['api_status']:
+                    for i in json_file_list:
+                        # print('deleting...',os.path.join(json_dir,i))
+                        os.remove(os.path.join(folder_dir,i))   
+
+                if MiscInfo.objects.all().count() == 0:
+                    MiscInfo.objects.create(resp_dt = datetime.datetime.now())
+                else :
+                    misc_obj = MiscInfo.objects.all().first()
+                    misc_obj.resp_dt = datetime.datetime.now()
+                    misc_obj.save()
+
+
+                infolog.info(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Generate_JSON_send_Response','sch_par_list':str(sch_par_list),'datetime':str(datetime.datetime.now())},default=str))
+
+
+                return Response({'api_status':True,'message':f"JSON file generated and sent successfully"})
+                                
+        except Exception as e:
+
+            errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'username':request.user.username,'action':'Generate_JSON_send_Response','sch_par_list':str(sch_par_list),'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
+            
+            try:
+                shutil.rmtree(folder_dir)
+            except Exception as e:
+                print(f'Unable to delete folder {folder_dir} :',e)
+            
+
+            return Response({'api_status':False,'message':'Error in generating JSON and sending response files','exception':str(e)})
+
+class GenSendResponsesOld(APIView):
 
     '''
         API query to Generete the json files of all the new students and send to the central server

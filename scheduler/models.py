@@ -80,7 +80,7 @@ class participants(models.Model):
     created_on                      = models.DateTimeField(auto_now=True ,blank =False)
 
     def __str__(self):
-        return "{0}-{1}-{2}".format(self.schedule_id,self.participant_category,self.participant_id)
+        return "{0}-{1}-{2}-{3}".format(self.id,self.schedule_id,self.participant_category,self.participant_id)
 
 
 class scheduling(models.Model):
