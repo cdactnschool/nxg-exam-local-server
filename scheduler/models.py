@@ -52,6 +52,7 @@ class subject_choices(models.TextChoices):
 
 class event(models.Model):
     id                  = models.BigIntegerField(primary_key=True)
+    event_type_id       = models.IntegerField(null=True,blank=True)
     event_type          = models.CharField(max_length=200)
     
     created_on          = models.DateTimeField(blank =False)
@@ -125,6 +126,7 @@ class scheduling(models.Model):
     flag2                   = models.CharField(max_length=250, blank=True, null=True)
     allowed_allocation_id   = models.IntegerField(blank = True, null = True)
     exam_category           = models.IntegerField(blank = True, null = True)
+    priority                = models.IntegerField(blank = True, null = True)
     
     created_on              = models.DateTimeField(blank =False)
     

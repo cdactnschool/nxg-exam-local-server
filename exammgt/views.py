@@ -898,11 +898,14 @@ class GetMyEvents(APIView):
 
                         '''
                         try:
-                            if datetime.datetime.strptime(single_event['event_startdate'], "%Y-%m-%d").date() <= datetime.datetime.now().date() <= datetime.datetime.strptime(single_event['event_enddate'], "%Y-%m-%d").date():
+                            
+                            # print('Event start date',single_event['event_startdate'])
+                            
+                            if datetime.datetime.strptime(str(single_event['event_startdate']), "%Y-%m-%d").date() <= datetime.datetime.now().date() <= datetime.datetime.strptime(str(single_event['event_enddate']), "%Y-%m-%d").date():
                                 single_event['event_status'] = 0
-                            elif datetime.datetime.strptime(single_event['event_startdate'], "%Y-%m-%d").date() > datetime.datetime.now().date():
+                            elif datetime.datetime.strptime(str(single_event['event_startdate']), "%Y-%m-%d").date() > datetime.datetime.now().date():
                                 single_event['event_status'] = 1
-                            elif datetime.datetime.strptime(single_event['event_enddate'], "%Y-%m-%d").date() < datetime.datetime.now().date():
+                            elif datetime.datetime.strptime(str(single_event['event_enddate']), "%Y-%m-%d").date() < datetime.datetime.now().date():
                                 single_event['event_status'] = 2
                             else :
                                 single_event['event_status'] = None
@@ -1051,7 +1054,7 @@ class GetMyEvents(APIView):
                         #  lang_desc
                         
                         try:
-                            single_event['lang_desc'] = MEDIUM[single_event['class_medium']]
+                            single_event['lang_desc'] = MEDIUM[int(single_event['class_medium'])]
                         except Exception as e:
                             print('Exception in getting lang_desc',e)
                             single_event['lang_desc'] = 0
