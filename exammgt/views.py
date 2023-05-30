@@ -2340,6 +2340,17 @@ class MetaData(APIView):
             
                 print('Request to the central server to download',str(payload))
 
+
+                json_base_path = load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
+
+                if not os.path.exists(json_base_path):
+                    os.mkdir(json_base_path)
+
+                zip_base_path = os.path.join(json_base_path, f"{request_data['event_id']}_{school_id_response[0][0]}_{participant_pk}_qpdownload_json")
+        
+                timestr = time.strftime("%Y_%m_%d_%H_%M_%S")
+                actualfile = f'{zip_base_path}_{timestr}.7z'
+
                 # get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
                 session = requests.Session()
@@ -2347,74 +2358,102 @@ class MetaData(APIView):
 
                 try:
                     get_meta_response = session.post(s3_req_url,data = payload,verify=CERT_FILE,stream=True)
-                
+                    
                 except ConnectionError as ce:
                     print('Request error',ce)
+                
+            
+                if get_meta_response.json()['api_status'] == True:
+                    hashvalue = get_meta_response.json()['hashvalue']
+                    reference_url = get_meta_response.json()['reference_url']
+                    request_type = get_meta_response.json()['process_str']
+                    res_md5sum = hashvalue
 
-                if get_meta_response.headers.get('Content-Disposition') == None:
+                    file_response = requests.get(reference_url)
+                    md5sum_value =  hashlib.md5(file_response.content).hexdigest()
+                    
+                    SOURCE_URL =  get_meta_response.json()['process_url']
+                    if md5sum_value == hashvalue:
+                        print('md5checksum correct')
+
+                        # with open(actualfile, 'wb') as f:
+                        #     f.write(file_response.content)
+
+                        with open(actualfile,'wb') as fle:
+                            for chunk in file_response.iter_content(chunk_size=8192):
+                                if chunk:
+                                    fle.write(chunk)
+                        get_meta_response.close()
+
+                    else:
+                        print('md5checksum incorrect')
+
+            
+                elif get_meta_response.json()['api_status'] == False:
                     try:
                         get_meta_response = session.post(req_url,data = payload,verify=CERT_FILE,stream=True)
                         
                     except ConnectionError as ce:
                         print('Request error',ce)
 
-                SOURCE_URL =  get_meta_response.headers.get('process_url')
-                if SOURCE_URL == 'S3Bucket':
+                    SOURCE_URL =  get_meta_response.headers.get('process_url')
+                
+
+                if SOURCE_URL != 'S3Bucket':
                     print(f"source url : {s3_req_url}")
+ 
+                    if get_meta_response.headers.get('content-type') == 'application/json':
+                        get_meta_response_json = get_meta_response.json()
+                        if get_meta_response_json['api_status'] == False:
+                            return Response({'api_status':False,'message':'Question paper not available in central server'})
+
+                    if get_meta_response.headers.get('Content-Disposition') == None:
+                        return Response({'api_status':True,'message':'No Meta allocated to this school','school_token':get_school_token()})
+
+                    if get_meta_response.status_code != 200:
+                        return Response({'api_status':False,'message':'Unable to load exam data','error':'Status not equal to 200'})
+                    
+                    res_fname = get_meta_response.headers.get('Content-Disposition').split('=')[1]
+                    res_md5sum = get_meta_response.headers.get('md5sum')
+                    request_type = get_meta_response.headers.get('process_str')
+
+                    print(res_fname, res_md5sum)
+
+                    # Delete residual files
+                    load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
+
+                    file_path = os.path.join(load_meta_base, res_fname.strip())
+                    questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
+
+                    if not os.path.exists(questionpath):
+                        os.makedirs(questionpath)
+
+                    with open(file_path,'wb') as fle:
+                        for chunk in get_meta_response.iter_content(chunk_size=8192):
+                            if chunk:
+                                #print('------abc--------')
+                                fle.write(chunk)
+                    get_meta_response.close()
+
+                    with open(file_path,"rb") as f:
+                        bytes_file = f.read() # read file as bytes_file
+                        readable_hash = hashlib.md5(bytes_file).hexdigest();
+                        #print('~~~~~~~~~~~~~',readable_hash)
+                    #print(res_md5sum)
+
+                    if readable_hash != res_md5sum:
+                        return Response({'api_status':False,'message':'Unable to load exam data','error':'mismatch in md5checksum'})
+                    else:
+                        print('md5checksum correct')
+
+
                 else:
                     print(f"source url : {req_url}")
 
-                # get_meta_response_json = get_meta_response.json()
+                    file_path = actualfile
+                    questionpath = zip_base_path
 
-                # if get_meta_response_json['api_status'] == False:
-                #     return Response(get_meta_response_json)
-
-                if get_meta_response.headers.get('content-type') == 'application/json':
-                    get_meta_response_json = get_meta_response.json()
-                    if get_meta_response_json['api_status'] == False:
-                        return Response({'api_status':False,'message':'Question paper not available in central server'})
-
-                if get_meta_response.headers.get('Content-Disposition') == None:
-                    return Response({'api_status':True,'message':'No Meta allocated to this school','school_token':get_school_token()})
-
-                if get_meta_response.status_code != 200:
-                    return Response({'api_status':False,'message':'Unable to load exam data','error':'Status not equal to 200'})
-                
-                res_fname = get_meta_response.headers.get('Content-Disposition').split('=')[1]
-                res_md5sum = get_meta_response.headers.get('md5sum')
-                request_type = get_meta_response.headers.get('process_str')
-
-
-                print(res_fname, res_md5sum)
-
-                # Delete residual files
-                load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
-
-                file_path = os.path.join(load_meta_base, res_fname.strip())
-                questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
-
-                # print(file_path, '-=--=--', questionpath)
-
-                if not os.path.exists(questionpath):
-                    os.makedirs(questionpath)
-
-                with open(file_path,'wb') as fle:
-                    for chunk in get_meta_response.iter_content(chunk_size=8192):
-                        if chunk:
-                            #print('------abc--------')
-                            fle.write(chunk)
-                get_meta_response.close()
-
-                with open(file_path,"rb") as f:
-                    bytes_file = f.read() # read file as bytes_file
-                    readable_hash = hashlib.md5(bytes_file).hexdigest();
-                    #print('~~~~~~~~~~~~~',readable_hash)
-                #print(res_md5sum)
-
-                if readable_hash != res_md5sum:
-                    return Response({'api_status':False,'message':'Unable to load exam data','error':'mismatch in md5checksum'})
-                else:
-                    print('md5checksum correct')
+    
 
                 with py7zr.SevenZipFile(file_path, mode='r') as z:
                     z.extractall(path=questionpath)
@@ -2491,26 +2530,6 @@ class MetaData(APIView):
                 event_meta_data['event_startdate'] = scheduling_queryset.event_startdate
                 event_meta_data['event_enddate'] = scheduling_queryset.event_enddate
                 event_meta_data['class_subject'] = scheduling_queryset.class_subject
-
-
-                # print('-----------event---meta-----data-----',event_meta_data)
-
-                # exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
-                # if len(exam_meta_object_edit) == 0:
-                #     serialized_exam_meta = ExamMetaSerializer(data=event_meta_data,many=False)
-                #     if serialized_exam_meta.is_valid():
-                #         serialized_exam_meta.save()
-                        
-                #     else:
-                #         print(f'Error in serialization of Exam meta data : {serialized_exam_meta.errors}')
-                #         return Response({"api_status":False,"message":"Incorrect data in serializing Exam Meta data","error":serialized_exam_meta.errors})
-
-                # else:
-                #     print('\n')
-                #     print('-----------------------------------------------------------')
-                #     print('Event ID is already present into school local database....')
-                    
-                #     print('-----------------------------------------------------------')
 
 
                 for qp_data in event_meta_data['qp_set_data']:
