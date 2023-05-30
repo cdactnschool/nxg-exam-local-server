@@ -1,0 +1,232 @@
+{
+    "hallTkt": "TNEB2021EXAM117AAA0078",
+    "qpShuffle": [
+        "12",
+        "13",
+        "4",
+        "5",
+        "7",
+        "8",
+        "1",
+        "2",
+        "3",
+        "9",
+        "10",
+        "19",
+        "11",
+        "6",
+        "14",
+        "20",
+        "15",
+        "16",
+        "17",
+        "18"
+    ],
+    "extraTime": 0,
+    "lastAns": {},
+    "examSlot": "A",
+    "examPost": "PHYSICS",
+    "ques": [
+        {
+            "qNo": 1,
+            "qImage": "1",
+            "options":[
+                {
+                    "optionNo": 56,
+                    "optionText": "A. The speed of light in a vacuum is about c=299792458 m/s."
+                },
+                {
+                    "optionNo": 2,
+                    "optionText": "B. The speed of light in a vacuum is about c=299792458 m/s."
+                },
+                {
+                    "optionNo": 3,
+                    "optionText": "C. The speed of light in a vacuum is about c=299792458 m/s."
+                },
+                {
+                    "optionNo": 4,
+                    "optionText": "D. The speed of light in a vacuum is about c=299792458 m/s."
+                }
+            ]
+        },
+        {
+            "qNo": 2,
+            "qImage": "2"
+        },
+        {
+            "qNo": 3,
+            "qImage": "3"
+        },
+        {
+            "qNo": 4,
+            "qImage": "4"
+        },
+        {
+            "qNo": 5,
+            "qImage": "5"
+        },
+        {
+            "qNo": 6,
+            "qImage": "6"
+        },
+        {
+            "qNo": 7,
+            "qImage": "7"
+        },
+        {
+            "qNo": 8,
+            "qImage": "8"
+        },
+        {
+            "qNo": 9,
+            "qImage": "9"
+        },
+        {
+            "qNo": 10,
+            "qImage": "10"
+        },
+        {
+            "qNo": 11,
+            "qImage": "11"
+        },
+        {
+            "qNo": 12,
+            "qImage": "sample"
+        },
+        {
+            "qNo": 13,
+            "qImage": "13"
+        },
+        {
+            "qNo": 14,
+            "qImage": "14"
+        },
+        {
+            "qNo": 15,
+            "qImage": "15"
+        },
+        {
+            "qNo": 16,
+            "qImage": "16"
+        },
+        {
+            "qNo": 17,
+            "qImage": "17"
+        },
+        {
+            "qNo": 18,
+            "qImage": "18"
+        },
+        {
+            "qNo": 19,
+            "qImage": "19"
+        },
+        {
+            "qNo": 20,
+            "qImage": "20"
+        }
+    ],
+    "candImgPath": "Candidate Image",
+    "ans": [
+        {
+            "ans": "D",
+            "review": "",
+            "qNo": 11
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 12
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 13
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 14
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 15
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 16
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 17
+        },
+        {
+            "ans": "A",
+            "review": "true",
+            "qNo": 18
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 19
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 1
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 2
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 3
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 4
+        },
+        {
+            "ans": "",
+            "review": "true",
+            "qNo": 5
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 6
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 7
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 8
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 9
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 20
+        },
+        {
+            "ans": "",
+            "review": "",
+            "qNo": 10
+        }
+    ]
+}

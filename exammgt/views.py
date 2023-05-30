@@ -1307,14 +1307,14 @@ class GenerateQuestionPaper(APIView):
             # request_data = JSONParser().parse(request)
             request_data = request.data
 
-            print('-------------request-data-------------',request_data)
+            # print('-------------request-data-------------',request_data)
 
             request_data['event_id'] = request_data['id']
 
-            print('---------------',request_data)
+            # print('---------------',request_data)
 
             try:
-                print('request_data',request_data)
+                # print('request_data',request_data)
                 participant_category = participants.objects.filter(schedule_id = request_data['id'],id = request_data['participant_pk'])[0].participant_category
             except Exception as e:
                 participant_category = None
@@ -1347,31 +1347,31 @@ class GenerateQuestionPaper(APIView):
 
                     cn.close()
 
-                    print('QPset query inputs',request_data['id'],emis_user_id)
+                    # print('QPset query inputs',request_data['id'],emis_user_id)
                     qpset_list = participants.objects.filter(schedule_id = request_data['id'],participant_id = emis_user_id, id = request_data['participant_pk'])[0].event_allocationid
 
 
 
             except Exception as e:
                 qpset_list = None
-                print('Error in fetching participant id :',str(e))
+                # print('Error in fetching participant id :',str(e))
                 errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Fetch emis_username for Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
 
-            print(f'QP set list ---------',qpset_list)
+            # print(f'QP set list ---------',qpset_list)
         
             event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,participant_pk = request_data['participant_pk'],student_username = request.user.username)
 
             
-            print('Event attendance check',event_attendance_check)
+            # print('Event attendance check',event_attendance_check)
         
             question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['participant_pk'],"participant_pk" : request_data['event_id']})
 
 
-            print('Event quetion meta object',question_meta_object)
+            # print('Event quetion meta object',question_meta_object)
             
             if len(question_meta_object) > 0:
                 question_meta_object = question_meta_object[0] # get the first instance
-                print('question_meta_object Content',question_meta_object)
+                # print('question_meta_object Content',question_meta_object)
             else:
                 return Response({'api_status':False,'message':'No question set for this student'})
 
@@ -1379,7 +1379,7 @@ class GenerateQuestionPaper(APIView):
             #Add an entry in the event_attenance_check
             if len(event_attendance_check) == 0:
                 
-                print('---remaining---time',question_meta_object.duration_mins)
+                # print('---remaining---time',question_meta_object.duration_mins)
 
                 event_attendance_obj = EventAttendance.objects.create(
                     event_id = request_data['event_id'],
@@ -1422,7 +1422,7 @@ class GenerateQuestionPaper(APIView):
             #MEDIA_PATH ="/".join(MEDIA_ROOT.split('/')[:-1]) + '/' + FOLDER
             json_file_path =  os.path.join(FOLDER, json_path)
 
-            print('QP json file existance status',os.path.exists(json_file_path))
+            # print('QP json file existance status',os.path.exists(json_file_path))
 
             if os.path.exists(json_file_path):
                 with open(json_file_path, 'r') as f:
@@ -1479,27 +1479,27 @@ class GenerateQuestionPaper(APIView):
                 'qp_set_id': event_attendance_obj.qp_set
                 }
         
-                print('--------------------------')
+                # print('--------------------------')
                 qp_sets_object_edit = QpSet.objects.filter(**qpset_filter)
                 qp_set_data = []  
-                print('--------------------------')
+                # print('--------------------------')
                 for qp_data in qp_sets_object_edit:
                     print(qp_data)
                     qp_set_data.append(model_to_dict(qp_data))
             
                 qid_list = eval(qp_set_data[0]['qid_list'])
 
-                print('---------start----qp_base---------',qid_list)
+                # print('---------start----qp_base---------',qid_list)
 
                 qp_base64_list = []
                 qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
                 for qp_data in qp_base64_list_object_edit:
                     qp_base64_list.append(model_to_dict(qp_data))
 
-                print('-------qp_base--------')
+                # print('-------qp_base--------')
 
-                for t in qp_base64_list:
-                    print('_+_+_+_+_',t['qid'])
+                # for t in qp_base64_list:
+                #     print('_+_+_+_+_',t['qid'])
 
                 choice_base64_list = []
                 for qid in qid_list:
@@ -1516,8 +1516,8 @@ class GenerateQuestionPaper(APIView):
                         choice_base64_list_object.append(tmp_dict_data)
                     choice_base64_list.append(choice_base64_list_object)
 
-                print('choice appended list',choice_base64_list)
-                print('-----------choice----------')
+                # print('choice appended list',choice_base64_list)
+                # print('-----------choice----------')
 
                 questions_data_list =[]
                 for qp_img in qp_base64_list:
@@ -1549,11 +1549,11 @@ class GenerateQuestionPaper(APIView):
                 configure_qp_data['ans'] = get_ans_api
                 
 
-                print('------------configure_qp_data------------')
-                print(configure_qp_data)
+                # print('------------configure_qp_data------------')
+                # print(configure_qp_data)
 
-                for c in configure_qp_data:
-                    print(c,configure_qp_data[c])
+                # for c in configure_qp_data:
+                #     print(c,configure_qp_data[c])
 
 
                 #if not os.path.exists(MEDIA_PATH):
