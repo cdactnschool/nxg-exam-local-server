@@ -2325,8 +2325,10 @@ class MetaData(APIView):
                 #     participant_id = None
                     
          
-                #request_data['event_id'] = 2349
+                #request_data['event_id'] = 2349 
+                #qpdownload-from-s3bucket
                 req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload"
+                s3_req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload-from-s3bucket"
                 payload = json.dumps({
                     'event_id':request_data['event_id'],
                     'school_id':school_id_response[0][0],
@@ -2335,6 +2337,7 @@ class MetaData(APIView):
                     'school_token':get_school_token()
                 },default=str)
 
+            
                 print('Request to the central server to download',str(payload))
 
                 # get_meta_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
@@ -2343,10 +2346,23 @@ class MetaData(APIView):
                 session.mount(CENTRAL_SERVER_IP, central_server_adapter)
 
                 try:
-                    get_meta_response = session.post(req_url,data = payload,verify=CERT_FILE,stream=True)
+                    get_meta_response = session.post(s3_req_url,data = payload,verify=CERT_FILE,stream=True)
                 
                 except ConnectionError as ce:
                     print('Request error',ce)
+
+                if get_meta_response.headers.get('Content-Disposition') == None:
+                    try:
+                        get_meta_response = session.post(req_url,data = payload,verify=CERT_FILE,stream=True)
+                        
+                    except ConnectionError as ce:
+                        print('Request error',ce)
+
+                SOURCE_URL =  get_meta_response.headers.get('process_url')
+                if SOURCE_URL == 'S3Bucket':
+                    print(f"source url : {s3_req_url}")
+                else:
+                    print(f"source url : {req_url}")
 
                 # get_meta_response_json = get_meta_response.json()
 
@@ -2377,7 +2393,7 @@ class MetaData(APIView):
                 file_path = os.path.join(load_meta_base, res_fname.strip())
                 questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
-                print(file_path, '-=--=--', questionpath)
+                # print(file_path, '-=--=--', questionpath)
 
                 if not os.path.exists(questionpath):
                     os.makedirs(questionpath)
@@ -2392,8 +2408,8 @@ class MetaData(APIView):
                 with open(file_path,"rb") as f:
                     bytes_file = f.read() # read file as bytes_file
                     readable_hash = hashlib.md5(bytes_file).hexdigest();
-                    print('~~~~~~~~~~~~~',readable_hash)
-                print(res_md5sum)
+                    #print('~~~~~~~~~~~~~',readable_hash)
+                #print(res_md5sum)
 
                 if readable_hash != res_md5sum:
                     return Response({'api_status':False,'message':'Unable to load exam data','error':'mismatch in md5checksum'})
@@ -2416,7 +2432,7 @@ class MetaData(APIView):
                         print('full path :',os.path.join(json_file_path,file))
                         with open(os.path.join(json_file_path,file), 'r') as f:
                             meta_data = json.load(f)
-                print(meta_data)
+                # print(meta_data)
 
                 event_meta_data = {}
                 # event_meta_data['event_id'] = meta_data['event_id']
@@ -2437,8 +2453,8 @@ class MetaData(APIView):
                 event_meta_data['end_alert_time'] = meta_data['end_alert_time']
                 event_meta_data['show_instruction'] = meta_data['show_instruction']
                 event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
-                print('~~~~~~~~~~~~~~~~~~~')
-                print(event_meta_data)
+                # print('~~~~~~~~~~~~~~~~~~~')
+                # print(event_meta_data)
 
                 iit_qp_set_list = []
                 iit_question_id_list = []
@@ -2450,7 +2466,7 @@ class MetaData(APIView):
                 # event_meta_data['qp_set_list'] = str(iit_qp_set_list) #we need string for store into database
                 # print('--------',event_meta_data)
 
-                print('-----------event---meta-----data-----',event_meta_data)
+                #print('-----------event---meta-----data-----',event_meta_data)
 
             
                 qp_set_data = []
@@ -2528,7 +2544,7 @@ class MetaData(APIView):
                 for file in os.listdir(json_file_path):
                     if file.startswith('qpdownload'):
                         # print('File :',file)
-                        print('full path :',os.path.join(json_file_path,file))
+                        #print('full path :',os.path.join(json_file_path,file))
                         with open(os.path.join(json_file_path,file), 'r+', encoding="utf-8") as f:
                             qpdownload_list = json.load(f)
 
@@ -2565,7 +2581,7 @@ class MetaData(APIView):
 
                 shutil.rmtree(load_meta_base,ignore_errors=False,onerror=None)
 
-                print('-----------event---meta-----data-----final',event_meta_data)
+                #print('-----------event---meta-----data-----final',event_meta_data)
 
                 exam_meta_object_edit = ExamMeta.objects.filter(**exam_meta_filter)
                 if len(exam_meta_object_edit) == 0:
