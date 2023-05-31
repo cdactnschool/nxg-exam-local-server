@@ -2400,7 +2400,7 @@ class MetaData(APIView):
                 
 
                 if SOURCE_URL != 'S3Bucket':
-                    print(f"source url : {s3_req_url}")
+                    print(f"source url : {req_url}")
  
                     if get_meta_response.headers.get('content-type') == 'application/json':
                         get_meta_response_json = get_meta_response.json()
@@ -2448,7 +2448,7 @@ class MetaData(APIView):
 
 
                 else:
-                    print(f"source url : {req_url}")
+                    print(f"source url : {s3_req_url}")
 
                     file_path = actualfile
                     questionpath = zip_base_path
@@ -4119,7 +4119,7 @@ class MetaAuto(APIView):
 
             meta_event_ids = list(ExamMeta.objects.all().values_list('participant_pk',flat=True))
 
-            print('meta_event_ids',meta_event_ids)
+            #print('meta_event_ids',meta_event_ids)
 
             # sch_list = scheduling.objects.all().exclude(schedule_id__in=meta_event_ids)
 
@@ -4131,8 +4131,6 @@ class MetaAuto(APIView):
                 'Content-Type': 'application/json'}
 
             for sch in sch_list:
-                print(sch.schedule_id, sch.id)
-                
                 print('-------------')
                 print('URL name',request.resolver_match.view_name)
 
