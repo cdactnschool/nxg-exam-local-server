@@ -2312,20 +2312,7 @@ class MetaData(APIView):
                 else:
                     participant_id = participants.objects.get(schedule_id = request_data['event_id'], id = participant_pk).participant_id
 
-                # participant_id = None
 
-                # if participant_category == 'DISTRICT':
-                #     participant_id = request.user.profile.district_id
-                # elif participant_category == 'BLOCK':
-                #     participant_id = request.user.profile.block_id
-                # elif participant_category == 'SCHOOL':
-                #     participant_id = request.user.profile.school_id
-                
-                # else:
-                #     participant_id = None
-                    
-         
-                #request_data['event_id'] = 2349 
                 #qpdownload-from-s3bucket
                 req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload"
                 s3_req_url = f"{CENTRAL_SERVER_IP}/paper/qpdownload-from-s3bucket"
@@ -2340,14 +2327,13 @@ class MetaData(APIView):
             
                 print('Request to the central server to download',str(payload))
 
-
-                json_base_path = load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
-
+                json_base_path =  os.path.join(MEDIA_ROOT, 'examdata')
+                load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
                 if not os.path.exists(json_base_path):
                     os.mkdir(json_base_path)
 
                 zip_base_path = os.path.join(json_base_path, f"{request_data['event_id']}_{school_id_response[0][0]}_{participant_pk}_qpdownload_json")
-        
+                
                 timestr = time.strftime("%Y_%m_%d_%H_%M_%S")
                 actualfile = f'{zip_base_path}_{timestr}.7z'
 
@@ -2356,12 +2342,13 @@ class MetaData(APIView):
                 session = requests.Session()
                 session.mount(CENTRAL_SERVER_IP, central_server_adapter)
 
+    
                 try:
                     get_meta_response = session.post(s3_req_url,data = payload,verify=CERT_FILE,stream=True)
                     
                 except ConnectionError as ce:
                     print('Request error',ce)
-                
+
             
                 if get_meta_response.json()['api_status'] == True:
                     hashvalue = get_meta_response.json()['hashvalue']
@@ -2398,6 +2385,7 @@ class MetaData(APIView):
 
                     SOURCE_URL =  get_meta_response.headers.get('process_url')
                 
+    
 
                 if SOURCE_URL != 'S3Bucket':
                     print(f"source url : {req_url}")
@@ -2420,8 +2408,6 @@ class MetaData(APIView):
                     print(res_fname, res_md5sum)
 
                     # Delete residual files
-                    load_meta_base = os.path.join(MEDIA_ROOT, 'examdata')
-
                     file_path = os.path.join(load_meta_base, res_fname.strip())
                     questionpath = os.path.join(file_path.split(res_fname)[0],f"{request_data['event_id']}_{school_id_response[0][0]}_qpdownload_json")
 
