@@ -4123,7 +4123,7 @@ class MetaAuto(APIView):
 
             # sch_list = scheduling.objects.all().exclude(schedule_id__in=meta_event_ids)
 
-            sch_list = participants.objects.all().exclude(schedule_id__in=meta_event_ids)
+            sch_list = participants.objects.all().exclude(id__in=meta_event_ids)
             # print('QP not downloaded for ',sch_list)
             
             headers = {
