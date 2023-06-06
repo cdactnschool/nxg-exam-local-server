@@ -3726,8 +3726,11 @@ class GenSendResponses(APIView):
                 for par_obj in participants.objects.all():
                     
                     details_object = []
-                    
-                    sch_obj = scheduling.objects.get(schedule_id = par_obj.schedule_id)
+                    try:
+                        sch_obj = scheduling.objects.get(schedule_id = par_obj.schedule_id)
+                    except Exception as e:
+                        print('Exception in fetching schedule for participant_s scheduleid : ',e)
+                        continue
                     event_attendances = EventAttendance.objects.filter(event_id = sch_obj.schedule_id, participant_pk = par_obj.id,json_created = False).exclude(end_time = None)
                     
                     print(f"{len(event_attendances)} records found in the scheduleid {sch_obj.schedule_id} - participant_pk {par_obj.id}")
