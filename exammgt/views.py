@@ -3720,6 +3720,9 @@ class GenSendResponses(APIView):
             with transaction.atomic(): # Atomic Transcation
                 sch_par_list = []
                 
+                if scheduling.objects.all().count() == 0 :
+                    return Response ({'api_status':True,'message':'No events available in the school server'})
+                
                 for par_obj in participants.objects.all():
                     
                     details_object = []
