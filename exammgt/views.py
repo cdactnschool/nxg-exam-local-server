@@ -63,6 +63,9 @@ import py7zr
 
 from django.db.models import Q
 
+S3BUCKET_REF_URL = 'https://d1e5r329t7a85t.cloudfront.net'
+
+
 # print('---------Centeral server IP----------',CENTRAL_SERVER_IP)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -2356,7 +2359,7 @@ class MetaData(APIView):
                     request_type = get_meta_response.json()['process_str']
                     res_md5sum = hashvalue
 
-                    file_response = requests.get(reference_url)
+                    file_response = requests.get(f"{S3BUCKET_REF_URL}/{reference_url}")
                     md5sum_value =  hashlib.md5(file_response.content).hexdigest()
                     
                     SOURCE_URL =  get_meta_response.json()['process_url']
