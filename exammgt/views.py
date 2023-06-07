@@ -1149,7 +1149,7 @@ class ExamSubmit(APIView):
             
             
             student_responses = ExamResponse.objects.filter(event_id=data['event_id'],participant_pk = data['participant_pk'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set)
-            
+
             if student_responses.count() == 0:
                 return Response({'api_status':False,'message' : 'No responses recorded'})
             
@@ -1422,7 +1422,7 @@ class GenerateQuestionPaper(APIView):
             
             #Save Json File Into Schhool Local Server
             #file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
-            json_path = "{0}_{1}.json".format(request_data['event_id'] ,event_attendance_obj.qp_set)
+            json_path = "{0}_{1}_{2}.json".format(request_data['event_id'] , request_data['participant_pk'],event_attendance_obj.qp_set)
             
             FOLDER = os.path.join(MEDIA_ROOT,'questions_json')
 
@@ -2536,7 +2536,8 @@ class MetaData(APIView):
                         
                     
                         qp_sets_filter  = {
-                                        "qp_set_id" : qp_data['qp_set_id']
+                                        "qp_set_id" : qp_data['qp_set_id'],
+                                        "event_id" : request_data['participant_pk']
                                     }
                         
                         qp_set_object_edit = QpSet.objects.filter(**qp_sets_filter)
@@ -3031,7 +3032,8 @@ class MetaUpload(APIView):
                     
                 
                     qp_sets_filter  = {
-                                    "qp_set_id" : qp_data['qp_set_id']
+                                    "qp_set_id" : qp_data['qp_set_id'],
+                                    "event_id" : participant_pk
                                 }
                     
                     qp_set_object_edit = QpSet.objects.filter(**qp_sets_filter)
