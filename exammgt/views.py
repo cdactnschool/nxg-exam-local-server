@@ -1705,6 +1705,9 @@ class LoadEvent(APIView):
             if type(event_id_list) != list:
                 event_id_list = eval(event_id_list)
 
+            participants_pk_list = get_events_response.headers.get('participants_pk_list')
+            if type(participants_pk_list) != list:
+                participants_pk_list = eval(participants_pk_list)
 
 
             print(res_fname, res_md5sum)
@@ -1815,7 +1818,8 @@ class LoadEvent(APIView):
                 "request_type":request_type,
                 "zip_hash":res_md5sum,
                 "school_token":get_school_token(),
-                "event_id_list":event_id_list
+                "event_id_list":event_id_list,
+                "participants_pk_list" : participants_pk_list
             },default=str)
 
             print('@@@@@ ack_payload',ack_payload)
@@ -2578,6 +2582,7 @@ class MetaData(APIView):
                     "request_type":request_type,
                     "zip_hash":res_md5sum,
                     "school_token":get_school_token(),
+                    "participant_pk" : participant_pk,
                     "event_id_list":[request_data['event_id']]
                 },default=str)
 
