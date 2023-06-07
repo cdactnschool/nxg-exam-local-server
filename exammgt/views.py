@@ -1146,7 +1146,14 @@ class ExamSubmit(APIView):
             reviewed_questions  = 0
             correct_answers     = 0
             wrong_answers       = 0
-            for resp_obj in ExamResponse.objects.filter(event_id=data['event_id'],participant_pk = data['participant_pk'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set):
+            
+            
+            student_responses = ExamResponse.objects.filter(event_id=data['event_id'],participant_pk = data['participant_pk'],student_username=request.user.username,qp_set_id=attendance_object_check.qp_set)
+            
+            if student_responses.count() == 0:
+                return Response({'api_status':False,'message' : 'No responses recorded'})
+            
+            for resp_obj in student_responses:
                 visited_questions += 1
                 
                 if resp_obj.selected_choice_id:

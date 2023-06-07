@@ -130,7 +130,7 @@ class ExamResponse(models.Model):
     created_on          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
-        return "{0}-{1}-{2}".format(self.id,self.event_id,self.created_on)
+        return "{0}-{1}-{2}-{3}".format(self.id,self.event_id,self.student_username,self.created_on)
 
 class EventAttendance(models.Model):
     '''
