@@ -1662,6 +1662,7 @@ class LoadEvent(APIView):
             
             except ConnectionError as ce:
                 print('Request error',ce)
+                return Response({'api_status':False,'message':'Error 101 - Unable to fetch data from central server'})
 
             # print('get_event____',get_events_response)
 
@@ -1907,6 +1908,7 @@ class LoadReg(APIView):
             
             except ConnectionError as ce:
                 print('Request error',ce)
+                return Response({'api_status':False,'message':'Error 101 - Unable to fetch data from central server'})
 
             # get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
