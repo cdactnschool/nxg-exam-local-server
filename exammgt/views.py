@@ -4169,3 +4169,141 @@ class MetaAuto(APIView):
             # return Response({'api_status':True})
         except Exception as e:
             return Response({'api_status':False,'message':'unable to trigger auto qp download','exception':str(e)})
+
+
+class QpKey(APIView):
+    '''
+    API class to get the qp key answers
+
+    input parameters
+
+    {
+    "event_id":376,
+    "participant_pk":138721,
+    "qpset": "V0685490101"
+    }
+
+    '''
+
+    # if AUTH_ENABLE:
+    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
+
+    def post(self,request,*args, **kwargs):
+        try:
+            request_data = request.data
+
+            event_id = request_data['event_id']
+            participant_pk = request_data['participant_pk']
+
+            try:
+                par_obj = participants.objects.filter(schedule_id = event_id, id = participant_pk)
+                if par_obj.count() == 0:
+                    return Response({'api_status':False,'message':'Error in obtaining participant object'})
+
+                qpset_list = eval(par_obj[0].event_allocationid)
+
+                try:
+                    if (request_data['qpset'] == None) or (request_data['qpset'] == ""):
+                        qpset = qpset_list[0]
+
+                    qpset = request_data['qpset']
+
+                except:
+                    qpset = qpset_list[0]
+
+                question_meta_object_query = ExamMeta.objects.filter(
+                    event_id = participant_pk,
+                    participant_pk = event_id
+                )
+
+                if question_meta_object_query.count() > 0:
+                    question_meta_object = question_meta_object_query[0]
+                else:
+                    return Response({'api_status':False,'message':'No question meta data found'})
+
+                tmp_exam_dict = model_to_dict(question_meta_object)
+                
+                #  flip event_id and participant_pk
+                tmp_event_id = tmp_exam_dict['participant_pk']
+                tmp_participant_pk = tmp_exam_dict['event_id']
+                tmp_exam_dict['event_id'] = tmp_event_id
+                tmp_exam_dict['participant_pk'] = tmp_participant_pk
+                tmp_exam_dict['qp_set_list'] = eval(tmp_exam_dict['qp_set_list'] )
+
+                # print('selected qp',qpset)
+                # print('Temp_exam_dict',tmp_exam_dict)
+
+
+                qp_sets_object_edit = QpSet.objects.filter(
+                    event_id = participant_pk,
+                    qp_set_id = qpset
+                )
+                # print('qp set object ',qp_sets_object_edit)
+
+                if qp_sets_object_edit.count() == 0:
+                    return Response({'api_status':False,'message':'qpset object empty'})
+
+                qp_set_data = model_to_dict(qp_sets_object_edit[0])
+                qid_list = eval(qp_set_data['qid_list'])
+
+
+                qp_base64_list = []
+                qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
+                for qp_data in qp_base64_list_object_edit:
+                    qp_base64_list.append(model_to_dict(qp_data))
+
+                choice_base64_list = []
+                for qid in qid_list:
+                    cfilter = {
+                        "qid": int(qid)
+                    }
+
+                    choice_base64_list_object_edit = Choice.objects.filter(**cfilter)
+                    # print('=-=-=-=', choice_base64_list_object_edit)
+                    choice_base64_list_object = []
+                    for ch_data in choice_base64_list_object_edit:
+                        tmp_dict_data = model_to_dict(ch_data)
+                        # del tmp_dict_data['qid']
+                        choice_base64_list_object.append(tmp_dict_data)
+                    choice_base64_list.append(choice_base64_list_object)
+
+                questions_data_list =[]
+                for qp_img in qp_base64_list:
+                    for ch_img in choice_base64_list:
+                        tmp_ch_dict = {}
+                        # print(qp_img['qid'],'****',ch_img)
+                        if len(ch_img) == 0:
+                            continue
+                        if qp_img['qid'] == str(ch_img[0]['qid']):
+                            tmp_ch_dict['q_choices'] = ch_img
+                            qp_img.update(tmp_ch_dict)
+                
+                    questions_data_list.append(qp_img)
+                
+                # sort questions
+
+                sorted_questions = []
+                try:
+                    for qid in qid_list:
+                        for qes in questions_data_list:
+                            if qes['qid'] in qid:
+                                sorted_questions.append(qes)
+                except Exception as e:
+                    return Response({'api_status':False,'message':'Error in sorting questions','exception':e})
+
+
+                configure_qp_data = tmp_exam_dict
+                configure_qp_data['qp_set_id'] = qpset
+                configure_qp_data['q_ids'] = qid_list
+                configure_qp_data['questions'] = sorted_questions
+
+                configure_qp_data['api_status'] = True
+
+                print('configure qp data',configure_qp_data)
+
+                return Response(configure_qp_data)
+            except Exception as e:
+                return Response({'api_status':False,'message':'Error in fetching qpset list for qpkey','exception':e})
+
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in QP answer key','exception':str(e)})
