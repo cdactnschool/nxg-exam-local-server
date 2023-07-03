@@ -4185,8 +4185,8 @@ class QpKey(APIView):
 
     '''
 
-    # if AUTH_ENABLE:
-    #     permission_classes = (IsAuthenticated,) # Allow only if authenticated
+    if AUTH_ENABLE:
+        permission_classes = (IsAuthenticated,) # Allow only if authenticated
 
     def post(self,request,*args, **kwargs):
         try:
@@ -4195,12 +4195,24 @@ class QpKey(APIView):
             event_id = request_data['event_id']
             participant_pk = request_data['participant_pk']
 
+            current_date = datetime.datetime.now().date()
+
+
+
             try:
                 par_obj = participants.objects.filter(schedule_id = event_id, id = participant_pk)
                 if par_obj.count() == 0:
                     return Response({'api_status':False,'message':'Error in obtaining participant object'})
 
                 qpset_list = eval(par_obj[0].event_allocationid)
+
+                try:
+                    sch_obj=scheduling.objects.filter(schedule_id=event_id)[0]
+                    if current_date <=sch_obj.event_enddate:
+                        return Response({'api_status':False,'message':'Event Not Completed Yet , Key will available only after Event is completed'})
+                        
+                except Exception as e:
+                    return Response({'api_status':False,'message':'Error in obtaining schedule_date object','exception':str(e)})
 
                 try:
                     if (request_data['qpset'] == None) or (request_data['qpset'] == ""):
@@ -4282,24 +4294,35 @@ class QpKey(APIView):
                 
                 # sort questions
 
-                sorted_questions = []
-                try:
-                    for qid in qid_list:
-                        for qes in questions_data_list:
-                            if qes['qid'] in qid:
-                                sorted_questions.append(qes)
-                except Exception as e:
-                    return Response({'api_status':False,'message':'Error in sorting questions','exception':e})
+                # sorted_questions = []
+                # try:
+                #     for qid in qid_list:
+                #         for qes in questions_data_list:
+                #             if qes['qid'] in qid:
+                #                 sorted_questions.append(qes)
+                # except Exception as e:
+                #     return Response({'api_status':False,'message':'Error in sorting questions','exception':e})
 
+                questions_data_list.sort(key=lambda x:qid_list.index(x['qid']))
+
+                # language
+
+                try:
+                    medium=scheduling.objects.filter(schedule_id=event_id)[0]
+                    lang = medium.class_medium
+                    lang_desc = MEDIUM[int(lang)]
+                except Exception as e:
+                    print('Exception in getting lang_desc',e)
+                    lang_desc = 'NA'
 
                 configure_qp_data = tmp_exam_dict
                 configure_qp_data['qp_set_id'] = qpset
                 configure_qp_data['q_ids'] = qid_list
-                configure_qp_data['questions'] = sorted_questions
-
+                configure_qp_data['questions'] = questions_data_list
+                configure_qp_data['lang_desc'] = lang_desc
                 configure_qp_data['api_status'] = True
 
-                print('configure qp data',configure_qp_data)
+                # print('configure qp data',configure_qp_data)
 
                 return Response(configure_qp_data)
             except Exception as e:
