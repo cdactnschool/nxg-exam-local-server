@@ -63,7 +63,7 @@ import py7zr
 
 from django.db.models import Q
 
-S3BUCKET_REF_URL = 'https://d1e5r329t7a85t.cloudfront.net'
+S3BUCKET_REF_URL = ''
 
 
 # print('---------Centeral server IP----------',CENTRAL_SERVER_IP)
@@ -325,11 +325,10 @@ class db_auth(APIView):
 
             # Check if credentials are loaded or not
 
-
-
             # Check for superuser
             superadmin_user_obj = authenticate(
                 username=data['username'], password=data['password'])
+
 
             if superadmin_user_obj is not None and superadmin_user_obj.is_staff == True:
                 user_detail['user_type'] = 'superadmin_user'
@@ -2000,43 +1999,80 @@ class LoadReg(APIView):
             #regcsvpath = os.path.join(regpath,'tn_registeration_data')
             regcsvpath = regpath
 
-            #Drop table
+            # #Drop table
+            # for file in os.listdir(regcsvpath):
+            #     if file.endswith(".csv"):
+            #         csv_full_path = os.path.join(regcsvpath,file)
+            #         table_name = os.path.basename(csv_full_path).split('.')[0]
+            #         with sqlite3.connect(base_sqlite_path) as conn:
+                    
+            #             c1 = conn.cursor()
+            #             c1.executescript(f"DROP TABLE IF EXISTS {table_name}")
+            #             conn.commit()
+            # c1.close()
+            # print('Dropped old tables')
+
+            # # Load schema
+            # for file in os.listdir(regcsvpath):
+            #     if file.endswith(".sql"):
+            #         schema_path = os.path.join(regcsvpath, file)
+            #         # load schema
+            #         with sqlite3.connect(base_sqlite_path) as conn:
+            #             c2 = conn.cursor()
+            #             with open(schema_path,'r') as file:
+            #                 content = file.read()
+            #             c2.executescript(content)
+            #             conn.commit()
+            # c2.close()
+            # print('Loaded the schema')
+
+            # # Load data
+            # for file in os.listdir(regcsvpath):
+            #     if file.endswith(".csv"):
+            #         csv_full_path = os.path.join(regcsvpath,file)
+            #         table_name = os.path.basename(csv_full_path).split('.')[0]
+            #         df = pd.read_csv(csv_full_path)
+            #         with sqlite3.connect(base_sqlite_path) as conn:
+            #             c3 = conn.cursor()
+            #             df.to_sql(table_name,conn,if_exists='replace')
+            #             print('Data inserted successfully for ;',table_name)
+            #             conn.commit()
+            # c3.close()
+            # print('Loaded the csv file')
+
+            conn = sqlite3.connect(base_sqlite_path)
+            con = conn.cursor()
             for file in os.listdir(regcsvpath):
+                print(file)
                 if file.endswith(".csv"):
                     csv_full_path = os.path.join(regcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
-                    with sqlite3.connect(base_sqlite_path) as conn:
                     
-                        c = conn.cursor()
-                        c.executescript(f"DROP TABLE IF EXISTS {table_name}")
-                        conn.commit()
-            print('Dropped old tables')
+                    con.execute(f"DROP TABLE IF EXISTS {table_name}")
+                    conn.commit()
 
-            # Load schema
-            for file in os.listdir(regcsvpath):
-                if file.endswith(".sql"):
+                elif file.endswith(".sql"):
                     schema_path = os.path.join(regcsvpath, file)
-                    # load schema
-                    with sqlite3.connect(base_sqlite_path) as conn:
-                        c = conn.cursor()
-                        with open(schema_path,'r') as file:
-                            content = file.read()
-                        c.executescript(content)
-                        conn.commit()
-            print('Loaded the schema')
+                    with open(schema_path,'r') as file:
+                        content = file.read()
+
+                    con.execute(content)
+                    conn.commit()
+
 
             # Load data
-            for file in os.listdir(regcsvpath):
+            for file in os.listdir(regcsvpath): 
                 if file.endswith(".csv"):
                     csv_full_path = os.path.join(regcsvpath,file)
                     table_name = os.path.basename(csv_full_path).split('.')[0]
                     df = pd.read_csv(csv_full_path)
-                    with sqlite3.connect(base_sqlite_path) as conn:
-                        c = conn.cursor()
-                        df.to_sql(table_name,conn,if_exists='replace')
-                        print('Data inserted successfully for ;',table_name)
-                        conn.commit()
+            
+                    df.to_sql(table_name,conn,if_exists='replace', index=False)
+                    conn.commit()
+         
             print('Loaded the csv file')
+
+            conn.close()
 
             cn = connection()
 
@@ -2365,14 +2401,16 @@ class MetaData(APIView):
                 except ConnectionError as ce:
                     print('Request error',ce)
 
-            
+       
                 if get_meta_response.json()['api_status'] == True:
                     hashvalue = get_meta_response.json()['hashvalue']
                     reference_url = get_meta_response.json()['reference_url']
                     request_type = get_meta_response.json()['process_str']
                     res_md5sum = hashvalue
 
-                    file_response = requests.get(f"{S3BUCKET_REF_URL}/{reference_url}")
+                    #file_response = requests.get(f"{S3BUCKET_REF_URL}/{reference_url}")
+
+                    file_response = requests.get(f"{reference_url}")
                     md5sum_value =  hashlib.md5(file_response.content).hexdigest()
                     
                     SOURCE_URL =  get_meta_response.json()['process_url']
