@@ -2039,40 +2039,39 @@ class LoadReg(APIView):
             #             conn.commit()
             # c3.close()
             # print('Loaded the csv file')
+            with transaction.atomic():
+                conn = sqlite3.connect(base_sqlite_path)
+                con = conn.cursor()
+                for file in os.listdir(regcsvpath):
+                    if file.endswith(".csv"):
+                        csv_full_path = os.path.join(regcsvpath,file)
+                        table_name = os.path.basename(csv_full_path).split('.')[0]
+                        
+                        con.execute(f"DROP TABLE IF EXISTS {table_name}")
+                        conn.commit()
 
-            conn = sqlite3.connect(base_sqlite_path)
-            con = conn.cursor()
-            for file in os.listdir(regcsvpath):
-                print(file)
-                if file.endswith(".csv"):
-                    csv_full_path = os.path.join(regcsvpath,file)
-                    table_name = os.path.basename(csv_full_path).split('.')[0]
-                    
-                    con.execute(f"DROP TABLE IF EXISTS {table_name}")
-                    conn.commit()
+                    elif file.endswith(".sql"):
+                        schema_path = os.path.join(regcsvpath, file)
+                        with open(schema_path,'r') as file:
+                            content = file.read()
 
-                elif file.endswith(".sql"):
-                    schema_path = os.path.join(regcsvpath, file)
-                    with open(schema_path,'r') as file:
-                        content = file.read()
-
-                    con.execute(content)
-                    conn.commit()
+                        con.execute(content)
+                        conn.commit()
 
 
-            # Load data
-            for file in os.listdir(regcsvpath): 
-                if file.endswith(".csv"):
-                    csv_full_path = os.path.join(regcsvpath,file)
-                    table_name = os.path.basename(csv_full_path).split('.')[0]
-                    df = pd.read_csv(csv_full_path)
+                # Load data
+                for file in os.listdir(regcsvpath): 
+                    if file.endswith(".csv"):
+                        csv_full_path = os.path.join(regcsvpath,file)
+                        table_name = os.path.basename(csv_full_path).split('.')[0]
+                        df = pd.read_csv(csv_full_path)
+                
+                        df.to_sql(table_name,conn,if_exists='replace', index=False)
+                        conn.commit()
             
-                    df.to_sql(table_name,conn,if_exists='replace', index=False)
-                    conn.commit()
-         
-            print('Loaded the csv file')
+                print('Loaded the csv file')
 
-            conn.close()
+                conn.close()
 
             cn = connection()
 
@@ -2101,11 +2100,19 @@ class LoadReg(APIView):
 
             # Create groups
             try:
-                Group.objects.create(name='student')
-                Group.objects.create(name='teacher')
-                Group.objects.create(name='hm')
-                Group.objects.create(name='department')
-                Group.objects.create(name='superadmin_user')
+                if not Group.objects.filter(name='student').exists():
+                    Group.objects.create(name='student')
+                if not Group.objects.filter(name='teacher').exists():
+                    Group.objects.create(name='teacher')
+                if not Group.objects.filter(name='hm').exists():
+                    Group.objects.create(name='hm')
+                if not Group.objects.filter(name='department').exists():
+                    Group.objects.create(name='department')
+                if not Group.objects.filter(name='superadmin_user').exists():
+                    Group.objects.create(name='superadmin_user')
+                if not Group.objects.filter(name='school').exists():
+                    Group.objects.create(name='school')
+
                 print('^^^Created Groups^^^^')
             except Exception as e:
                 print('Exception in creating groups :',e)
@@ -2126,7 +2133,6 @@ class LoadReg(APIView):
                 print('Exception in deleting old user\'s entry')
 
             # Creation of superuser
-            print('--------=============-------------')
             print('create superuser')
             suser = User.objects.create_superuser(username=SUPER_USERNAME,password=SUPER_PASSWORD)
             suser.save()
