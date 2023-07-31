@@ -40,7 +40,7 @@ class GenerateJSON(APIView):
 
         try:
         
-            if request.user.profile.usertype not in ['hm','superadmin_user']:
+            if request.user.profile.usertype not in ['hm','superadmin_user','school']:
                 return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
             
             data = JSONParser().parse(request)

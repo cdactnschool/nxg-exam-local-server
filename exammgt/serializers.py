@@ -80,7 +80,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         
         # For teacher / HM
         
-        if user_detail.profile.usertype in ['teacher','hm','superadmin_user']:
+        if user_detail.profile.usertype in ['teacher','hm','superadmin_user','school']:
             return None
         
         #return str(user_detail.profile.name_text)+str(obj.event_completion_status)
@@ -251,7 +251,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         '''
         Return the count of attendance model where json is created
         '''
-        if self.context.get('user').profile.usertype == 'hm':
+        if self.context.get('user').profile.usertype in ['hm','school']:
             return EventAttendance.objects.filter(event_id=obj.schedule_id,json_created=True).count()
         else:
             return None
@@ -260,7 +260,7 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         '''
         Return the count of attendance model where json can be created
         '''
-        if self.context.get('user').profile.usertype == 'hm':
+        if self.context.get('user').profile.usertype in ['hm','school']:
             return EventAttendance.objects.filter(event_id=obj.schedule_id,json_created=False).count()
         else:
             return None

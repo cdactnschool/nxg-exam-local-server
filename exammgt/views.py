@@ -418,6 +418,7 @@ class db_auth(APIView):
                         print('Given user is HM')
                         print('=====\n',user_detail)
                         token_response = create_local_user(request,user_detail)
+                        cn.close()
                         return Response(token_response)
                     else:
                         possible_type = 'teacher'
@@ -430,11 +431,49 @@ class db_auth(APIView):
                         print('Given user is a teacher')
                         print('=====\n',user_detail)
                         token_response = create_local_user(request,user_detail)
+                        cn.close()
                         return Response(token_response)
 
                 # else:
                 #     return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
 
+            
+            # School login
+
+            if str(data['username']).isnumeric() and len(str(data['username'])) == 11:
+                possible_type = 'school'
+
+                query = f"SELECT user_id, password FROM emis_login WHERE user_id = {data['username']}"
+                mycursor.execute(query)
+
+                auth_detail_response = mycursor.fetchall()
+
+                if len(auth_detail_response) > 0:
+                    if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
+                        school_query = f"SELECT udise_code, district_id, block_id, school_id FROM students_school_child_count WHERE udise_code = {data['username']};"
+
+                        print(f'School login query : {query}')
+
+                        mycursor.execute(school_query)
+                        school_user_response = mycursor.fetchall()
+
+                        if len(school_user_response) == 0:
+                            return Response({'message': 'Invalid Credentials', 'api_status': False, 'possible_type': 'School Login'})
+
+                        user_detail['user_type'] = 'school'
+                        user_detail['username'] = data['username']
+                        user_detail['password'] = data['password']
+                        user_detail['name_text'] = data['username']
+                        user_detail['priority'] = 15
+                        user_detail['udise_code'] = school_user_response[0][0]
+                        user_detail['district_id'] = school_user_response[0][1]
+                        user_detail['block_id'] = school_user_response[0][2]
+                        user_detail['school_id'] = school_user_response[0][3]
+
+                        token_response = create_local_user(request, user_detail)
+                        cn.close()
+                        return Response(token_response)
+            
             # student
 
 
@@ -488,6 +527,7 @@ class db_auth(APIView):
 
                 print('@@@@@@@@@@@@@@@@',user_detail)
                 token_response = create_local_user(request,user_detail)
+                cn.close()
                 return Response(token_response)
                 # else:
                 #     return Response({'api_status':False,'possible_type':possible_type,'message':'Incorrect Username/password'})
@@ -939,7 +979,7 @@ class GetMyEvents(APIView):
 
                         '''
                         try:
-                            if request.user.profile.usertype in ['teacher','hm','superadmin_user']:
+                            if request.user.profile.usertype in ['teacher','hm','superadmin_user','school']:
                                 single_event['exam_correct'] = None
                             
                             else:
@@ -1888,8 +1928,8 @@ class LoadReg(APIView):
             else:
                 
                 # Allow only HM to update credentials 
-                if request.user.profile.usertype not in ['hm','superadmin_user']:
-                    return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
+                if request.user.profile.usertype not in ['hm','superadmin_user','school']:
+                    return Response ({'api_status':False,'message':'Only HM/school is authorized for update credentials'})
 
                 payload = json.dumps({
                     "udise_code" : request.user.profile.udise_code,
@@ -2099,23 +2139,38 @@ class LoadReg(APIView):
             shutil.rmtree(load_reg_base,ignore_errors=False,onerror=None)
 
             # Create groups
-            try:
-                if not Group.objects.filter(name='student').exists():
-                    Group.objects.create(name='student')
-                if not Group.objects.filter(name='teacher').exists():
-                    Group.objects.create(name='teacher')
-                if not Group.objects.filter(name='hm').exists():
-                    Group.objects.create(name='hm')
-                if not Group.objects.filter(name='department').exists():
-                    Group.objects.create(name='department')
-                if not Group.objects.filter(name='superadmin_user').exists():
-                    Group.objects.create(name='superadmin_user')
-                if not Group.objects.filter(name='school').exists():
-                    Group.objects.create(name='school')
+            group_names = ['student', 'teacher', 'hm', 'department', 'superadmin_user', 'school']
 
-                print('^^^Created Groups^^^^')
-            except Exception as e:
-                print('Exception in creating groups :',e)
+            for gname in group_names:
+                try:
+                    obj,created = Group.objects.get_or_create(name=gname)
+                    print(f'Created Group : {gname}')
+
+                    if obj is None or created==False:
+                       print(f'Error while creating group: {gname} - {obj}- {created}')
+                
+                except Exception as e:
+                    print(f'Exception in creating groups :{gname} -> {e}')
+
+
+
+            # try:
+            #     if not Group.objects.filter(name='student').exists():
+            #         Group.objects.create(name='student')
+            #     if not Group.objects.filter(name='teacher').exists():
+            #         Group.objects.create(name='teacher')
+            #     if not Group.objects.filter(name='hm').exists():
+            #         Group.objects.create(name='hm')
+            #     if not Group.objects.filter(name='department').exists():
+            #         Group.objects.create(name='department')
+            #     if not Group.objects.filter(name='superadmin_user').exists():
+            #         Group.objects.create(name='superadmin_user')
+            #     if not Group.objects.filter(name='school').exists():
+            #         Group.objects.create(name='school')
+
+            #     print('^^^Created Groups^^^^')
+            # except Exception as e:
+            #     print('Exception in creating groups :',e)
 
             if MiscInfo.objects.all().count() == 0:
                 MiscInfo.objects.create(reg_dt = datetime.datetime.now(),school_token=school_token)
@@ -3541,7 +3596,7 @@ class SendResponse(APIView):
     def post(self,request,*args,**kwargs):
         try:
 
-            if request.user.profile.usertype not in ['hm','superadmin_user']:
+            if request.user.profile.usertype not in ['hm','superadmin_user','school']:
                 return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
         
             data = JSONParser().parse(request)
@@ -3656,7 +3711,7 @@ class SendResponses(APIView):
     def post(self,request,*args,**kwargs):
 
         try:
-            if request.user.profile.usertype not in ['hm','superadmin_user']:
+            if request.user.profile.usertype not in ['hm','superadmin_user','school']:
                 return Response ({'api_status':False,'message':'Only HM is authorized for JSON generation'})
 
             print('-----------------')
@@ -3776,7 +3831,7 @@ class GenSendResponses(APIView):
         os.makedirs(folder_dir, exist_ok=True)
         
         try:
-            
+            print('Initiate Send response ',request.user.profile.usertype )
             if request.user.profile.usertype in ['student']:
                 return Response ({'api_status':False,'message':'Student not authorized'})
 
