@@ -2592,7 +2592,11 @@ class MetaData(APIView):
                 event_meta_data['show_result'] = meta_data['show_result']
                 event_meta_data['end_alert_time'] = meta_data['end_alert_time']
                 event_meta_data['show_instruction'] = meta_data['show_instruction']
-                event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
+                if len(meta_data['school_qp_sets']) == 0:
+                    return Response({"api_status":False,"message":"Question id not available in qp set"})
+                else:
+                    event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
+                # event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
                 # print('~~~~~~~~~~~~~~~~~~~')
                 # print(event_meta_data)
 
@@ -3075,7 +3079,11 @@ class MetaUpload(APIView):
             event_meta_data['show_result'] = meta_data['show_result']
             event_meta_data['end_alert_time'] = meta_data['end_alert_time']
             event_meta_data['show_instruction'] = meta_data['show_instruction']
-            event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
+            if len(meta_data['school_qp_sets']) == 0:
+                return Response({"api_status":False,"message":"Question id not available in qp set"})
+            else:
+                event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
+            # event_meta_data['qp_set_list'] = str(meta_data['school_qp_sets'])
             print('~~~~~~~~~~~~~~~~~~~')
             print(event_meta_data)
 
