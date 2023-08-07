@@ -564,42 +564,60 @@ class CandidateResponse(APIView):
     '''
     
     def post(self,request,*args, **kwargs):
-        data = JSONParser().parse(request)
+        
+        with transaction.atomic():
+            data = JSONParser().parse(request)
 
-        filter_fields = {
-            'student_username':request.user.username,
-            'question_id':data['qid'],
-            'qp_set_id':data['qp_set_id'],
-            'event_id':data['event_id'],
-            'participant_pk':data['participant_pk']
-        }
-        try:
-            print(request.user.username)
-            print(filter_fields)
-            # object_edit = get_object_or_404(ExamResponse,**filter_fields)
-            object_edit = ExamResponse.objects.get(**filter_fields)
-            print('--------------',object_edit)
-            object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
-            object_edit.question_result = data['correct_choice']
-            object_edit.review = data['review']
-            object_edit.save()
+            filter_fields = {
+                'student_username':request.user.username,
+                'question_id':data['qid'],
+                'qp_set_id':data['qp_set_id'],
+                'event_id':data['event_id'],
+                'participant_pk':data['participant_pk']
+            }
+
+            def update_exam_response(object_edit, data):
+                object_edit.selected_choice_id = None if data['ans'] == '' else data['ans']
+                object_edit.question_result = data['correct_choice']
+                object_edit.review = data['review']
+                object_edit.save()
+
+
+            try:
+                print('Store response username',request.user.username)
+                print('Store response filter fields',filter_fields)
+                # object_edit = get_object_or_404(ExamResponse,**filter_fields)
+                object_edit_filter = ExamResponse.objects.filter(**filter_fields)
+                
+                # If already a response record exists
+                if object_edit_filter.count() == 1:
+                    object_edit = object_edit_filter[0]
+                    update_exam_response(object_edit, data)
+                    return Response({'api_status': True,'message':'updated'})
+                
+                # If not response of this filters exists
+                elif object_edit_filter.count() == 0:
+                    try:
+                        object_edit = ExamResponse.objects.create(**filter_fields)
+                        update_exam_response(object_edit, data)
+                        return Response({'api_status': True,'message':'New entry Created'})
+                    except Exception as e:
+                        return Response({'api_status': False,'message':'Error in creating new entry'})
+                
+                else: # If more than one response exists for this same filters
+                    try:
+                        latest_object = object_edit_filter.latest('created_on')
+                        object_edit_filter.exclude(pk=latest_object.pk).delete()
+                        object_edit = latest_object
+                        update_exam_response(object_edit, data)
+                        return Response({'api_status': True,'message':'Duplicate entries Deleted'})
+                    except Exception as e:
+                        return Response({'api_status': False,'message':'Error in Deleting the duplicate entries'})
             
-            return Response({'api_status': True,'message':'updated'})
-        except Exception as e:
-
-            # print('Exception element :',e)
-            try:            
-                filter_fields['selected_choice_id'] = None if data['ans'] == '' else data['ans']
-                filter_fields['question_result'] = data['correct_choice']
-                filter_fields['review'] = data['review']
-
-
-                obj = ExamResponse.objects.create(**filter_fields)
-                #print('Exception in ExamResponse :',e)
-                return Response({'api_status': True,'message': 'new entry'})
             except Exception as e:
-                print('Exception in ExamResponse :',e)
-                return Response({'api_status': False,'message': 'Error in saving response'})
+                return Response({'api_status': False,'message': 'Error in saving response','exception':str(e)})
+
+
 
 
 def get_summary(event_id,participant_pk,student_username):
@@ -1206,7 +1224,32 @@ class ExamSubmit(APIView):
                 if resp_obj.review:
                     reviewed_questions += 1
                 
+            # Check if parameters are above thresholds(total questions)
 
+            if visited_questions > attendance_object_check.total_questions:
+                visited_questions = attendance_object_check.total_questions
+            elif visited_questions < 0:
+                visited_questions = 0
+            
+            if answered_questions > attendance_object_check.total_questions:
+                answered_questions = attendance_object_check.total_questions
+            elif answered_questions < 0:
+                answered_questions = 0
+            
+            if reviewed_questions > attendance_object_check.total_questions:
+                reviewed_questions = attendance_object_check.total_questions
+            elif reviewed_questions < 0:
+                reviewed_questions = 0
+            
+            if correct_answers > attendance_object_check.total_questions:
+                correct_answers = attendance_object_check.total_questions
+            elif correct_answers < 0:
+                correct_answers = 0
+            
+            if wrong_answers > attendance_object_check.total_questions:
+                wrong_answers = attendance_object_check.total_questions
+            elif wrong_answers < 0:
+                wrong_answers = 0
                 
             attendance_object_check.visited_questions   = visited_questions
             attendance_object_check.answered_questions  = answered_questions
