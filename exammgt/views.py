@@ -1230,24 +1230,24 @@ class ExamSubmit(APIView):
                 visited_questions = attendance_object_check.total_questions
             elif visited_questions < 0:
                 visited_questions = 0
-            
-            if answered_questions > attendance_object_check.total_questions:
-                answered_questions = attendance_object_check.total_questions
+
+            if answered_questions > visited_questions:
+                answered_questions = visited_questions
             elif answered_questions < 0:
                 answered_questions = 0
-            
-            if reviewed_questions > attendance_object_check.total_questions:
-                reviewed_questions = attendance_object_check.total_questions
+
+            if reviewed_questions > visited_questions:
+                reviewed_questions = visited_questions
             elif reviewed_questions < 0:
                 reviewed_questions = 0
-            
-            if correct_answers > attendance_object_check.total_questions:
-                correct_answers = attendance_object_check.total_questions
+
+            if correct_answers > answered_questions:
+                correct_answers = answered_questions 
             elif correct_answers < 0:
                 correct_answers = 0
-            
-            if wrong_answers > attendance_object_check.total_questions:
-                wrong_answers = attendance_object_check.total_questions
+
+            if wrong_answers + correct_answers > answered_questions:
+                wrong_answers = answered_questions - correct_answers
             elif wrong_answers < 0:
                 wrong_answers = 0
                 
