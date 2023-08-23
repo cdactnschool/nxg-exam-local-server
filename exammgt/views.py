@@ -1516,7 +1516,7 @@ class GenerateQuestionPaper(APIView):
 
             # print('QP json file existance status',os.path.exists(json_file_path))
 
-            if os.path.exists(json_file_path):
+            if os.path.exists(json_file_path) and os.path.getsize(json_file_path) > 0:
                 with open(json_file_path, 'r') as f:
                     question_paper_data = json.load(f)
             
