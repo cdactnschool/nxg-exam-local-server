@@ -1,4 +1,3 @@
-
 from crypt import methods
 from django.shortcuts import render
 
@@ -49,6 +48,24 @@ import subprocess
 
 from django.db import transaction
 from django.db import connection as dbconnect
+
+# check for sqlite3 pragma
+
+import sqlite3
+
+def is_database_corrupted():
+    try:
+        conn = sqlite3.connect(DATABASES['default']['NAME'])
+        cursor = conn.cursor()
+        cursor.execute('PRAGMA integrity_check;')
+        result = cursor.fetchone()[0]
+        conn.close()
+        if result == 'ok':
+            return False
+        else:
+            return True
+    except sqlite3.Error:
+        return True
 
 logger      = logging.getLogger('monitoringdebug')
 accesslog   = logging.getLogger('accesslog')
@@ -279,6 +296,14 @@ class db_auth(APIView):
     def post(self,request):
 
         try:
+
+            # Check for db
+
+            if not os.path.exists(DATABASES['default']['NAME']):
+                return Response({'api_status': False, 'message': 'Database file not found!! Contact 14417'})
+            
+            if is_database_corrupted():
+                return Response({'api_status': False, 'message': 'Database is corrupted!! Kindly restart the school server and check'})
 
             cn = connection()
 
@@ -1744,7 +1769,7 @@ class LoadEvent(APIView):
             
             except ConnectionError as ce:
                 print('Request error',ce)
-                return Response({'api_status':False,'message':'Error 101 - Unable to fetch data from central server'})
+                return Response({'api_status':False,'message':'Error 101 - Kindly check your internet connection'})
 
             # print('get_event____',get_events_response)
 
@@ -1990,7 +2015,7 @@ class LoadReg(APIView):
             
             except ConnectionError as ce:
                 print('Request error',ce)
-                return Response({'api_status':False,'message':'Error 101 - Unable to fetch data from central server'})
+                return Response({'api_status':False,'message':'Error 101 - Kindly check your internet connection'})
 
             # get_events_response = requests.request("POST", req_url, data=payload, verify=CERT_FILE, stream = True)
 
