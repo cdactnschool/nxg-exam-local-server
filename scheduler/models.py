@@ -89,7 +89,7 @@ class scheduling(models.Model):
     event_title             = models.CharField(max_length=200)
     class_std               = models.IntegerField(blank = True, null = True) #models.CharField(max_length=200)
     class_section           = models.CharField(max_length=10,blank=True, null=True)
-    class_group             = models.CharField(max_length=200,blank=True, null=True)
+    class_group             = models.CharField(max_length=1000,blank=True, null=True)
     class_subject           = models.CharField(max_length=200)
     class_medium            = models.CharField(max_length=20, blank=True, null=True)#,choices=MediumChoices.choices,default=MediumChoices.ENGLISH)
     event_startdate         = models.DateField(blank=True, null=True)

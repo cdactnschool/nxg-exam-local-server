@@ -859,7 +859,8 @@ class GetMyEvents(APIView):
                 # Filter for stream for higher secondary
 
                 events_queryset = events_queryset.filter(
-                    Q(class_group=None) | Q(class_group__startswith=f"{student_master_group}-")
+                    # Q(class_group=None) | Q(class_group__startswith=f"{student_master_group}-")
+                    Q(class_group=None) | Q(class_group__icontains=f"{student_master_group}-")
                     )
 
                 # print('stream query set',events_queryset.query)
@@ -1085,7 +1086,14 @@ class GetMyEvents(APIView):
                                 query = f"{query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{single_event['class_section']}'"
                             
                             if single_event['class_group'] != None:
-                                query = f"{query} AND r.group_code_id = {single_event['class_group'].split('-')[0]}"
+                                # query = f"{query} AND r.group_code_id = {single_event['class_group'].split('-')[0]}"
+                                if isinstance(eval(single_event['class_group']), list):
+                                    group_list = [i.split('-')[0] for i in eval(single_event['class_group'])]
+                                    if len(group_list) == 1:
+                                        group_values = f"({group_list[0]})"
+                                    else:
+                                        group_values = tuple(group_list)
+                                    query = f"{query} AND r.group_code_id IN {group_values}"
 
                             mycursor.execute(query)
                             student_count_result = mycursor.fetchall()
@@ -2954,7 +2962,16 @@ class ConsSummary(APIView):
                 students_query = f"{students_query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{scheduling_obj.class_section}'"
             
             if scheduling_obj.class_group != None:
-                students_query = f"{students_query} AND r.group_code_id = {scheduling_obj.class_group.split('-')[0]}"
+                # students_query = f"{students_query} AND r.group_code_id = {scheduling_obj.class_group.split('-')[0]}"
+
+                if isinstance(eval(scheduling_obj.class_group), list):
+                    group_list = [i.split('-')[0] for i in eval(scheduling_obj.class_group)]
+                    if len(group_list) == 1:
+                        group_values = f"({group_list[0]})"
+                    else:
+                        group_values = tuple(group_list)
+                    students_query = f"{students_query} AND r.group_code_id IN {group_values}"
+
             
             if 'participant_pk' in request.data:
                 par_qs = participants.objects.filter(id = request_data['participant_pk'])
