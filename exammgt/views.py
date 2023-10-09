@@ -1610,6 +1610,7 @@ class GenerateQuestionPaper(APIView):
                 # print('--------------------------')
                 for qp_data in qp_sets_object_edit:
                     print(qp_data)
+
                     qp_set_data.append(model_to_dict(qp_data))
             
                 qid_list = eval(qp_set_data[0]['qid_list'])
@@ -1619,7 +1620,15 @@ class GenerateQuestionPaper(APIView):
                 qp_base64_list = []
                 qp_base64_list_object_edit = Question.objects.filter(qid__in=qid_list)
                 for qp_data in qp_base64_list_object_edit:
-                    qp_base64_list.append(model_to_dict(qp_data))
+    
+                    tmp_qp_set_data  = model_to_dict(qp_data)
+                    
+                    try:
+                        del tmp_qp_set_data['language']
+                    except:
+                        pass
+
+                    qp_base64_list.append(tmp_qp_set_data)
 
                 # print('-------qp_base--------')
 
@@ -1638,6 +1647,12 @@ class GenerateQuestionPaper(APIView):
                     for ch_data in choice_base64_list_object_edit:
                         tmp_dict_data = model_to_dict(ch_data)
                         # del tmp_dict_data['qid']
+                        try:
+                            del tmp_dict_data['language']
+                            del tmp_dict_data['hint']
+                        except:
+                            pass
+
                         choice_base64_list_object.append(tmp_dict_data)
                     choice_base64_list.append(choice_base64_list_object)
 
@@ -1648,13 +1663,13 @@ class GenerateQuestionPaper(APIView):
                 for qp_img in qp_base64_list:
                     for ch_img in choice_base64_list:
                         tmp_ch_dict = {}
-                        print(qp_img['qid'],'****',ch_img)
+                        print(qp_img['qid'],'****_test',ch_img)
                         if len(ch_img) == 0:
                             continue
                         if qp_img['qid'] == str(ch_img[0]['qid']):
                             tmp_ch_dict['q_choices'] = ch_img
                             qp_img.update(tmp_ch_dict)
-                
+                    
                     questions_data_list.append(qp_img)
 
                 print('-------questions-------------------')
@@ -2395,6 +2410,23 @@ def load_question_choice_data(qpdownload_list):
             question['qimage'] = img_data['qimage']
             question['no_of_choices'] = img_data['no_of_choices']
             question['correct_choice'] = img_data['correct_choice']
+
+
+            try:
+                question['q_medium'] = img_data['q_medium']
+            except Exception as e:
+                print('Exception in generating question - q_medium ',e)
+            
+            try:
+                question['q_type'] = img_data['q_type']
+            except Exception as e:
+                print('Exception in generating question - q_type')
+
+            try:
+                question['hint'] = img_data['q_hint']
+            except Exception as e:
+                print('Exception in generating question - q_hint')
+                
 
             serialized_questions = QuestionsSerializer(data=question,many=False)
             if serialized_questions.is_valid():

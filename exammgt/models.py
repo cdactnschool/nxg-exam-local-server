@@ -96,6 +96,9 @@ class Question(models.Model):
     language                            = models.TextField(null=True,blank=True)
     hint                                = models.TextField(null=True,blank=True)
 
+    q_medium                            = models.IntegerField(null=True, blank = True)
+    q_type                              = models.IntegerField(null=True, blank = True)
+
     created_on                          = models.DateTimeField(auto_now = True)
 
     def __str__(self):
@@ -124,8 +127,8 @@ class ExamResponse(models.Model):
     student_username    = models.IntegerField()
     qp_set_id           = models.TextField()
     question_id         = models.IntegerField()
-    selected_choice_id  = models.IntegerField(null=True, blank=True)
-    question_result     = models.IntegerField(null=True,  blank=True)
+    selected_choice_id  = models.TextField(null=True, blank=True)
+    question_result     = models.TextField(null=True, blank=True)
     review              = models.BooleanField(default=False)
     created_on          = models.DateTimeField(auto_now = True)
 
