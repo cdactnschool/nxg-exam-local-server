@@ -909,7 +909,8 @@ class GetMyEvents(APIView):
                     par.id as participant_pk,
                     par.section,
                     par.allocation_status,
-                    par.generation_status
+                    par.generation_status,
+                    sch.class_medium
                     FROM scheduler_scheduling sch
                     LEFT JOIN scheduler_participants par WHERE par.schedule_id = sch.schedule_id
                     '''
@@ -1081,7 +1082,7 @@ class GetMyEvents(APIView):
                             cn = connection()
                             mycursor = cn.cursor()
 
-                            query = f" SELECT COUNT(l.{AUTH_FIELDS['student']['username_field']}) FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {single_event['class_std']}"
+                            query = f" SELECT COUNT(l.{AUTH_FIELDS['student']['username_field']}) FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {single_event['class_std']} AND r.education_medium_id = {single_event['class_medium']}"
                             if single_event['class_section'] != None:
                                 query = f"{query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{single_event['class_section']}'"
                             
@@ -2412,20 +2413,20 @@ def load_question_choice_data(qpdownload_list):
             question['correct_choice'] = img_data['correct_choice']
 
 
-            try:
-                question['q_medium'] = img_data['q_medium']
-            except Exception as e:
-                print('Exception in generating question - q_medium ',e)
+            # try:
+            #     question['q_medium'] = img_data['q_medium']
+            # except Exception as e:
+            #     print('Exception in generating question - q_medium ',e)
             
-            try:
-                question['q_type'] = img_data['q_type']
-            except Exception as e:
-                print('Exception in generating question - q_type')
+            # try:
+            #     question['q_type'] = img_data['q_type']
+            # except Exception as e:
+            #     print('Exception in generating question - q_type')
 
-            try:
-                question['hint'] = img_data['q_hint']
-            except Exception as e:
-                print('Exception in generating question - q_hint')
+            # try:
+            #     question['hint'] = img_data['q_hint']
+            # except Exception as e:
+            #     print('Exception in generating question - q_hint')
                 
 
             serialized_questions = QuestionsSerializer(data=question,many=False)
@@ -2989,7 +2990,7 @@ class ConsSummary(APIView):
                 return Response({'api_status':False,'message':f"Schedule for event_id: {request_data['event_id']} not found !"})
             scheduling_obj = scheduling_queryset[0]
 
-            students_query = f" SELECT l.{AUTH_FIELDS['student']['username_field']}, r.{AUTH_FIELDS['student']['name_field_master']}, r.{AUTH_FIELDS['student']['student_class']}, r.{AUTH_FIELDS['student']['section_field_master']} FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {scheduling_obj.class_std}"
+            students_query = f" SELECT l.{AUTH_FIELDS['student']['username_field']}, r.{AUTH_FIELDS['student']['name_field_master']}, r.{AUTH_FIELDS['student']['student_class']}, r.{AUTH_FIELDS['student']['section_field_master']} FROM {AUTH_FIELDS['student']['auth_table']} l LEFT JOIN {AUTH_FIELDS['student']['master_table']} r ON l.{AUTH_FIELDS['student']['school_field_foreign']} = r.{AUTH_FIELDS['student']['school_field_foreign_ref']} WHERE r.{AUTH_FIELDS['student']['student_class']} = {scheduling_obj.class_std} AND r.education_medium_id = {scheduling_obj.class_medium}"
             if scheduling_obj.class_section != None:
                 students_query = f"{students_query} AND r.{AUTH_FIELDS['student']['section_field_master']} = '{scheduling_obj.class_section}'"
             
