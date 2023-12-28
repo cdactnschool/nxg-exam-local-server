@@ -1551,9 +1551,12 @@ class GenerateQuestionPaper(APIView):
             # print('QP json file existance status',os.path.exists(json_file_path))
 
             if os.path.exists(json_file_path) and os.path.getsize(json_file_path) > 0:
-                with open(json_file_path, 'r') as f:
-                    question_paper_data = json.load(f)
+                # with open(json_file_path, 'r') as f:
+                #     question_paper_data = json.load(f)
             
+                with open(json_file_path, 'r', encoding='utf8') as f:
+                    question_paper_data = json.load(f)
+
                 print('----------------------------------------------------------------')
                 print('Event ID and QP SET ID already exists in local school database..',json_file_path)
                         
@@ -1699,8 +1702,12 @@ class GenerateQuestionPaper(APIView):
 
                 #if not os.path.exists(MEDIA_PATH):
                 #    os.makedirs(MEDIA_PATH)
-                with open(json_file_path , 'w') as f :
-                    json.dump(configure_qp_data, f,default=str)
+                # with open(json_file_path , 'w') as f :
+                #     json.dump(configure_qp_data, f,default=str)
+
+                with open(json_file_path, "w", encoding='utf8') as f:
+                    json.dump(configure_qp_data, f, ensure_ascii=False,default=str)
+
                 configure_qp_data['user'] = request.user.username
                 configure_qp_data['api_status'] = True
 
@@ -2413,20 +2420,20 @@ def load_question_choice_data(qpdownload_list):
             question['correct_choice'] = img_data['correct_choice']
 
 
-            # try:
-            #     question['q_medium'] = img_data['q_medium']
-            # except Exception as e:
-            #     print('Exception in generating question - q_medium ',e)
+            try:
+                question['q_medium'] = img_data['q_medium']
+            except Exception as e:
+                print('Exception in generating question - q_medium ',e)
             
-            # try:
-            #     question['q_type'] = img_data['q_type']
-            # except Exception as e:
-            #     print('Exception in generating question - q_type')
+            try:
+                question['q_type'] = img_data['q_type']
+            except Exception as e:
+                print('Exception in generating question - q_type')
 
-            # try:
-            #     question['hint'] = img_data['q_hint']
-            # except Exception as e:
-            #     print('Exception in generating question - q_hint')
+            try:
+                question['hint'] = img_data['q_hint']
+            except Exception as e:
+                print('Exception in generating question - q_hint')
                 
 
             serialized_questions = QuestionsSerializer(data=question,many=False)
@@ -4555,3 +4562,73 @@ class QpKey(APIView):
 
         except Exception as e:
             return Response({'api_status':False,'message':'Error in QP answer key','exception':str(e)})
+
+
+class DeleteOldData(APIView):
+    def post(self, request):
+        try:
+            # delete the questions_json and cons_zip folder on the first login
+
+            folders_to_delete = [
+                os.path.join('exammgt', 'media/questions_json'),
+                os.path.join('exammgt', 'media/cons_zip'),
+            ]
+
+            for folder_name in folders_to_delete:
+                if os.path.exists(folder_name):
+                    shutil.rmtree(folder_name)
+
+
+
+            with transaction.atomic():
+                # Get a list of active event IDs
+                active_event_ids = scheduling.objects.values_list('schedule_id', flat=True)
+                active_metas = ExamMeta.objects.values_list('event_id', flat=True)
+
+                # Use Q objects for filtering
+                delete_filter = Q(event_id__in=active_event_ids)
+                delete_filter_meta = Q(participant_pk__in=active_event_ids)
+                delete_filter_qpset = Q(event_id__in=active_metas)
+
+                # Delete records using a single transaction
+                EventAttendance.objects.filter(~delete_filter).delete()
+                ExamResponse.objects.filter(~delete_filter).delete()
+                ExamMeta.objects.filter(~delete_filter_meta).delete()
+                QpSet.objects.filter(~delete_filter_qpset).delete()
+
+            return Response({'api_status':True,'message': 'Old files and records deleted successfully'})
+        except Exception as e:
+            return Response({'api_status':False,'message': f'An error occurred in deleting :  {str(e)}'})
+            
+
+
+class DeleteOldQuestsChoices(APIView):
+    def post(self, request):
+
+        current_date = datetime.datetime.now()
+
+        live_events = list(scheduling.objects.filter(event_enddate__gte=current_date).values_list('schedule_id', flat=True))
+        print(live_events)
+
+        live_events_count = ExamMeta.objects.filter(participant_pk__in=live_events).count()
+
+        # for getting distinct count
+        # live_events_count = ExamMeta.objects.filter(participant_pk__in=live_events).values('participant_pk').annotate(num_participants=Count('participant_pk')).count()
+        print(live_events_count)
+
+        if live_events_count != 0:
+            return Response({'api_status': True, 'message': 'question paper already available'})
+       
+        try:
+            with transaction.atomic():
+                all_qid = []
+                for i in list(QpSet.objects.all().only('qid_list').values_list('qid_list', flat=True)):
+                    all_qid.extend(eval(i))
+                unique_qid = list(set(all_qid))
+
+                Question.objects.exclude(qid__in=unique_qid).delete()
+                Choice.objects.exclude(qid__in=unique_qid).delete()
+
+            return Response({'api_status': True, 'message': 'Old questions and choices deleted successfully'})
+        except Exception as e:
+            return Response({'api_status': False, 'message': f'An error occurred in deleting the questions and choices: {str(e)}'})
