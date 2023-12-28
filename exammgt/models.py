@@ -96,8 +96,8 @@ class Question(models.Model):
     language                            = models.TextField(null=True,blank=True)
     hint                                = models.TextField(null=True,blank=True)
 
-    # q_medium                            = models.IntegerField(null=True, blank = True)
-    # q_type                              = models.IntegerField(null=True, blank = True)
+    q_medium                            = models.IntegerField(null=True, blank = True)
+    q_type                              = models.IntegerField(null=True, blank = True)
 
     created_on                          = models.DateTimeField(auto_now = True)
 
