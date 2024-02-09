@@ -120,8 +120,8 @@ class GenerateJSON(APIView):
             print('*********',details_object)
             consolidated_data['details'] = details_object
 
-            with open(file_name, 'w') as outfile:  
-                json.dump(consolidated_data, outfile)
+            with open(file_name, 'w',encoding="utf-8") as outfile:  
+                json.dump(consolidated_data, outfile,default=str,ensure_ascii=False)
 
             print('Consolidate data',consolidated_data)
 
