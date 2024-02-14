@@ -53,6 +53,8 @@ from django.db import connection as dbconnect
 
 import sqlite3
 
+IGNORE_CASE_SENSITIVE_ANSWER = False
+
 def is_database_corrupted():
     try:
         conn = sqlite3.connect(DATABASES['default']['NAME'])
@@ -1249,7 +1251,18 @@ class ExamSubmit(APIView):
                 
                 if resp_obj.selected_choice_id:
                     answered_questions += 1
-                
+
+                    if IGNORE_CASE_SENSITIVE_ANSWER:
+                        if resp_obj.selected_choice_id.lower() == resp_obj.question_result.lower():
+                            correct_answers += 1
+                        else:
+                            wrong_answers += 1
+                    else:
+                        if resp_obj.selected_choice_id == resp_obj.question_result:
+                            correct_answers += 1
+                        else:
+                            wrong_answers += 1
+
                     if resp_obj.selected_choice_id == resp_obj.question_result:
                         correct_answers += 1
                     else:
