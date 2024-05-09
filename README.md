@@ -17,7 +17,7 @@ python3 -m venv venv
 
 source venv/bin/activate
 
-git clone http://dvcs.chennai.cdac.in/boss-assessment/tnschool-local-server.git
+git clone http://dvcs.chennai.cdac.in/secure_exam_software/nsg-exam-local-server.git
 
 cd tnschool-local-server
 

@@ -14,11 +14,8 @@ central_server_adapter = HTTPAdapter(max_retries=3)
 # Enable authentication for the api calls
 AUTH_ENABLE = True # Enable is_authentication in views.py file
 
-CENTRAL_SERVER_IP = 'https://exam4.tnschools.gov.in'
-#CENTRAL_SERVER_IP = 'https://exams1.tnschools.gov.in'
-# CENTRAL_SERVER_IP = 'http://10.184.36.118:8000'
-# CENTRAL_SERVER_IP = 'https://10.184.36.231/'
-# CENTRAL_SERVER_IP = 'http://10.184.36.237:8000'
+
+CENTRAL_SERVER_IP = 'http://10.184.36.237:8000'
 
 # CERT_FILE = os.path.join(BASE_DIR, 'cert/schoolexam-RootCA.cert.pem')
 CERT_FILE = False
