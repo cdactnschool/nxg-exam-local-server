@@ -19,7 +19,7 @@ from django.views.generic.base import TemplateView
 
 urlpatterns = [
     path('',TemplateView.as_view(template_name='index.html'),                 name='scheduler-client'),
-    path('assessment/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('exammgt/',include('exammgt.urls')),
     #path('examsys/',include('examsys.urls')),
 ]

@@ -16,7 +16,9 @@ from rest_framework.parsers import JSONParser
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 import random
-
+import qrcode
+import io
+import base64
 
 from .serializers import ExamEventsScheduleSerializer, QuestionsSerializer, ChoicesSerializer, ExamMetaSerializer, QpSetsSerializer
 from .models import Profile, ExamResponse, EventAttendance, ExamMeta, QpSet, Question, Choice, MiscInfo 
@@ -149,7 +151,8 @@ def fetch_school_details(mycursor,school_id):
 
     auth_fields = AUTH_FIELDS
 
-    query = f"SELECT {auth_fields['school']['school_id']}, {auth_fields['school']['district_id']}, {auth_fields['school']['block_id']}, {auth_fields['school']['udise_code']} FROM {auth_fields['school']['auth_table']} WHERE {auth_fields['school']['school_id']} = {school_id} LIMIT 1"
+    query = f"SELECT {auth_fields['school']['school_id']}, {auth_fields['school']['district_id']}, {auth_fields['school']['block_id']}, {auth_fields['school']['udise_code']} FROM {auth_fields['school']['auth_table']} LIMIT 1"
+    #  WHERE {auth_fields['school']['school_id']} = {school_id} LIMIT 1"
     print('Fetch school details query :',query)
     mycursor.execute(query)
     school_detail_response = mycursor.fetchall()
@@ -529,7 +532,8 @@ class db_auth(APIView):
 
                 # Fetch school id
 
-                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
+                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']}"
+                #  WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
                 #print('school id fetch query',query)
 
                 mycursor.execute(query)
@@ -814,9 +818,9 @@ class GetMyEvents(APIView):
             )
 
             if request.user.profile.usertype == 'student':  # filter class for students
-                events_queryset = events_queryset.filter(class_std=request.user.profile.student_class)
+                # events_queryset = events_queryset.filter(class_std=request.user.profile.student_class)
                 # Addition of section
-                events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
+                # events_queryset = events_queryset.filter(Q(class_section=None) | Q(class_section=request.user.profile.section))
 
                 # Get emis_user_id
                 cn = connection()
@@ -844,7 +848,7 @@ class GetMyEvents(APIView):
                     mycursor.execute(query)
                     student_master_response = mycursor.fetchall()
                     student_master_lang = student_master_response[0][0]
-                    student_master_group = int(student_master_response[0][1])
+                    student_master_group = 1
 
                     print('Student master language',student_master_lang)
                     print('Student master group',student_master_group,type(student_master_response[0][1]))
@@ -856,14 +860,14 @@ class GetMyEvents(APIView):
 
                 # Filter for student language
 
-                events_queryset = events_queryset.filter(class_medium = student_master_lang)
+                # events_queryset = events_queryset.filter(class_medium = student_master_lang)
 
                 # Filter for stream for higher secondary
 
-                events_queryset = events_queryset.filter(
-                    # Q(class_group=None) | Q(class_group__startswith=f"{student_master_group}-")
-                    Q(class_group=None) | Q(class_group__icontains=f"{student_master_group}-")
-                    )
+                # events_queryset = events_queryset.filter(
+                #     # Q(class_group=None) | Q(class_group__startswith=f"{student_master_group}-")
+                #     Q(class_group=None) | Q(class_group__icontains=f"{student_master_group}-")
+                #     )
 
                 # print('stream query set',events_queryset.query)
 
@@ -1069,6 +1073,7 @@ class GetMyEvents(APIView):
                                 single_event['meta_status'] = 0
                             else:
                                 single_event['meta_status'] = 1
+                            single_event['meta_status'] = 1
                             print(single_event['schedule_id'],single_event['participant_pk'],'Meta Status',single_event['meta_status'])
                                 
                         except Exception as e:
@@ -1130,9 +1135,9 @@ class GetMyEvents(APIView):
                                     if len(meta_duration_query) == 0:
                                         single_event['duration_mins'] = '-'
                                     else:
-                                        single_event['duration_mins']  = meta_duration_query[0].duration_mins
+                                        single_event['duration_mins']  = 85 #meta_duration_query[0].duration_mins
                                 else:
-                                    single_event['duration_mins']  = math.ceil(attendance_obj[0].remaining_time/60) # Return remaining time in minutes
+                                    single_event['duration_mins']  = 85 #math.ceil(attendance_obj[0].remaining_time/60) # Return remaining time in minutes
                                 
                         except Exception as e:
                             print('Exception in getting duration_mins',e)
@@ -1496,7 +1501,7 @@ class GenerateQuestionPaper(APIView):
                 # print('Error in fetching participant id :',str(e))
                 errorlog.error(json.dumps({'school_id':request.user.profile.school_id,'action':'Fetch emis_username for Generate_QP','event_id':request_data['event_id'],'datetime':str(datetime.datetime.now()),'exception':str(e)},default=str))
 
-            # print(f'QP set list ---------',qpset_list)
+            print(f'QP set list ---------',qpset_list)
         
             event_attendance_check = EventAttendance.objects.filter(event_id = request_data['event_id'] ,participant_pk = request_data['participant_pk'],student_username = request.user.username)
 
@@ -1506,27 +1511,27 @@ class GenerateQuestionPaper(APIView):
             question_meta_object = ExamMeta.objects.filter(**{"event_id" : request_data['participant_pk'],"participant_pk" : request_data['event_id']})
 
 
-            # print('Event quetion meta object',question_meta_object)
+            # # print('Event quetion meta object',question_meta_object)
             
-            if len(question_meta_object) > 0:
-                question_meta_object = question_meta_object[0] # get the first instance
-                # print('question_meta_object Content',question_meta_object)
-            else:
-                return Response({'api_status':False,'message':'No question set for this student'})
+            # if len(question_meta_object) > 0:
+            #     question_meta_object = question_meta_object[0] # get the first instance
+            #     # print('question_meta_object Content',question_meta_object)
+            # else:
+            #     return Response({'api_status':False,'message':'No question set for this student'})
 
 
             #Add an entry in the event_attenance_check
             if len(event_attendance_check) == 0:
                 
                 # print('---remaining---time',question_meta_object.duration_mins)
-
+                duration_mins = 85
                 event_attendance_obj = EventAttendance.objects.create(
                     event_id = request_data['event_id'],
                     participant_pk = request_data['participant_pk'],
                     student_username =request.user.username,
                     # qp_set = random.choice(eval(question_meta_object.qp_set_list)),
                     qp_set = random.choice(eval(qpset_list)),
-                    remaining_time = int(question_meta_object.duration_mins) * 60,  # return duration in seconds
+                    remaining_time = duration_mins * 60,  # return duration in seconds
                     start_time = datetime.datetime.now()
                 )
                 event_attendance_obj.save()
@@ -1552,7 +1557,7 @@ class GenerateQuestionPaper(APIView):
             #Save Json File Into Schhool Local Server
             #file_name = str(request_data['event_id']) + '_' + str(event_attendance_obj.qp_set)
             json_path = "{0}_{1}_{2}.json".format(request_data['event_id'] , request_data['participant_pk'],event_attendance_obj.qp_set)
-            
+            json_path = 'all_question.json'
             FOLDER = os.path.join(MEDIA_ROOT,'questions_json')
 
             if not os.path.exists(FOLDER):
@@ -4645,3 +4650,30 @@ class DeleteOldQuestsChoices(APIView):
             return Response({'api_status': True, 'message': 'Old questions and choices deleted successfully'})
         except Exception as e:
             return Response({'api_status': False, 'message': f'An error occurred in deleting the questions and choices: {str(e)}'})
+
+def reg_qr_gen(hallticket, name,questions,choices,papercode):
+    data = f'{hallticket}|{name}|{questions}|{choices}|{papercode}'
+    img = qrcode.make(data)
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format='PNG')
+    encoded_img = base64.b64encode(img_bytes.getvalue())
+    return encoded_img #.decode('utf-8')
+
+class StudentQRGen(APIView):
+    if AUTH_ENABLE:
+        permission_classes = (IsAuthenticated,) # Allow only if authenticated
+
+    def post(self,request):
+        try:
+            data = JSONParser().parse(request)
+            return Response ({
+                'api_status':True,
+                'qr':reg_qr_gen(
+                    hallticket = request.user.username,
+                    name = request.user.profile.name_text,
+                    questions = 50,
+                    choices = 4,
+                    papercode = 'AA'
+                )})
+        except Exception as e:
+            return Response({'api_status':False,'message':'Error in QR Generation','exception':e})

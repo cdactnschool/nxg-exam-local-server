@@ -8,7 +8,7 @@ from .views import ( MetaUpload, db_auth, MyTokenObtainPairView, GetUserDetail,
                      ConsSummary, MetaUpload, ResetDB, MasterCleaner, 
                      ListCleanerID, ExamComplete, DispMisc, ToComplete, SendResponse,
                      SendResponses, VersionNumber,LogoutView, GenSendResponses,
-                     AutoUpdateStatus, MetaAuto, QpKey
+                     AutoUpdateStatus, MetaAuto, QpKey,StudentQRGen
                      )
 
                      
@@ -76,5 +76,7 @@ urlpatterns = [
     path('disp-misc',                       DispMisc.as_view(),                     name='disp-misc'),
     
     path('qpkey',                           QpKey.as_view(),                        name='qpkey'),
+
+    path('student-qr',                      StudentQRGen.as_view(),                 name='student-qr')
     
     ]

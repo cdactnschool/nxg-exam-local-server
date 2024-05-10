@@ -27,7 +27,7 @@ from datetime import timedelta
 SECRET_KEY = 'django-insecure-(y=&ct401vu+=0%l-l485k-5ow=979an+@8+j1fl@h%p3+6)h^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*',]
 
@@ -206,43 +206,43 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'debug.log'),
+            'filename': os.path.join('/var/log/examlogs', 'debug.log'),
             # 'formatter': 'verbose'
         },
         'logins': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'access.log'),
+            'filename': os.path.join('/var/log/examlogs', 'access.log'),
             # 'formatter': 'verbose'
         },
         'error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'error.log'),
+            'filename': os.path.join('/var/log/examlogs', 'error.log'),
             # 'formatter': 'verbose'
         },
         'infos': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'info.log'),
+            'filename': os.path.join('/var/log/examlogs', 'info.log'),
             # 'formatter': 'verbose'
         },
         'api_log': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'api_log.log'),
+            'filename': os.path.join('/var/log/examlogs', 'api_log.log'),
             # 'formatter': 'verbose'
         },
         'api_error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'api_error.log'),
+            'filename': os.path.join('/var/log/examlogs', 'api_error.log'),
             # 'formatter': 'verbose'
         },
         'student_log': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join('/opt/tnschools/examlogs', 'school_log.log')
+            'filename': os.path.join('/var/log/examlogs', 'school_log.log')
         },
     },
     'loggers': {

@@ -82,23 +82,23 @@ class ExamEventsScheduleSerializer(serializers.ModelSerializer):
         
         if user_detail.profile.usertype in ['teacher','hm','superadmin_user','school']:
             return None
-        
+        return 0
         #return str(user_detail.profile.name_text)+str(obj.event_completion_status)
         #print('<------->',obj.event_startdate)
         #print('<------->',obj.schedule_id)
-        attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)
+        # attendance_obj = fetch_attendance_object(self.context.get('user'),obj.schedule_id)
+        
+        
+        # if attendance_obj == None:
+        #     return 0
+        
+        # if attendance_obj.end_time == None:
+        #     return 1
+        
+        # if attendance_obj.end_time != None:
+        #     return 2
 
-        
-        if attendance_obj == None:
-            return 0
-        
-        if attendance_obj.end_time == None:
-            return 1
-        
-        if attendance_obj.end_time != None:
-            return 2
-
-        return None
+        # return None
 
     def get_event_status(self,obj):
         '''

@@ -33,3 +33,4 @@ sqlparse==0.4.2
 texttable==1.6.4
 tomli==2.0.1
 urllib3==1.26.11
+qrcode==7.4.2
