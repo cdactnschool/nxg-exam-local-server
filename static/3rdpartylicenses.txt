@@ -121,6 +121,9 @@ SOFTWARE.
 ng-particles
 MIT
 
+ngx-scanner-qrcode
+LGPL-2.1+
+
 ngx-spinner
 MIT
 
