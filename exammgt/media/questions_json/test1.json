@@ -1,0 +1,930 @@
+{
+    "event_id": 12,
+    "participant_pk": 12,
+    "event_title": "q_type_exam",
+    "class_subject": "English",
+    "class_std": "9",
+    "class_section": null,
+    "subject": "English",
+    "no_of_questions": 0,
+    "duration_mins": 60,
+    "qtype": "MCQ",
+    "total_marks": 0,
+    "qshuffle": false,
+    "show_submit_at_last_question": true,
+    "show_summary": true,
+    "show_result": true,
+    "end_alert_time": 5,
+    "show_instruction": true,
+    "language": null,
+    "sync_done": 0,
+    "qp_set_id": "test",
+    "exam_duration": 3600,
+    "end_alert_seconds": 300,
+    "q_ids": [
+        12438,
+        12359,
+        20577,
+        20588,
+        12497,
+        20924,
+        12155,
+        20726,
+        12772,
+        12643,
+        877,
+        866,
+        1028,
+        1017,
+        5022,
+        884,
+        924,
+        962,
+        818,
+        20620
+    ],
+    "questions": [
+        {
+            "pid": 1,
+            "qid": 12438,
+            "ques": "One evening before sunset Rekha and Hema were talking to each other face to face. If Hema's shadow was exactly to the right of Hema, which direction was Rekha facing?\n\n",
+            "no_of_choices": 4,
+            "correct_choice": "South",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 12438,
+                    "cid": 4075149,
+                    "cimage": "North",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12438,
+                    "cid": 4075150,
+                    "cimage": "South",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12438,
+                    "cid": 4075151,
+                    "cimage": "East",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12438,
+                    "cid": 4075152,
+                    "cimage": "Data is inadequate",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 2,
+            "qid": 12359,
+            "ques": "Ravi and Kumar are working on an assignment. Ravi takes 6 hours to type 32 pages on a computer, while Kumar takes 5 hours to type 40 pages. How much time will they take, working together on two different computers to type an assignment of 110 pages?",
+            "no_of_choices": 4,
+            "correct_choice": "8 hours 15 minutes",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 12359,
+                    "cid": 4075153,
+                    "cimage": "7 hours 30 minutes",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12359,
+                    "cid": 4075154,
+                    "cimage": "8 hours",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12359,
+                    "cid": 4075155,
+                    "cimage": "8 hours 15 minutes",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12359,
+                    "cid": 4075156,
+                    "cimage": "8 hours 25 minutes",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 3,
+            "qid": 20577,
+            "ques": "Thunder : Lightning :: Tornado :?",
+            "no_of_choices": 4,
+            "correct_choice": "Wind",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 20577,
+                    "cid": 4075157,
+                    "cimage": "Wind",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20577,
+                    "cid": 4075158,
+                    "cimage": "Rain",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20577,
+                    "cid": 4075159,
+                    "cimage": "Hail",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20577,
+                    "cid": 4075160,
+                    "cimage": "Storm",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 4,
+            "qid": 20588,
+            "ques": "Sun : Solar System :: Atom :?",
+            "no_of_choices": 4,
+            "correct_choice": "Electron",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 20588,
+                    "cid": 4075161,
+                    "cimage": "Molecule",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20588,
+                    "cid": 4075162,
+                    "cimage": "Proton",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20588,
+                    "cid": 4075163,
+                    "cimage": "Electron",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20588,
+                    "cid": 4075164,
+                    "cimage": "Nucleus",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 5,
+            "qid": 12497,
+            "ques": "BY, DW, FU, ?",
+            "no_of_choices": 4,
+            "correct_choice": "HS",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 12497,
+                    "cid": 4075165,
+                    "cimage": "GT",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12497,
+                    "cid": 4075166,
+                    "cimage": "HS",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12497,
+                    "cid": 4075167,
+                    "cimage": "HT",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12497,
+                    "cid": 4075168,
+                    "cimage": "HU",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 6,
+            "qid": 20924,
+            "ques": "Statement 1: Police had resorted to lathi-charge to disperse the unruly mob from the civic headquarters \nStatement 2: The civic administration has recently hiked the property tax of the residential buildings by about 30 percent",
+            "no_of_choices": 4,
+            "correct_choice": "Both the statements I and II are effects of independent causes.",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 20924,
+                    "cid": 4075169,
+                    "cimage": "Statement I is the cause and statement II is its effect.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20924,
+                    "cid": 4075170,
+                    "cimage": "Statement II is the cause and statement I is its effect.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20924,
+                    "cid": 4075171,
+                    "cimage": "Both the statements I and II are independent causes.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20924,
+                    "cid": 4075172,
+                    "cimage": "Both the statements I and II are effects of independent causes.",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 7,
+            "qid": 12155,
+            "ques": "The total number of ways of selecting six coins out of 20 one rupee coins, 10 fifty paise coins and 7 twenty five paise coins is",
+            "no_of_choices": 4,
+            "correct_choice": "28",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 12155,
+                    "cid": 4075173,
+                    "cimage": "28",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12155,
+                    "cid": 4075174,
+                    "cimage": "56",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12155,
+                    "cid": 4075175,
+                    "cimage": "³⁷C₆",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12155,
+                    "cid": 4075176,
+                    "cimage": "none of these",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 8,
+            "qid": 20726,
+            "ques": "Statements:\n1. All politicians are public speakers.\n2. Some public speakers are journalists.\nConclusion:",
+            "no_of_choices": 4,
+            "correct_choice": "Some journalists are politicians.",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 20726,
+                    "cid": 4075177,
+                    "cimage": "Some journalists are politicians.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20726,
+                    "cid": 4075178,
+                    "cimage": "All journalists are public speakers.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20726,
+                    "cid": 4075179,
+                    "cimage": "Some public speakers are not politicians.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20726,
+                    "cid": 4075180,
+                    "cimage": "All politicians are journalists.",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 9,
+            "qid": 12772,
+            "ques": "In a certain encryption pattern, HARD is coded as 1357 and SOFT is coded as 2468, What will 21448 stand for ?",
+            "no_of_choices": 4,
+            "correct_choice": "SHOOT",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 12772,
+                    "cid": 4075181,
+                    "cimage": "SHAFT",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12772,
+                    "cid": 4075182,
+                    "cimage": "ROOTS",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12772,
+                    "cid": 4075183,
+                    "cimage": "RAFTS",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12772,
+                    "cid": 4075184,
+                    "cimage": "SHOOT",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 10,
+            "qid": 12643,
+            "ques": "select the word from the given alternative which cannot be formed using the letters of the given word. \n\nGEMDISTIONARY.",
+            "no_of_choices": 4,
+            "correct_choice": "DISTART",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 12643,
+                    "cid": 4075185,
+                    "cimage": "GAME",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12643,
+                    "cid": 4075186,
+                    "cimage": "DISTART",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12643,
+                    "cid": 4075187,
+                    "cimage": "MEGASITY",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 12643,
+                    "cid": 4075188,
+                    "cimage": "STAR",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 11,
+            "qid": 877,
+            "ques": "\nI wanted to _____________ an exciting life, but I ended up living in the small town of Inertia, Kentucky.",
+            "no_of_choices": 4,
+            "correct_choice": "Lead",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 877,
+                    "cid": 4075189,
+                    "cimage": "Led",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 877,
+                    "cid": 4075190,
+                    "cimage": "Lead",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 877,
+                    "cid": 4075191,
+                    "cimage": "Both",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 877,
+                    "cid": 4075192,
+                    "cimage": "None of the above",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 12,
+            "qid": 866,
+            "ques": "\nI refused to _____________ the performance evaluation because there was false information in it.\n",
+            "no_of_choices": 4,
+            "correct_choice": "Accept",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 866,
+                    "cid": 4075193,
+                    "cimage": "Accept",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 866,
+                    "cid": 4075194,
+                    "cimage": "Except",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 866,
+                    "cid": 4075195,
+                    "cimage": "Both",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 866,
+                    "cid": 4075196,
+                    "cimage": "None of the above",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 13,
+            "qid": 1028,
+            "ques": "A place where monks live is called a __",
+            "no_of_choices": 4,
+            "correct_choice": "monastery",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 1028,
+                    "cid": 4075197,
+                    "cimage": "monastery",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 1028,
+                    "cid": 4075198,
+                    "cimage": "Inanimate",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 1028,
+                    "cid": 4075199,
+                    "cimage": "Gratis",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 1028,
+                    "cid": 4075200,
+                    "cimage": "Cosmopolitan",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 14,
+            "qid": 1017,
+            "ques": "Choose the past perfect continuous tense form of the sentence. “The children played in the park throughout the evening.”",
+            "no_of_choices": 4,
+            "correct_choice": "The children had been playing in the park throughout the evening.",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 1017,
+                    "cid": 4075201,
+                    "cimage": "The children played in the park throughout the evening.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 1017,
+                    "cid": 4075202,
+                    "cimage": "The children have been playing in the park throughout the evening.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 1017,
+                    "cid": 4075203,
+                    "cimage": "The children had played in the park throughout the evening.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 1017,
+                    "cid": 4075204,
+                    "cimage": "The children had been playing in the park throughout the evening.",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 15,
+            "qid": 5022,
+            "ques": "By whom a poem is written?",
+            "no_of_choices": 4,
+            "correct_choice": "Who writes a poem?",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 5022,
+                    "cid": 4075205,
+                    "cimage": "Who writes a poem?",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 5022,
+                    "cid": 4075206,
+                    "cimage": "Who wrote a poem?",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 5022,
+                    "cid": 4075207,
+                    "cimage": "Who has written a poem?",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 5022,
+                    "cid": 4075208,
+                    "cimage": "Who writes for a  poem?",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 16,
+            "qid": 884,
+            "ques": "James Watt discovered the energy of steam.",
+            "no_of_choices": 4,
+            "correct_choice": "The energy of steam was discovered by James Watt.",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 884,
+                    "cid": 4075209,
+                    "cimage": "The energy of steam discovered James Watt.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 884,
+                    "cid": 4075210,
+                    "cimage": "The energy of steam was discovered by James Watt.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 884,
+                    "cid": 4075211,
+                    "cimage": "James Watt was discovered by the energy of steam.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 884,
+                    "cid": 4075212,
+                    "cimage": "James Watt discovered the energy of steam.",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 17,
+            "qid": 924,
+            "ques": "The sun rises in the east. ",
+            "no_of_choices": 4,
+            "correct_choice": "East is the direction in which the sun rises.",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 924,
+                    "cid": 4075213,
+                    "cimage": "The direction of the sun rises is east.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 924,
+                    "cid": 4075214,
+                    "cimage": "The sun rises is in the east direction.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 924,
+                    "cid": 4075215,
+                    "cimage": "East is the direction in which the sun rises.",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 924,
+                    "cid": 4075216,
+                    "cimage": "The east rises the sun.",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 18,
+            "qid": 962,
+            "ques": "A single discount equivalent to three successive discounts of 20%, 25% and 10% is",
+            "no_of_choices": 4,
+            "correct_choice": "46%",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 962,
+                    "cid": 4075217,
+                    "cimage": "55%",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 962,
+                    "cid": 4075218,
+                    "cimage": "54%",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 962,
+                    "cid": 4075219,
+                    "cimage": "46%",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 962,
+                    "cid": 4075220,
+                    "cimage": "48%",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 19,
+            "qid": 818,
+            "ques": "What comes next in the series? 2, 5, 10, 17, 26, ?",
+            "no_of_choices": 4,
+            "correct_choice": "37",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 818,
+                    "cid": 4075221,
+                    "cimage": "38",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 818,
+                    "cid": 4075222,
+                    "cimage": "36",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 818,
+                    "cid": 4075223,
+                    "cimage": "37",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 818,
+                    "cid": 4075224,
+                    "cimage": "34",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        },
+        {
+            "pid": 20,
+            "qid": 20620,
+            "ques": "_______, I won't be able to make it for the party.",
+            "no_of_choices": 4,
+            "correct_choice": "Unfortunately",
+            "language": null,
+            "hint": null,
+            "q_choices": [
+                {
+                    "qid": 20620,
+                    "cid": 4075225,
+                    "cimage": "Luckily",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20620,
+                    "cid": 4075226,
+                    "cimage": "Thankfully",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20620,
+                    "cid": 4075227,
+                    "cimage": "Fortunately",
+                    "language": null,
+                    "hint": null
+                },
+                {
+                    "qid": 20620,
+                    "cid": 4075228,
+                    "cimage": "Unfortunately",
+                    "language": null,
+                    "hint": null
+                }
+            ]
+        }
+    ],
+    "ans": [
+        {
+            "qid": "12438",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "12359",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "20577",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "20588",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "12497",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "20924",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "12155",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "20726",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "12772",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "12643",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "877",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "866",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "1028",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "1017",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "5022",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "884",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "924",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "962",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "818",
+            "review": "",
+            "ans": ""
+        },
+        {
+            "qid": "20620",
+            "review": "",
+            "ans": ""
+        }
+    ]
+}

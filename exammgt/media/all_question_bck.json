@@ -1,0 +1,368 @@
+{
+    "questions": [
+        {
+            "qid": 15873,
+            "qimage": "<p>What is the value of X=X+2 +z ?&nbsp;</p>\r\n",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 121990,
+            "q_choices": [
+                {
+                    "cid": 121993,
+                    "cimage": "6"
+                },
+                {
+                    "cid": 121990,
+                    "cimage": "3"
+                },
+                {
+                    "cid": 121991,
+                    "cimage": "4"
+                },
+                {
+                    "cid": 121992,
+                    "cimage": "5"
+                }
+            ]
+        },
+        {
+            "qid": 10926,
+            "qimage": "If 60% A = 34\nof B, then A : B is",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82416,
+            "q_choices": [
+                {
+                    "cid": 82414,
+                    "cimage": "4 : 5"
+                },
+                {
+                    "cid": 82416,
+                    "cimage": "5 : 4"
+                },
+                {
+                    "cid": 82418,
+                    "cimage": "9 : 20"
+                },
+                {
+                    "cid": 82420,
+                    "cimage": "20 : 9"
+                }
+            ]
+        },
+        {
+            "qid": 10927,
+            "qimage": "If A and B are in the ratio 3 : 4, and B and C in the ratio 12 : 13, then A and C will be in the ratio",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82424,
+            "q_choices": [
+                {
+                    "cid": 82422,
+                    "cimage": "3 : 13"
+                },
+                {
+                    "cid": 82424,
+                    "cimage": "9 : 13"
+                },
+                {
+                    "cid": 82426,
+                    "cimage": "36 : 13"
+                },
+                {
+                    "cid": 82428,
+                    "cimage": "13 : 9"
+                }
+            ]
+        },
+        {
+            "qid": 10928,
+            "qimage": "If A : B = 12\n:\n13\nand B : C =\n12\n:\n13,\nthen A, B, C is equal to -",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82436,
+            "q_choices": [
+                {
+                    "cid": 82430,
+                    "cimage": "1 : 2 : 6"
+                },
+                {
+                    "cid": 82432,
+                    "cimage": "2 : 3 : 3"
+                },
+                {
+                    "cid": 82434,
+                    "cimage": "3 : 2 : 6"
+                },
+                {
+                    "cid": 82436,
+                    "cimage": "9 : 6 : 4"
+                }
+            ]
+        },
+        {
+            "qid": 10929,
+            "qimage": "If A\n:\nB\n12\n:\n38,\nB\n:\nC\n13\n:\n59\nand\nC\n:\nD\n56\n:\n34,\nThen the ratio of A : B : C : D is ?",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82442,
+            "q_choices": [
+                {
+                    "cid": 82438,
+                    "cimage": "6 : 4 : 8 : 10"
+                },
+                {
+                    "cid": 82440,
+                    "cimage": "6 : 8 : 9 : 10"
+                },
+                {
+                    "cid": 82442,
+                    "cimage": "8 : 6 : 10 : 9"
+                },
+                {
+                    "cid": 82444,
+                    "cimage": "4 : 6 : 8 : 10"
+                }
+            ]
+        },
+        {
+            "qid": 10930,
+            "qimage": "If A : B = 2 : 3 and B : C = 4 : 5 then A : B : C is",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82450,
+            "q_choices": [
+                {
+                    "cid": 82446,
+                    "cimage": "2 : 3 : 5"
+                },
+                {
+                    "cid": 82448,
+                    "cimage": "5 : 4 : 6"
+                },
+                {
+                    "cid": 82450,
+                    "cimage": "8 : 12 : 15"
+                },
+                {
+                    "cid": 82452,
+                    "cimage": "6 : 4 : 5"
+                }
+            ]
+        },
+        {
+            "qid": 10931,
+            "qimage": "If A : B = 2 : 3, B : C = 2 : 4 and C : D = 2 : 5, then A : D is equal to -",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82460,
+            "q_choices": [
+                {
+                    "cid": 82454,
+                    "cimage": "1 : 5"
+                },
+                {
+                    "cid": 82456,
+                    "cimage": "2 : 5"
+                },
+                {
+                    "cid": 82458,
+                    "cimage": "3 : 5"
+                },
+                {
+                    "cid": 82460,
+                    "cimage": "2 : 15"
+                }
+            ]
+        },
+        {
+            "qid": 10922,
+            "qimage": "34:\n12\n:: 27y : ? Solve this -",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82384,
+            "q_choices": [
+                {
+                    "cid": 82382,
+                    "cimage": "12y"
+                },
+                {
+                    "cid": 82384,
+                    "cimage": "18y"
+                },
+                {
+                    "cid": 82386,
+                    "cimage": "21y"
+                },
+                {
+                    "cid": 82388,
+                    "cimage": "24y"
+                }
+            ]
+        },
+        {
+            "qid": 10923,
+            "qimage": "If 0.75 : x :: 5 : 8, then x is equal to:",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82392,
+            "q_choices": [
+                {
+                    "cid": 82390,
+                    "cimage": "1.12"
+                },
+                {
+                    "cid": 82392,
+                    "cimage": "1.2"
+                },
+                {
+                    "cid": 82394,
+                    "cimage": "1.25"
+                },
+                {
+                    "cid": 82396,
+                    "cimage": "1.3"
+                }
+            ]
+        },
+        {
+            "qid": 10924,
+            "qimage": "If 2A = 3B = 4C, then A : B : C is equal to -",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82404,
+            "q_choices": [
+                {
+                    "cid": 82398,
+                    "cimage": "2 : 3 : 4"
+                },
+                {
+                    "cid": 82400,
+                    "cimage": "3 : 4 : 6"
+                },
+                {
+                    "cid": 82402,
+                    "cimage": "4 : 3 : 2"
+                },
+                {
+                    "cid": 82404,
+                    "cimage": "6 : 4 : 3"
+                }
+            ]
+        },
+        {
+            "qid": 10925,
+            "qimage": "If 3A = 5B and 4B = 6C, then A : C equal to -",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 82412,
+            "q_choices": [
+                {
+                    "cid": 82406,
+                    "cimage": "2 : 5"
+                },
+                {
+                    "cid": 82408,
+                    "cimage": "3 : 5"
+                },
+                {
+                    "cid": 82410,
+                    "cimage": "4 : 5"
+                },
+                {
+                    "cid": 82412,
+                    "cimage": "5 : 2"
+                }
+            ]
+        },
+        {
+            "qid": 11210,
+            "qimage": "An egg seller sells his eggs only in the packs of 3 eggs, 6 eggs, 9 eggs, 12 eggs etc., but the rate is not necessarily uniform. One day Raju (which is not the same egg seller) purchased at the rate of 3 eggs for a rupee and the next hour he purchased equal number of eggs at the rate of 6 eggs for a rupee. Next day he sold all the eggs at the rate of 9 eggs for Rs. 2. What is his percentage profit or loss?",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 84688,
+            "q_choices": [
+                {
+                    "cid": 84686,
+                    "cimage": "10% loss"
+                },
+                {
+                    "cid": 84688,
+                    "cimage": "11.11% loss"
+                },
+                {
+                    "cid": 84690,
+                    "cimage": "3% loss"
+                },
+                {
+                    "cid": 84692,
+                    "cimage": "2.5% profit"
+                }
+            ]
+        },
+        {
+            "qid": 11312,
+            "qimage": "A man covers half of his journey at 6 km/h and the remaining half at 3 km/h. His average speed is",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 85506,
+            "q_choices": [
+                {
+                    "cid": 85502,
+                    "cimage": "9 km/h"
+                },
+                {
+                    "cid": 85504,
+                    "cimage": "4.5 km/h"
+                },
+                {
+                    "cid": 85506,
+                    "cimage": "4 km/h"
+                },
+                {
+                    "cid": 85508,
+                    "cimage": "3 km/h"
+                }
+            ]
+        },
+        {
+            "qid": 11553,
+            "qimage": "The average of four consecutive odd numbers is 24 Find the largest number",
+            "q_type": 1,
+            "q_medium": 1,
+            "no_of_choices": 4,
+            "correct_choice": 87432,
+            "q_choices": [
+                {
+                    "cid": 87430,
+                    "cimage": "25"
+                },
+                {
+                    "cid": 87432,
+                    "cimage": "27"
+                },
+                {
+                    "cid": 87434,
+                    "cimage": "29"
+                },
+                {
+                    "cid": 87436,
+                    "cimage": "31"
+                }
+            ]
+        }
+    ]
+}

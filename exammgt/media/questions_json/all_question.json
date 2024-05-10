@@ -1,0 +1,1335 @@
+{
+    "event_id": 12,
+    "participant_pk": 12,
+    "event_title": "q_type_exam",
+    "class_subject": "English",
+    "class_std": "9",
+    "class_section": null,
+    "subject": "English",
+    "no_of_questions": 0,
+    "duration_mins": 60,
+    "qtype": "MCQ",
+    "total_marks": 0,
+    "qshuffle": false,
+    "show_submit_at_last_question": true,
+    "show_summary": true,
+    "show_result": true,
+    "end_alert_time": 5,
+    "show_instruction": true,
+    "language": null,
+    "sync_done": 0,
+    "qp_set_id": "test",
+    "exam_duration": 3600,
+    "end_alert_seconds": 300,
+    "q_ids": [
+      "1319709",
+      "1317372",
+      "1319711",
+      "1317306",
+      "1287604",
+      "1287986",
+      "1290595",
+      "1288497",
+      "1290471",
+      "1289605",
+      "1287658",
+      "1291144",
+      "1417416",
+      "1417392",
+      "1417400",
+      "1417385",
+      "1417373",
+      "1433151",
+      "1318900",
+      "1318896",
+      "1318890",
+      "1330107",
+      "1318891",
+      "1318892",
+      "1291387",
+      "1291443",
+      "1291329",
+      "1291559",
+      "1291507"
+    ],
+    "questions": [
+      {
+        "pid": 1,
+        "qid": "1319709",
+        "qimage": "<p>&nbsp;5 \u0b95\u0bbe\u0bb2\u0bcd\u0b95\u0bc1\u0bb2\u0bc7\u0b9f\u0bcd\u0b9f\u0bb0\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0bb5\u0bbf\u0bb2\u0bc8&nbsp;\u20b9400 \u0b8e\u0ba9\u0bbf\u0bb2\u0bcd, 8 \u0b95\u0bbe\u0bb2\u0bcd\u0b95\u0bc1\u0bb2\u0bc7\u0b9f\u0bcd\u0b9f\u0bb0\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0bb5\u0bbf\u0bb2\u0bc8&nbsp;\u0b8e\u0ba9\u0bcd\u0ba9?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4075151,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1319709,
+            "cid": 4075149,
+            "cimage": "\u20b9480",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1319709,
+            "cid": 4075150,
+            "cimage": "\u20b9560",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1319709,
+            "cid": 4075151,
+            "cimage": "\u20b9640",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1319709,
+            "cid": 4075152,
+            "cimage": "\u20b9800",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 2,
+        "qid": "1317372",
+        "qimage": "<p>x \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd y \u0b8e\u0ba9\u0bcd\u0baa\u0ba4\u0bc1 \u0ba8\u0bc7\u0bb0\u0bcd \u0bb5\u0bbf\u0b95\u0bbf\u0ba4\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bc1\u0bae\u0bcd\u0baa\u0bcb\u0ba4\u0bc1, \u0b95\u0bc0\u0bb4\u0bcd\u0b95\u0bcd\u0b95\u0ba3\u0bcd\u0b9f\u0bb5\u0bb1\u0bcd\u0bb1\u0bc1\u0bb3\u0bcd \u0b8e\u0ba4\u0bc1 \u0b89\u0ba3\u0bcd\u0bae\u0bc8\u0baf\u0bbe\u0b95\u0bc1\u0bae\u0bcd?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4065834,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1317372,
+            "cid": 4065834,
+            "cimage": "x =   ky  (k \u0b8e\u0ba9\u0bcd\u0baa\u0ba4\u0bc1 \u0b92\u0bb0\u0bc1 \u0bae\u0bbe\u0bb1\u0bbf\u0bb2\u0bbf)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1317372,
+            "cid": 4065835,
+            "cimage": "x =  k/y  (k \u0b8e\u0ba9\u0bcd\u0baa\u0ba4\u0bc1 \u0b92\u0bb0\u0bc1 \u0bae\u0bbe\u0bb1\u0bbf\u0bb2\u0bbf)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1317372,
+            "cid": 4065836,
+            "cimage": "y =  k+x  (k \u0b8e\u0ba9\u0bcd\u0baa\u0ba4\u0bc1 \u0b92\u0bb0\u0bc1 \u0bae\u0bbe\u0bb1\u0bbf\u0bb2\u0bbf)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1317372,
+            "cid": 4065837,
+            "cimage": "k =  y\u02e3  (k \u0b8e\u0ba9\u0bcd\u0baa\u0ba4\u0bc1 \u0b92\u0bb0\u0bc1 \u0bae\u0bbe\u0bb1\u0bbf\u0bb2\u0bbf)",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 3,
+        "qid": "1319711",
+        "qimage": "<p>8 \u0bb5\u0bbe\u0bb4\u0bc8&nbsp;\u0b87\u0bb2\u0bc8\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0bb5\u0bbf\u0bb2\u0bc8 \u20b9 44 \u0b8e\u0ba9\u0bbf\u0bb2\u0bcd, 30 \u0bb5\u0bbe\u0bb4\u0bc8 \u0b87\u0bb2\u0bc8\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0bb5\u0bbf\u0bb2\u0bc8 \u0b8e\u0ba9\u0bcd\u0ba9?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4075159,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1319711,
+            "cid": 4075157,
+            "cimage": "\u20b9 240",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1319711,
+            "cid": 4075158,
+            "cimage": "\u20b9 352",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1319711,
+            "cid": 4075159,
+            "cimage": "\u20b9 165",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1319711,
+            "cid": 4075160,
+            "cimage": "\u20b9 138",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 4,
+        "qid": "1317306",
+        "qimage": "<p>\u0b92\u0bb0\u0bc1 \u0baa\u0bc7\u0bb0\u0bc1\u0ba8\u0bcd\u0ba4\u0bc1 \u0bae\u0bc2\u0ba9\u0bcd\u0bb1\u0bc1 \u0ba4\u0b9f\u0bb5\u0bc8\u0b95\u0bb3\u0bbf\u0bb2\u0bcd 240 \u0baa\u0bc7\u0bb0\u0bc8 \u0b85\u0bb4\u0bc8\u0ba4\u0bcd\u0ba4\u0bc1\u0b9a\u0bcd \u0b9a\u0bc6\u0bb2\u0bcd\u0bb2 \u0b87\u0baf\u0bb2\u0bc1\u0bae\u0bcd \u0b8e\u0ba9\u0bbf\u0bb2\u0bcd 1200 \u0baa\u0bc7\u0bb0\u0bc8 \u0b85\u0bb4\u0bc8\u0ba4\u0bcd\u0ba4\u0bc1\u0b9a\u0bcd \u0b9a\u0bc6\u0bb2\u0bcd\u0bb2 \u0b8e\u0ba4\u0bcd\u0ba4\u0ba9\u0bc8 \u0bae\u0bc1\u0bb1\u0bc8 \u0ba4\u0bc7\u0bb5\u0bc8\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0bae\u0bcd?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4065575,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1317306,
+            "cid": 4065572,
+            "cimage": "20",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1317306,
+            "cid": 4065573,
+            "cimage": "14",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1317306,
+            "cid": 4065574,
+            "cimage": "12",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1317306,
+            "cid": 4065575,
+            "cimage": "15",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 5,
+        "qid": "1287604",
+        "qimage": "<p>4 \u0b95\u0bc1\u0bb4\u0ba8\u0bcd\u0ba4\u0bc8\u0b95\u0bb3\u0bc1\u0b95\u0bcd\u0b95\u0bc1 \u0bb5\u0bbf\u0bb3\u0bc8\u0baf\u0bbe\u0b9f\u0bc1\u0bb5\u0ba4\u0bb1\u0bcd\u0b95\u0bc1 36 \u0baa\u0bca\u0bae\u0bcd\u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb5\u0bb4\u0b99\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0baa\u0bcd\u0b9f\u0bbe\u0bb2\u0bcd 12 \u0b95\u0bc1\u0bb4\u0ba8\u0bcd\u0ba4\u0bc8\u0b95\u0bb3\u0bcd \u0bb5\u0bbf\u0bb3\u0bc8\u0baf\u0bbe\u0b9f \u0b8e\u0ba4\u0bcd\u0ba4\u0ba9\u0bc8 \u0baa\u0bca\u0bae\u0bcd\u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0ba4\u0bc7\u0bb5\u0bc8?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3950747,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1287604,
+            "cid": 3950744,
+            "cimage": "44",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287604,
+            "cid": 3950745,
+            "cimage": "48",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287604,
+            "cid": 3950746,
+            "cimage": "72",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287604,
+            "cid": 3950747,
+            "cimage": "108",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 6,
+        "qid": "1287986",
+        "qimage": "<p>\u0b95\u0bc0\u0bb4\u0bcd\u0b95\u0ba3\u0bcd\u0b9f\u0bb5\u0bb1\u0bcd\u0bb1\u0bc1\u0bb3\u0bcd \u0b8e\u0ba4\u0bc1 \u0ba8\u0bc7\u0bb0\u0bcd\u0bb5\u0bbf\u0b95\u0bbf\u0ba4\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3952264,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1287986,
+            "cid": 3952262,
+            "cimage": "\u0b95\u0b9f\u0ba8\u0bcd\u0ba4 \u0ba4\u0bca\u0bb2\u0bc8\u0bb5\u0bc1 \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0b86\u0b95\u0bc1\u0bae\u0bcd \u0ba8\u0bc7\u0bb0\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287986,
+            "cid": 3952263,
+            "cimage": "\u0b95\u0bc1\u0b9f\u0bc1\u0bae\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0bb1\u0bcd\u0b95\u0bc1 \u0b86\u0b95\u0bc1\u0bae\u0bcd \u0b9a\u0bc6\u0bb2\u0bb5\u0bc1 \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0b95\u0bc1\u0b9f\u0bc1\u0bae\u0bcd\u0baa \u0b89\u0bb1\u0bc1\u0baa\u0bcd\u0baa\u0bbf\u0ba9\u0bb0\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b8e\u0ba3\u0bcd\u0ba3\u0bbf\u0b95\u0bcd\u0b95\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287986,
+            "cid": 3952264,
+            "cimage": "\u0bb5\u0bc7\u0bb2\u0bc8 \u0b86\u0b9f\u0bcd\u0b95\u0bb3\u0bc1\u0bae\u0bcd \u0ba8\u0bbe\u0b9f\u0bcd\u0b95\u0bb3\u0bc1\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287986,
+            "cid": 3952265,
+            "cimage": "\u0baa\u0bc6\u0ba9\u0bcd\u0b9a\u0bbf\u0bb2\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b8e\u0ba3\u0bcd\u0ba3\u0bbf\u0b95\u0bcd\u0b95\u0bc8\u0baf\u0bc1\u0bae\u0bcd \u0b85\u0ba4\u0ba9\u0bcd \u0bb5\u0bbf\u0bb2\u0bc8\u0baf\u0bc1\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 7,
+        "qid": "1290595",
+        "qimage": "<p>\u0bb5\u0bc6\u0baa\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0ba9\u0bbe\u0bb2\u0bcd \u0baa\u0bca\u0bb0\u0bc1\u0bb3\u0bbf\u0ba9\u0bcd \u0ba8\u0bbf\u0bb2\u0bc8\u0baf\u0bbf\u0bb2\u0bcd \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bae\u0bcd \u0b8f\u0bb1\u0bcd\u0baa\u0b9f\u0b95\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3962645,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1290595,
+            "cid": 3962642,
+            "cimage": "\u0bae\u0bc2\u0bb2\u0b95\u0bcd\u0b95\u0bc2\u0bb1\u0bc1\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b87\u0baf\u0b95\u0bcd\u0b95 \u0b86\u0bb1\u0bcd\u0bb1\u0bb2\u0bcd \u0b85\u0ba4\u0bbf\u0b95\u0bb0\u0bbf\u0baa\u0bcd\u0baa\u0ba4\u0bbe\u0bb2\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1290595,
+            "cid": 3962643,
+            "cimage": "\u0bae\u0bc2\u0bb2\u0b95\u0bcd\u0b95\u0bc2\u0bb1\u0bc1\u0b95\u0bb3\u0bc1\u0b95\u0bcd\u0b95\u0bbf\u0b9f\u0bc8\u0baf\u0bc7\u0baf\u0bbe\u0ba9 \u0b88\u0bb0\u0bcd\u0baa\u0bcd\u0baa\u0bc1 \u0bb5\u0bbf\u0b9a\u0bc8 \u0b95\u0bc1\u0bb1\u0bc8\u0bb5\u0ba4\u0bbe\u0bb2\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1290595,
+            "cid": 3962644,
+            "cimage": "\u0bae\u0bc2\u0bb2\u0b95\u0bcd\u0b95\u0bc2\u0bb1\u0bc1\u0b95\u0bb3\u0bcd \u0b9a\u0bc0\u0bb0\u0bb1\u0bcd\u0bb1 \u0bae\u0bc1\u0bb1\u0bc8\u0baf\u0bbf\u0bb2\u0bcd \u0ba8\u0b95\u0bb0\u0bcd\u0bb5\u0ba4\u0bbe\u0bb2\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1290595,
+            "cid": 3962645,
+            "cimage": "\u0bae\u0bc7\u0bb1\u0bcd\u0b95\u0ba3\u0bcd\u0b9f \u0b85\u0ba9\u0bc8\u0ba4\u0bcd\u0ba4\u0bc1\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 8,
+        "qid": "1288497",
+        "qimage": "<p>\u0baa\u0bbf\u0ba9\u0bcd\u0bb5\u0bb0\u0bc1\u0bb5\u0ba9\u0bb5\u0bb1\u0bcd\u0bb1\u0bbf\u0bb2\u0bcd \u0b9a\u0bc7\u0bb0\u0bcd\u0bae\u0bae\u0bcd \u0baa\u0bb1\u0bcd\u0bb1\u0bbf \u0ba4\u0bb5\u0bb1\u0bbe\u0ba9 \u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bc1 \u0b8e\u0ba4\u0bc1?</p><p>(i) &nbsp;\u0b87\u0bb0\u0ba3\u0bcd\u0b9f\u0bc1 \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0b85\u0ba4\u0bb1\u0bcd\u0b95\u0bc1 \u0bae\u0bc7\u0bb1\u0bcd\u0baa\u0b9f\u0bcd\u0b9f&nbsp;<br>&nbsp; &nbsp; &nbsp;\u0ba4\u0ba9\u0bbf\u0bae\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b85\u0ba3\u0bc1\u0b95\u0bcd\u0b95\u0bb3\u0bbe\u0bb2\u0bcd \u0b86\u0ba9\u0bb5\u0bc8</p><p>(ii) &nbsp;\u0b9a\u0bc7\u0bb0\u0bcd\u0bae\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b87\u0baf\u0bb1\u0bcd\u0baa\u0bbf\u0baf\u0bb2\u0bcd \u0bae\u0bc1\u0bb1\u0bc8\u0baf\u0bbf\u0bb2\u0bcd&nbsp;<br>&nbsp; &nbsp; &nbsp; \u0b85\u0bb5\u0bb1\u0bcd\u0bb1\u0bbf\u0ba9\u0bcd \u0b95\u0bc2\u0bb1\u0bc1\u0b95\u0bb3\u0bbe\u0b95 \u0baa\u0bbf\u0bb0\u0bbf\u0b95\u0bcd\u0b95 \u0bae\u0bc1\u0b9f\u0bbf\u0baf\u0bc1\u0bae\u0bcd</p><p>(iii) &nbsp;\u0b85\u0ba3\u0bc1\u0b95\u0bcd\u0b95\u0bb3\u0bcd \u0b87\u0baf\u0bb1\u0bcd\u0baa\u0bbf\u0baf\u0bb2\u0bcd \u0bae\u0bc1\u0bb1\u0bc8\u0baf\u0bbf\u0bb2\u0bcd \u0b87\u0ba3\u0bc8\u0ba8\u0bcd\u0ba4\u0bc1&nbsp;<br>&nbsp; &nbsp; &nbsp; &nbsp;\u0b9a\u0bc7\u0bb0\u0bcd\u0bae\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b89\u0bb0\u0bc1\u0bb5\u0bbe\u0b95\u0bbf\u0ba9\u0bcd\u0bb1\u0ba9</p><p>(iv) &nbsp;\u0b9a\u0bc7\u0bb0\u0bcd\u0bae\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b85\u0b9f\u0bbf\u0baa\u0bcd\u0baa\u0b9f\u0bc8\u0ba4\u0bcd \u0ba4\u0bc1\u0b95\u0bb3\u0bcd \u0b85\u0ba3\u0bc1\u0b95\u0bcd\u0b95\u0bb3\u0bcd&nbsp;<br>&nbsp; &nbsp; &nbsp; &nbsp;\u0b86\u0b95\u0bc1\u0bae\u0bcd&nbsp;</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3954288,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1288497,
+            "cid": 3954286,
+            "cimage": "(i), (ii) \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd (iv)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1288497,
+            "cid": 3954287,
+            "cimage": "(i) \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd (ii)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1288497,
+            "cid": 3954288,
+            "cimage": "(ii), (iii) \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd (iv)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1288497,
+            "cid": 3954289,
+            "cimage": "(i) \u0bae\u0b9f\u0bcd\u0b9f\u0bc1\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 9,
+        "qid": "1290471",
+        "qimage": "<p>\u0bb5\u0bc6\u0baa\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0ba9\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bbe\u0b95 \u0b8f\u0bb1\u0bcd\u0baa\u0b9f\u0bc1\u0bae\u0bcd \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0b99\u0bcd\u0b95\u0bb3\u0bcd&nbsp;</p><p>(\u0b85) &nbsp;\u0ba8\u0bbf\u0bb2\u0bc8 \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bae\u0bcd<br>(\u0b86) &nbsp;\u0ba8\u0bbf\u0bb1\u0bc8 \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bae\u0bcd<br>(\u0b87) &nbsp;\u0b85\u0b9f\u0bb0\u0bcd\u0ba4\u0bcd\u0ba4\u0bbf \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bae\u0bcd<br>(\u0b88) &nbsp;\u0baa\u0bca\u0bb0\u0bc1\u0bb3\u0bcd \u0bb5\u0bbf\u0bb0\u0bbf\u0bb5\u0b9f\u0bc8\u0ba4\u0bb2\u0bcd</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3962147,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1290471,
+            "cid": 3962146,
+            "cimage": "(\u0b85), (\u0b86) \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd (\u0b88)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1290471,
+            "cid": 3962147,
+            "cimage": "(\u0b85), (\u0b87) \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd (\u0b88)",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1290471,
+            "cid": 3962148,
+            "cimage": "(\u0b88) \u0bae\u0b9f\u0bcd\u0b9f\u0bc1\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1290471,
+            "cid": 3962149,
+            "cimage": "(\u0b86), (\u0b87) \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd (\u0b88)",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 10,
+        "qid": "1289605",
+        "qimage": "<p>\u0baa\u0bca\u0bb0\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1\u0b95.</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \u0b9a\u0bc7\u0bb0\u0bcd\u0bae\u0b99\u0bcd\u0b95\u0bb3\u0bcd &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \u0baa\u0b95\u0bc1\u0ba4\u0bbf \u0ba4\u0ba9\u0bbf\u0bae\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd&nbsp;</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\u0b95\u0bc1\u0bb1\u0bbf\u0baf\u0bc0\u0b9f\u0bc1\u0b95\u0bb3\u0bcd</p><p>\u0b85) &nbsp;\u0b9a\u0bcb\u0b9f\u0bbf\u0baf\u0bae\u0bcd \u0b95\u0bbe\u0bb0\u0bcd\u0baa\u0ba9\u0bc7\u0b9f\u0bcd &nbsp; &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; &nbsp;(1) &nbsp;C , H , O<br>\u0b86) &nbsp;\u0bb5\u0bc6\u0bb3\u0bcd\u0bb3\u0bc8\u0b9a\u0bcd \u0b9a\u0bb0\u0bcd\u0b95\u0bcd\u0b95\u0bb0\u0bc8 &nbsp; &nbsp; &nbsp;- &nbsp; &nbsp; &nbsp; &nbsp;(2) &nbsp;Na , H , O<br>\u0b87) &nbsp;\u0b9a\u0bcb\u0b9f\u0bbf\u0baf\u0bae\u0bcd &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; &nbsp;(3) &nbsp;Na , C , H , O<br>&nbsp; &nbsp; &nbsp; &nbsp;\u0bb9\u0bc8\u0b9f\u0bcd\u0bb0\u0bbe\u0b95\u0bcd\u0bb8\u0bc8\u0b9f\u0bc1&nbsp;<br>\u0b88) &nbsp;\u0b9a\u0bae\u0bc8\u0baf\u0bb2\u0bcd \u0b9a\u0bcb\u0b9f\u0bbe &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; &nbsp;(4) &nbsp;Na , C , O</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3958709,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1289605,
+            "cid": 3958706,
+            "cimage": "(\u0b85)-4, (\u0b86)-1, (\u0b87)-3, (\u0b88)-2",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1289605,
+            "cid": 3958707,
+            "cimage": "(\u0b85)-1, (\u0b86)-2, (\u0b87)-4, (\u0b88)-3",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1289605,
+            "cid": 3958708,
+            "cimage": "(\u0b85)-3, (\u0b86)-4, (\u0b87)-2, (\u0b88)-1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1289605,
+            "cid": 3958709,
+            "cimage": "(\u0b85)-4, (\u0b86)-1, (\u0b87)-2, (\u0b88)-3",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 11,
+        "qid": "1287658",
+        "qimage": "<p>\u0b95\u0bc1\u0bb1\u0bbf\u0baf\u0bc0\u0b9f\u0bc1\u0b95\u0bb3\u0bc8 \u0ba4\u0b95\u0bc1\u0ba8\u0bcd\u0ba4 \u0bae\u0bc1\u0bb1\u0bc8\u0baf\u0bbf\u0bb2\u0bcd \u0baa\u0baf\u0ba9\u0bcd\u0baa\u0b9f\u0bc1\u0ba4\u0bcd\u0ba4\u0bbf\u0baf \u0bae\u0bc1\u0ba4\u0bb2\u0bcd \u0bb5\u0bc7\u0ba4\u0bbf\u0baf\u0bbf\u0baf\u0bb2\u0bcd \u0b85\u0bb1\u0bbf\u0b9e\u0bb0\u0bcd _________________________ .</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3950962,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1287658,
+            "cid": 3950960,
+            "cimage": "\u0bb0\u0bc2\u0ba4\u0bb0\u0bcd\u0baa\u0bcb\u0bb0\u0bcd\u0b9f\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287658,
+            "cid": 3950961,
+            "cimage": "\u0ba4\u0bbe\u0bae\u0bcd\u0b9a\u0ba9\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287658,
+            "cid": 3950962,
+            "cimage": "\u0b9f\u0bbe\u0bb2\u0bcd\u0b9f\u0ba9\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1287658,
+            "cid": 3950963,
+            "cimage": "\u0b9a\u0bbe\u0b9f\u0bcd\u0bb5\u0bbf\u0b95\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 12,
+        "qid": "1291144",
+        "qimage": "<p>\u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bc1 &nbsp; &nbsp; &nbsp; : &nbsp;\u0bb5\u0bc6\u0baa\u0bcd\u0baa\u0b95\u0bcd \u0b95\u0bbe\u0bb1\u0bcd\u0bb1\u0bc1 \u0ba8\u0bbf\u0bb0\u0baa\u0bcd\u0baa\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f&nbsp;\u0baa\u0bb2\u0bc2\u0ba9\u0bbe\u0ba9\u0ba4\u0bc1 \u0b95\u0bbe\u0bb1\u0bcd\u0bb1\u0bbf\u0bb2\u0bcd \u0bae\u0bbf\u0ba4\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0ba4\u0bc1.</p><p>\u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd : &nbsp;\u0bb5\u0bc6\u0baa\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbe\u0bb2\u0bcd \u0baa\u0bb2\u0bc2\u0ba9\u0bbf\u0bb2\u0bcd \u0b89\u0bb3\u0bcd\u0bb3 \u0b95\u0bbe\u0bb1\u0bcd\u0bb1\u0bc1 \u0bb5\u0bbf\u0bb0\u0bbf\u0bb5\u0b9f\u0bc8\u0ba8\u0bcd\u0ba4\u0bc1 \u0b85\u0ba4\u0ba9\u0bcd \u0b85\u0b9f\u0bb0\u0bcd\u0ba4\u0bcd\u0ba4\u0bbf&nbsp;<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\u0bb5\u0bc6\u0bb3\u0bbf\u0baa\u0bcd\u0baa\u0bc1\u0bb1\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd \u0b89\u0bb3\u0bcd\u0bb3 \u0b95\u0bbe\u0bb1\u0bcd\u0bb1\u0bbf\u0ba9\u0bcd \u0b85\u0b9f\u0bb0\u0bcd\u0ba4\u0bcd\u0ba4\u0bbf\u0baf\u0bc8 \u0bb5\u0bbf\u0b9f \u0b95\u0bc1\u0bb1\u0bc8\u0b95\u0bbf\u0bb1\u0ba4\u0bc1.</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3964820,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1291144,
+            "cid": 3964820,
+            "cimage": "\u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bc1 \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd \u0b87\u0bb0\u0ba3\u0bcd\u0b9f\u0bc1\u0bae\u0bcd \u0b9a\u0bb0\u0bbf, \u0bae\u0bc7\u0bb2\u0bc1\u0bae\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd \u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bbf\u0bb1\u0bcd\u0b95\u0bbe\u0ba9 \u0b9a\u0bb0\u0bbf\u0baf\u0bbe\u0ba9 \u0bb5\u0bbf\u0bb3\u0b95\u0bcd\u0b95\u0bae\u0bcd.",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291144,
+            "cid": 3964821,
+            "cimage": "\u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bc1 \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd \u0b87\u0bb0\u0ba3\u0bcd\u0b9f\u0bc1\u0bae\u0bcd \u0b9a\u0bb0\u0bbf, \u0b86\u0ba9\u0bbe\u0bb2\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd \u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bbf\u0bb1\u0bcd\u0b95\u0bbe\u0ba9 \u0b9a\u0bb0\u0bbf\u0baf\u0bbe\u0ba9 \u0bb5\u0bbf\u0bb3\u0b95\u0bcd\u0b95\u0bae\u0bcd \u0b85\u0bb2\u0bcd\u0bb2.",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291144,
+            "cid": 3964822,
+            "cimage": "\u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bc1 \u0b9a\u0bb0\u0bbf \u0b86\u0ba9\u0bbe\u0bb2\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd \u0ba4\u0bb5\u0bb1\u0bc1.",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291144,
+            "cid": 3964823,
+            "cimage": "\u0b95\u0bc2\u0bb1\u0bcd\u0bb1\u0bc1 \u0ba4\u0bb5\u0bb1\u0bc1 \u0b86\u0ba9\u0bbe\u0bb2\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bcd \u0b9a\u0bb0\u0bbf.",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 13,
+        "qid": "1417416",
+        "qimage": "<p style=\"text-align:justify\">\u0b89\u0bb2\u0b95\u0bbf\u0bb2\u0bcd \u0bb5\u0bbe\u0bb4\u0bc1\u0bae\u0bcd \u0b87\u0bb0\u0ba3\u0bcd\u0b9f\u0bc1 \u0bb5\u0b95\u0bc8 \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0baf\u0bbe\u0bb5\u0bc8?&nbsp;</p>\r\n\r\n<p style=\"text-align:justify\">&nbsp;</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4423305,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1417416,
+            "cid": 4423305,
+            "cimage": "\u0b86\u0b9a\u0bbf\u0baf \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd, \u0b86\u0baa\u0bcd\u0baa\u0bbf\u0bb0\u0bbf\u0b95\u0bcd\u0b95 \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417416,
+            "cid": 4423306,
+            "cimage": "\u0b86\u0b9a\u0bbf\u0baf \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd, \u0b85\u0bae\u0bc6\u0bb0\u0bbf\u0b95\u0bcd\u0b95 \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417416,
+            "cid": 4423307,
+            "cimage": "\u0b86\u0b9a\u0bbf\u0baf \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd, \u0b90\u0bb0\u0bcb\u0baa\u0bcd\u0baa\u0bbe \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417416,
+            "cid": 4423308,
+            "cimage": "\u0b86\u0b9a\u0bbf\u0baf \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd, \u0b86\u0bb8\u0bcd\u0ba4\u0bbf\u0bb0\u0bc7\u0bb2\u0bbf\u0baf \u0b9a\u0bbf\u0b99\u0bcd\u0b95\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 14,
+        "qid": "1417392",
+        "qimage": "<p style=\"text-align:justify\">\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u0ba8\u0bbe\u0b9f\u0bcd\u0b9f\u0bbf\u0bb2\u0bcd \u0b89\u0bb3\u0bcd\u0bb3 \u0b87\u0bb0\u0ba3\u0bcd\u0b9f\u0bbe\u0bb5\u0ba4\u0bc1 \u0bae\u0bbf\u0b95\u0baa\u0bcd\u0baa\u0bc6\u0bb0\u0bbf\u0baf \u0b95\u0bbe\u0baa\u0bcd\u0baa\u0b95\u0bae\u0bcd \u0b8e\u0ba4\u0bc1?</p>\r\n\r\n<p style=\"text-align:justify\">&nbsp;</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4423217,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1417392,
+            "cid": 4423217,
+            "cimage": "\u0bae\u0bc1\u0ba3\u0bcd\u0b9f\u0ba8\u0bcd\u0ba4\u0bc1\u0bb1\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417392,
+            "cid": 4423218,
+            "cimage": "\u0bae\u0bc1\u0ba4\u0bc1\u0bae\u0bb2\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417392,
+            "cid": 4423219,
+            "cimage": "\u0bae\u0bc7\u0b95\u0bae\u0bb2\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417392,
+            "cid": 4423220,
+            "cimage": "\u0b9a\u0ba4\u0bcd\u0ba4\u0bbf\u0baf\u0bae\u0b99\u0bcd\u0b95\u0bb2\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 15,
+        "qid": "1417400",
+        "qimage": "<p style=\"text-align:justify\">\u0b95\u0bb0\u0bc8\u0baf\u0bbe\u0ba9\u0bc8 \u0bae\u0bbf\u0b95\u0bb5\u0bc1\u0bae\u0bcd \u0baa\u0bbf\u0b9f\u0bbf\u0ba4\u0bcd\u0ba4 \u0b89\u0ba3\u0bb5\u0bbe\u0b95 \u0b89\u0b9f\u0bcd\u0b95\u0bca\u0bb3\u0bcd\u0bb3\u0bc1\u0bae\u0bcd \u0bb5\u0bbf\u0bb2\u0b99\u0bcd\u0b95\u0bc1 \u0b8e\u0ba4\u0bc1?</p>\r\n\r\n<p style=\"text-align:justify\">&nbsp;</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4423238,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1417400,
+            "cid": 4423237,
+            "cimage": "\u0baa\u0bc1\u0bb2\u0bbf",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417400,
+            "cid": 4423238,
+            "cimage": "\u0b95\u0bb0\u0b9f\u0bbf",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417400,
+            "cid": 4423239,
+            "cimage": "\u0baf\u0bbe\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417400,
+            "cid": 4423240,
+            "cimage": "\u0baa\u0bc1\u0bb3\u0bcd\u0bb3\u0bbf\u0bae\u0bbe\u0ba9\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 16,
+        "qid": "1417385",
+        "qimage": "<p style=\"text-align:justify\">\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u0ba8\u0bbe\u0b9f\u0bcd\u0b9f\u0bbf\u0bb2\u0bcd \u0bb5\u0ba9\u0b95\u0bcd\u0b95\u0bb2\u0bcd\u0bb2\u0bc2\u0bb0\u0bbf \u0b85\u0bae\u0bc8\u0ba8\u0bcd\u0ba4\u0bc1\u0bb3\u0bcd\u0bb3 \u0b87\u0b9f\u0bae\u0bcd \u0b8e\u0ba4\u0bc1?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4423193,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1417385,
+            "cid": 4423193,
+            "cimage": "\u0b95\u0bcb\u0bb5\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417385,
+            "cid": 4423194,
+            "cimage": "\u0b9a\u0bc6\u0ba9\u0bcd\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417385,
+            "cid": 4423195,
+            "cimage": "\u0ba8\u0bc6\u0bb2\u0bcd\u0bb2\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417385,
+            "cid": 4423196,
+            "cimage": "\u0ba8\u0bc0\u0bb2\u0b95\u0bbf\u0bb0\u0bbf",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 17,
+        "qid": "1417373",
+        "qimage": "<p style=\"text-align:justify\">\u0baf\u0bbe\u0ba9\u0bc8\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0b95\u0bc2\u0b9f\u0bcd\u0b9f\u0ba4\u0bcd\u0ba4\u0bbf\u0bb1\u0bcd\u0b95\u0bc1 \u0ba4\u0bb2\u0bc8\u0bae\u0bc8 \u0ba4\u0bbe\u0b99\u0bcd\u0b95\u0bc1\u0bb5\u0ba4\u0bc1 \u0b8e\u0ba8\u0bcd\u0ba4 \u0baf\u0bbe\u0ba9\u0bc8?</p>\r\n\r\n<p>&nbsp;</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4423142,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1417373,
+            "cid": 4423141,
+            "cimage": "\u0b86\u0ba3\u0bcd \u0baf\u0bbe\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417373,
+            "cid": 4423142,
+            "cimage": "\u0baa\u0bc6\u0ba3\u0bcd \u0baf\u0bbe\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417373,
+            "cid": 4423143,
+            "cimage": "\u0b95\u0bc1\u0b9f\u0bcd\u0b9f\u0bbf  \u0baf\u0bbe\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1417373,
+            "cid": 4423144,
+            "cimage": "\u0bb5\u0bb2\u0bbf\u0bae\u0bc8\u0baf\u0bc1\u0bb3\u0bcd\u0bb3 \u0baf\u0bbe\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 18,
+        "qid": "1433151",
+        "qimage": "<p>\u0bae\u0bbf\u0b95\u0bc1\u0ba8\u0bcd\u0ba4 \u0ba8\u0bbf\u0ba9\u0bc8\u0bb5\u0bbe\u0bb1\u0bcd\u0bb1\u0bb2\u0bcd \u0b95\u0bca\u0ba3\u0bcd\u0b9f \u0bb5\u0bbf\u0bb2\u0b99\u0bcd\u0b95\u0bc1 __________.</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4481307,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1433151,
+            "cid": 4481306,
+            "cimage": "\u0baa\u0bc1\u0bb2\u0bbf",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1433151,
+            "cid": 4481307,
+            "cimage": "\u0baf\u0bbe\u0ba9\u0bc8",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1433151,
+            "cid": 4481308,
+            "cimage": "\u0bae\u0bbe\u0ba9\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1433151,
+            "cid": 4481309,
+            "cimage": "\u0b95\u0bb0\u0b9f\u0bbf",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 19,
+        "qid": "1318900",
+        "qimage": "<p>\u0baa\u0bbe\u0bb2\u0bc8\u0bb5\u0ba9\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd \u0b85\u0bb0\u0bbf\u0ba4\u0bcd\u0ba4\u0bb2\u0bcd \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0baa\u0b9f\u0bbf\u0baf \u0bb5\u0bc8\u0ba4\u0bcd\u0ba4\u0bb2\u0bcd \u0b9a\u0bc6\u0baf\u0bb2\u0bcd\u0bae\u0bc1\u0bb1\u0bc8\u0b95\u0bb3\u0bc8 \u0bb5\u0bc7\u0b95\u0bae\u0bbe\u0b95 \u0b9a\u0bc6\u0baf\u0bb2\u0bcd\u0baa\u0b9f\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1\u0bae\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bbf ___________&nbsp; \u0b86\u0b95\u0bc1\u0bae\u0bcd</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4071915,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1318900,
+            "cid": 4071915,
+            "cimage": "\u0b95\u0bbe\u0bb1\u0bcd\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318900,
+            "cid": 4071916,
+            "cimage": "\u0baa\u0ba9\u0bbf\u0baf\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318900,
+            "cid": 4071917,
+            "cimage": "\u0ba8\u0bc0\u0bb0\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318900,
+            "cid": 4071918,
+            "cimage": "\u0b95\u0b9f\u0bb2\u0bcd \u0b85\u0bb2\u0bc8\u0b95\u0bb3\u0bcd",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 20,
+        "qid": "1318896",
+        "qimage": "<p>\u0bae\u0bb2\u0bc8\u0b9a\u0bcd\u0b9a\u0bb0\u0bbf\u0bb5\u0bbf\u0bb2\u0bcd, \u0b88\u0bb0\u0bcd\u0baa\u0bcd\u0baa\u0bc1 \u0bb5\u0bbf\u0b9a\u0bc8\u0baf\u0bbf\u0ba9\u0bcd \u0b95\u0bbe\u0bb0\u0ba3\u0bae\u0bbe\u0b95 \u0b9a\u0bb0\u0bbf\u0bb5\u0bc8 \u0ba8\u0bcb\u0b95\u0bcd\u0b95\u0bbf \u0bae\u0bc6\u0bb2\u0bcd\u0bb2 \u0ba8\u0b95\u0bb0\u0bc1\u0bae\u0bcd \u0baa\u0bc6\u0bb0\u0bbf\u0baf \u0baa\u0ba9\u0bbf\u0b95\u0bcd\u0b95\u0bc1\u0bb5\u0bbf\u0baf\u0bb2\u0bcd -----------</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4071901,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1318896,
+            "cid": 4071899,
+            "cimage": "\u0b95\u0bbf\u0bb3\u0bc8\u0baf\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318896,
+            "cid": 4071900,
+            "cimage": "\u0ba4\u0bc1\u0ba3\u0bc8\u0baf\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318896,
+            "cid": 4071901,
+            "cimage": "\u0baa\u0ba9\u0bbf\u0baf\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318896,
+            "cid": 4071902,
+            "cimage": "\u0b95\u0ba3\u0bcd\u0b9f\u0baa\u0bcd\u0baa\u0ba9\u0bbf\u0baf\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 21,
+        "qid": "1318890",
+        "qimage": "<p>\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u0ba8\u0bbe\u0b9f\u0bcd\u0b9f\u0bbf\u0bb2\u0bcd ---------- \u0b86\u0bb1\u0bcd\u0bb1\u0bbf\u0ba9\u0bcd \u0b95\u0bc1\u0bb1\u0bc1\u0b95\u0bcd\u0b95\u0bc7 \u0b95\u0bc1\u0bb1\u0bcd\u0bb1\u0bbe\u0bb2 \u0ba8\u0bc0\u0bb0\u0bcd\u0bb5\u0bc0\u0bb4\u0bcd\u0b9a\u0bcd\u0b9a\u0bbf \u0b89\u0bb3\u0bcd\u0bb3\u0ba4\u0bc1</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4071875,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1318890,
+            "cid": 4071875,
+            "cimage": "\u0b9a\u0bbf\u0bb1\u0bcd\u0bb1\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318890,
+            "cid": 4071876,
+            "cimage": "\u0ba4\u0bbe\u0bae\u0bbf\u0bb0\u0baa\u0bb0\u0ba3\u0bbf",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318890,
+            "cid": 4071877,
+            "cimage": "\u0bae\u0ba3\u0bbf\u0bae\u0bc1\u0ba4\u0bcd\u0ba4\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318890,
+            "cid": 4071878,
+            "cimage": "\u0b95\u0bc1\u0ba3\u0bcd\u0b9f\u0bbe\u0bb1\u0bc1",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 22,
+        "qid": "1330107",
+        "qimage": "<p>\u0b86\u0bb1\u0bcd\u0bb1\u0bc1 \u0ba8\u0bc0\u0bb0\u0bbe\u0ba9\u0ba4\u0bc1 \u0b9a\u0bc6\u0b99\u0bcd\u0b95\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1 \u0b9a\u0bb0\u0bbf\u0bb5\u0bc8 &nbsp;\u0b95\u0bca\u0ba3\u0bcd\u0b9f \u0bae\u0bb2\u0bc8\u0baa\u0bcd\u0baa\u0bbf\u0bb0\u0ba4\u0bc7\u0b9a\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0bb2\u0bcd \u0b85\u0bb0\u0bbf\u0baa\u0bcd\u0baa\u0ba4\u0bbe\u0bb2\u0bcd \u0b89\u0bb0\u0bc1\u0bb5\u0bbe\u0b95\u0bc1\u0bae\u0bcd \u0ba8\u0bbf\u0bb2\u0ba4\u0bcd\u0ba4\u0bcb\u0bb1\u0bcd\u0bb1\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0ba9\u0bcd \u0bb5\u0b9f\u0bbf\u0bb5\u0bae\u0bcd \u0b8e\u0ba9\u0bcd\u0ba9?</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4115614,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1330107,
+            "cid": 4115612,
+            "cimage": "L \u0bb5\u0b9f\u0bbf\u0bb5 \u0baa\u0bb3\u0bcd\u0bb3\u0ba4\u0bcd\u0ba4\u0bbe\u0b95\u0bcd\u0b95\u0bc1\u0b95\u0bb3\u0bcd.",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1330107,
+            "cid": 4115613,
+            "cimage": "V \u0bb5\u0b9f\u0bbf\u0bb5 \u0baa\u0bb3\u0bcd\u0bb3\u0ba4\u0bcd\u0ba4\u0bbe\u0b95\u0bcd\u0b95\u0bc1\u0b95\u0bb3\u0bcd.",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1330107,
+            "cid": 4115614,
+            "cimage": "U \u0bb5\u0b9f\u0bbf\u0bb5 \u0baa\u0bb3\u0bcd\u0bb3\u0ba4\u0bcd\u0ba4\u0bbe\u0b95\u0bcd\u0b95\u0bc1\u0b95\u0bb3\u0bcd.",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1330107,
+            "cid": 4115615,
+            "cimage": "\u0bae\u0bc7\u0bb1\u0bcd\u0b95\u0ba3\u0bcd\u0b9f  \u0b8e\u0ba4\u0bc1\u0bb5\u0bc1\u0bae\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 23,
+        "qid": "1318891",
+        "qimage": "<p>\u0bae\u0bb2\u0bc8 \u0b85\u0b9f\u0bbf\u0bb5\u0bbe\u0bb0\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd \u0b86\u0bb1\u0bc1\u0b95\u0bb3\u0bbe\u0bb2\u0bcd \u0baa\u0b9f\u0bbf\u0baf \u0bb5\u0bc8\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0bae\u0bcd \u0bb5\u0ba3\u0bcd\u0b9f\u0bb2\u0bcd \u0baa\u0b9f\u0bbf\u0bb5\u0bc1\u0b95\u0bb3\u0bcd ------- \u0b86\u0b95\u0bc1\u0bae\u0bcd.</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4071880,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1318891,
+            "cid": 4071879,
+            "cimage": "\u0bb5\u0bc0\u0bb4\u0bcd\u0b9a\u0bcd\u0b9a\u0bbf \u0b95\u0bc1\u0bb3\u0bae\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318891,
+            "cid": 4071880,
+            "cimage": "\u0bb5\u0ba3\u0bcd\u0b9f\u0bb2\u0bcd \u0bb5\u0bbf\u0b9a\u0bbf\u0bb1\u0bbf\u0b95\u0bb3\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318891,
+            "cid": 4071881,
+            "cimage": "\u0bb5\u0bc6\u0bb3\u0bcd\u0bb3\u0b9a\u0bcd\u0b9a\u0bae\u0bb5\u0bc6\u0bb3\u0bbf",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318891,
+            "cid": 4071882,
+            "cimage": "\u0b9f\u0bc6\u0bb2\u0bcd\u0b9f\u0bbe",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 24,
+        "qid": "1318892",
+        "qimage": "<p>\u0b86\u0bb1\u0bcd\u0bb1\u0bbf\u0ba9\u0bcd \u0bae\u0bc1\u0b95\u0ba4\u0bcd\u0ba4\u0bc1\u0bb5\u0bbe\u0bb0\u0b99\u0bcd\u0b95\u0bb3\u0bbf\u0bb2\u0bcd \u0ba4\u0bcb\u0bb1\u0bcd\u0bb1\u0bc1\u0bb5\u0bbf\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0bae\u0bcd \u0baa\u0b9f\u0bbf\u0bb5\u0bc1\u0b95\u0bb3\u0bcd ---------\u0b95\u0bcd\u0b95\u0bb3\u0bc8 \u0b89\u0bb0\u0bc1\u0bb5\u0bbe\u0b95\u0bcd\u0b95\u0bc1\u0b95\u0bbf\u0ba9\u0bcd\u0bb1\u0ba9.</p>",
+        "no_of_choices": 4,
+        "correct_choice": 4071885,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1318892,
+            "cid": 4071883,
+            "cimage": "\u0b9a\u0bb0\u0bcd\u0b95\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318892,
+            "cid": 4071884,
+            "cimage": "\u0b89\u0baa\u0bcd\u0baa\u0b99\u0bcd\u0b95\u0bb4\u0bbf\u0b95\u0bb3\u0bcd",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318892,
+            "cid": 4071885,
+            "cimage": "\u0b9f\u0bc6\u0bb2\u0bcd\u0b9f\u0bbe",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1318892,
+            "cid": 4071886,
+            "cimage": "\u0b95\u0b9f\u0bb1\u0bcd\u0b95\u0bb0\u0bc8",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 25,
+        "qid": "1291387",
+        "qimage": "<p>\"Squirm\" means ...........</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3965780,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1291387,
+            "cid": 3965780,
+            "cimage": "turn",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291387,
+            "cid": 3965781,
+            "cimage": "standing",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291387,
+            "cid": 3965782,
+            "cimage": "sit",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291387,
+            "cid": 3965783,
+            "cimage": "sleep",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 26,
+        "qid": "1291443",
+        "qimage": "<p>In desperation I asked ...........</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3966010,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1291443,
+            "cid": 3966008,
+            "cimage": "Opera",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291443,
+            "cid": 3966009,
+            "cimage": "mozilla firefox",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291443,
+            "cid": 3966010,
+            "cimage": "Jeeves",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291443,
+            "cid": 3966011,
+            "cimage": "interner explorer",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 27,
+        "qid": "1291329",
+        "qimage": "<p>She pressed ........ and ....... and disappeared from view</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3965555,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1291329,
+            "cid": 3965552,
+            "cimage": "shift, Enter",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291329,
+            "cid": 3965553,
+            "cimage": "Enter , End",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291329,
+            "cid": 3965554,
+            "cimage": "Enter,delete",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291329,
+            "cid": 3965555,
+            "cimage": "Control , Enter",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 28,
+        "qid": "1291559",
+        "qimage": "<p>\"Devoured\" means ............</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3966471,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1291559,
+            "cid": 3966468,
+            "cimage": "hated",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291559,
+            "cid": 3966469,
+            "cimage": "repaired",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291559,
+            "cid": 3966470,
+            "cimage": "saved",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291559,
+            "cid": 3966471,
+            "cimage": "consumed",
+            "language": null,
+            "hint": null
+          }
+        ]
+      },
+      {
+        "pid": 29,
+        "qid": "1291507",
+        "qimage": "<p>She must have caught a virus or been eaten by a ........</p>",
+        "no_of_choices": 4,
+        "correct_choice": 3966257,
+        "language": null,
+        "hint": null,
+        "q_choices": [
+          {
+            "qid": 1291507,
+            "cid": 3966256,
+            "cimage": "Monster",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291507,
+            "cid": 3966257,
+            "cimage": "Worm",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291507,
+            "cid": 3966258,
+            "cimage": "Snake",
+            "language": null,
+            "hint": null
+          },
+          {
+            "qid": 1291507,
+            "cid": 3966259,
+            "cimage": "dinosaurs",
+            "language": null,
+            "hint": null
+          }
+        ]
+      }
+    ],
+    "ans": [
+      {
+        "qid": "1319709",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1317372",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1319711",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1317306",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1287604",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1287986",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1290595",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1288497",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1290471",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1289605",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1287658",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1291144",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1417416",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1417392",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1417400",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1417385",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1417373",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1433151",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1318900",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1318896",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1318890",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1330107",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1318891",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1318892",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1291387",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1291443",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1291329",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1291559",
+        "review": "",
+        "ans": ""
+      },
+      {
+        "qid": "1291507",
+        "review": "",
+        "ans": ""
+      }
+    ]
+  }
