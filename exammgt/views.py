@@ -225,7 +225,7 @@ def create_local_user(request,data):
     print('Obtaining user pair')
     try:
         print('Token URL',request.build_absolute_uri(reverse('token-obtain-pair')))
-        x = requests.post(request.build_absolute_uri(reverse('token-obtain-pair')),data = {'username':data['username'],'password':data['password']})
+        x = requests.post(request.build_absolute_uri(reverse('token-obtain-pair')),data = {'username':data['username'],'password':data['password']}, verify=False)
         x.raise_for_status()
     except requests.exceptions.HTTPError as e:
         print(e.response.text)
