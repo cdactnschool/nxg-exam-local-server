@@ -513,7 +513,7 @@ class db_auth(APIView):
 
             query = f"SELECT {auth_fields['student']['username_field']},{auth_fields['student']['hash_field']},{auth_fields['student']['school_field_foreign']} FROM {auth_fields['student']['auth_table']} WHERE {auth_fields['student']['username_field']} = {data['username']} AND status = 'Active' LIMIT 1"
 
-            print(query)
+            print('student selection query',query)
             mycursor.execute(query)
             auth_detail_response = mycursor.fetchall()
             
@@ -527,13 +527,16 @@ class db_auth(APIView):
             
             #print('Records matching the username',auth_detail_response)
 
+            print('password check',data['password'],hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1])
+            print(auth_detail_response)
+            print(hashlib.md5(data['password'].encode('utf-8')).hexdigest(),auth_detail_response[0][1])
+
             if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == auth_detail_response[0][1]:
                 user_detail['user_type'] = 'student'
 
                 # Fetch school id
 
-                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']}"
-                #  WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
+                query = f"SELECT {auth_fields['student']['school_key_ref_master']},{auth_fields['student']['name_field_master']},{auth_fields['student']['student_class']},{auth_fields['student']['section_field_master']} FROM {auth_fields['student']['master_table']} WHERE {auth_fields['student']['school_field_foreign_ref']} = {user_detail['emis_user_id'] }"
                 #print('school id fetch query',query)
 
                 mycursor.execute(query)
@@ -2203,7 +2206,7 @@ class LoadReg(APIView):
                     if file.endswith(".csv"):
                         csv_full_path = os.path.join(regcsvpath,file)
                         table_name = os.path.basename(csv_full_path).split('.')[0]
-                        
+                        print(f'Dropping table {table_name}')
                         con.execute(f"DROP TABLE IF EXISTS {table_name}")
                         conn.commit()
 
